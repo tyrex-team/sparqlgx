@@ -61,12 +61,12 @@ RDF/SPARQL benchmarks can be runned : [LUBM](http://swat.cse.lehigh.edu/projects
 	  - A SPARQL query re-writer based on RDF data
 	  statistics. Users first have to compute statistics; and then
 	  SPARQL query clauses (Triple Patterns in the WHERE{...}) can
-	  be re-ordered according to the data repartition.</li>
->bash bin/generate-stat.sh hdfs_file.nt output_local_stat.txt # Generate Statistics  
->bash bin/order-with-stat.sh local_query.rq local_stat.txt # Use Statistics  
+	  be re-ordered according to the data repartition.  
+	  >bash bin/generate-stat.sh hdfs_file.nt output_local_stat.txt # Generate Statistics  
+>bash bin/order-with-stat.sh local_query.rq local_stat.txt # Use Statistics
 	  - A SPARQL Direct Evaluator (S-DE) i.e. no loading
 	  phase needed. S-DE directly evaluates SPARQL queries of RDF
-	  datasets saved on the HDFS.
+	  datasets saved on the HDFS.  
 >bash bin/sparqlgx-direct-eval.sh local_query.rq hdfs_file.nt ;  
 
 5. Run the test-suite:
