@@ -1,0 +1,1 @@
+select ?v0, ?v2, ?v3 where ?v0 httpdbuwaterloocagalucwsdbmsubscribes httpdbuwaterloocagalucwsdbmWebsite16661 . ?v2 httpschemaorgcaption ?v3 . ?v0 httpdbuwaterloocagalucwsdbmlikes ?v2 .

@@ -1,0 +1,1 @@
+select ?v0, ?v4, ?v6, ?v7 where ?v0 httpschemaorgcaption ?v1 . ?v0 httpschemaorgtext ?v2 . ?v0 httpschemaorgcontentRating ?v3 . ?v0 httppurlorgstuffrevhasReview ?v4 . ?v4 httppurlorgstuffrevtitle ?v5 . ?v4 httppurlorgstuffrevreviewer ?v6 . ?v7 httpschemaorgactor ?v6 . ?v7 httpschemaorglanguage ?v8 .
