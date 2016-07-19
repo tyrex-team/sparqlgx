@@ -1,5 +1,7 @@
 open Struct ;;
 open ToScalaUtils ;;
+open Parser;;    (* SPARQL parser. *)
+open Cost;;      (* Optimisation on triples patterns. *)
 
 (***************************
  * Set-up the preliminaries
@@ -234,3 +236,31 @@ let where ( (const:triple list) , (env:environment) ) =
   in aux(const,env,"")
 ;;
 
+
+let translatorVertical (v:string) = 
+  let q = parse v in
+  let initEnv = {current=0;suite=[]} in
+  let definition = "def t (s:String):Boolean = org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(s))\n" in
+
+  match q.union with
+  | [] ->
+     let preliminaires = definition^listLoaders(q.const) in
+     let contrainte,newEnv = where ( no_order(q.const) , initEnv ) in
+     (*let contrainte,newEnv = where ( order_by_nb_var(q.const) , initEnv ) in*)
+     let selection = select ( q.dist , newEnv ) in
+     let solution_modifiers = modifiers() in
+     let finalquery = "val Qfinal = if (!("^listPaths(q.const)^")) {Array();} \n\t else{"^selection^solution_modifiers^"}" in
+     Printf.printf "%s \n" (preliminaires^contrainte^finalquery)
+  | union -> 
+     let preliminaires = definition^listLoaders(q.const) in
+     let contrainte,newEnv = where ( no_order(q.const) , initEnv ) in
+     (*let contrainte,newEnv = where ( order_by_nb_var(q.const) , initEnv ) in*)
+     let selection = select ( q.dist , newEnv ) in
+     let forUnionEnv = {current=newEnv.current;suite=[]} in
+     let contrainteunion,unionEnv = where ( no_order(union) , forUnionEnv ) in
+     let selectionunion = select ( q.dist , unionEnv ) in
+     let solution_modifiers = modifiers() in
+     let finalquery = "val Qfinal = if (!("^listPaths(q.const)^")) {Array();} \n\t else{"^selection^".union("^selectionunion^")"^solution_modifiers^"}" in
+     Printf.printf "%s \n" (preliminaires^contrainte^contrainteunion^finalquery)
+
+;;

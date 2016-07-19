@@ -1,6 +1,7 @@
 open Struct ;;
 open ToScalaUtils ;;
-
+open Parser;;
+open Cost;;
 (********************
 Operations on Queries
 ********************)
@@ -148,4 +149,17 @@ let where ( (const:triple list) , (env:environment) ) =
 		let updated_e:environment = {current=new_e.current+1;suite=new_e.suite} in
 		aux(q,updated_e,trad^sc)
   in aux(const,env,"")
+;;
+
+
+let translatorOneFile ( (v:string) , (hdfsAddr:string) ) = 
+  let q = parse v in
+  let initEnv = {current=0;suite=[]} in
+  (*let contrainte,newEnv = where ( no_order(q.const) , initEnv ) in*)
+  let debut = "val triples=sc.textFile(\""^hdfsAddr^"\").map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1),field(2))};\n" in
+  let contrainte,newEnv = where ( order_by_nb_var(q.const) , initEnv ) in
+  let selection = select ( q.dist , newEnv ) in
+  let solution_modifiers = modifiers() in
+
+  Printf.printf "%s \n" (debut^contrainte^selection^solution_modifiers)
 ;;

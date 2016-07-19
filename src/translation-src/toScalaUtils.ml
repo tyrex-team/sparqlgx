@@ -75,16 +75,11 @@ let union((l1:string list),(l2:string list)):string list=
 ;;
 
 
-
-
 let return_biggest_label(env:environment):int=
-  let rec aux l result = match l with
-    | [] -> result.label
-    | t :: q -> if (List.length t.varlist) >= (List.length result.varlist)
-      then aux q t
-      else aux q result
-  in let initial:element={var="";label=0;nbJoin=0;varlist=[]} in
-     aux env.suite initial
+ let initial:element={var="";label=0;nbJoin=0;varlist=[]} in
+ let best =
+   List.fold_left (fun ac el -> if List.length el.varlist >= List.length ac.varlist then el else ac)  initial env.suite
+ in best.label
 ;;
 
 
@@ -95,7 +90,7 @@ let contained l1 l2 = (* We assuming that there are no duplicate values in l1 an
 (* Return the element that having a varlist containing dist and having the biggest label *)
 let return_good((dist:string list) , (env:environment) ):element =
   let initial:element={var="";label=0;nbJoin=0;varlist=[]} in
-  List.fold_left (fun ac el -> if el.label > ac.label && contained dist el.varlist then el else ac)  initial env.suite
+  List.fold_left (fun ac el -> if el.label >= ac.label && contained dist el.varlist then el else ac)  initial env.suite
 
 ;;
 
@@ -109,4 +104,17 @@ let select ( (dist:atom list) , (env:environment) ) =
     let string_dist = List.map atom2string dist in
     let good_element:element = return_good(string_dist,env) in
     "Q"^string_of_int(good_element.label)^".map{case "^(printlist good_element.varlist)^"=>"^(printlist(string_dist))^"}"
+;;
+
+(* Lexing  *)
+
+
+let read_lines name : string list =
+  let ic = open_in name in
+  let try_read () =
+    try Some (input_line ic) with End_of_file -> None in
+  let rec loop acc = match try_read () with
+    | Some s -> loop (s :: acc)
+    | None -> close_in ic; List.rev acc in
+  loop []
 ;;
