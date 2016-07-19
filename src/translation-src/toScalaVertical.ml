@@ -91,6 +91,29 @@ let listPaths(tp:triple list):string =
 Operations on Queries
 ********************)
 
+
+let translateTP t =
+
+   let rec join d v = function
+     | [] -> d
+     | [a] -> a
+     | a::q -> a^v^(join d v q)
+   in
+
+   let filter name = function
+     | Variable(v) -> ""
+     | Exact(v) -> name^".equals(\""^v^"\")"
+   in
+
+   let map name = function
+     | Variable(v) -> ""
+     | Exact(v) -> name
+   in
+
+  ".filter{case (s,p,d)=>"^(join "true" "&&" [filter "s" t.subj ; filter "p" t.pred ; filter "d" t.obj])^"}\n"^
+  ".map{case (s,p,d)=>("^(join "" "," [map "s" t.subj ; map "p" t.pred ; map "d" t.obj ]  )^"}"
+;;
+
 let corefilter((t:triple) , (position1:int) , (position2:int)) :string =
   (*We have to know that 's' and 'd' are integers whereas 'p' is a string.*)
   match position1,position2 with
@@ -145,18 +168,16 @@ let translate1 ( (triple:triple) , (e:environment) ) =
 let translate2 ( (triple:triple) , (e:environment) ) =
   let x,positionx=extractFirstVar(triple) in
   let y,positiony=extractSecondVar(triple) in
+  let filter:string = corefilter(triple,positionx,positiony) in
+  let mapped:string = coremap(triple,positionx,positiony) in
   match isInEnv(x,e),isInEnv(y,e) with
   | None,None -> let newx:element = {var=x;label=e.current;nbJoin=0;varlist=[x;y]} in
 		 let newy:element = {var=y;label=e.current;nbJoin=0;varlist=[x;y]} in
-		 let filter:string = corefilter(triple,positionx,positiony) in
-		 let mapped:string = coremap(triple,positionx,positiony) in
 		 let head:string = "val Q"^(string_of_int e.current)^filter^mapped in
 		 head^";\n",upEnv newy (upEnv newx e)
   | Some(t),None -> let newvarlist:string list = union([x;y],t.varlist) in
 		    let newx:element = {var=x;label=e.current;nbJoin=t.nbJoin+1;varlist=newvarlist} in
 		    let newy:element = {var=y;label=e.current;nbJoin=0;varlist=newvarlist} in
-		    let filter:string = corefilter(triple,positionx,positiony) in
-		    let mapped:string = coremap(triple,positionx,positiony) in
 		    let key1:string = printlist [x;y] in
 		    let key2:string = printlist t.varlist in
 		    let adjustkey2:string = printlist (adjust t.varlist [x;y]) in
@@ -167,8 +188,6 @@ let translate2 ( (triple:triple) , (e:environment) ) =
   | None,Some(t) -> let newvarlist:string list = union([x;y],t.varlist) in
 		    let newx:element = {var=x;label=e.current;nbJoin=0;varlist=newvarlist} in
 		    let newy:element = {var=y;label=e.current;nbJoin=t.nbJoin+1;varlist=newvarlist} in
-		    let filter:string = corefilter(triple,positionx,positiony) in
-		    let mapped:string = coremap(triple,positionx,positiony) in
 		    let key1:string = printlist [x;y] in
 		    let key2:string = printlist t.varlist in
 		    let adjustkey2:string = printlist (adjust t.varlist [x;y]) in
