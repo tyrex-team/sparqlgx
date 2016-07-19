@@ -4,6 +4,44 @@ open Struct;;
 let modifiers () = ".collect;\n";;
 
 
+(***************************
+ * Operations on Environment
+ * - have data about a variable isInEnv
+ * - nb of join => collateral of isInEnv
+ * - returns the select command selectFromEnv
+ * - updates with a variable upEnv
+****************************)
+
+(* Returns the element of the variable if it exists *)
+let isInEnv ( (x:string) , (env:environment) ) =
+  let rec aux(s,e) = match e with
+    | [] -> None
+    | t :: q -> if String.compare s t.var = 0
+      then Some(t)
+      else aux(s,q)
+  in aux(x,env.suite)
+;;
+
+(* This funciton does 2 things:
+   1. Add x at the correct place (where the former x was) in the list in env
+   2. Change the .label and the .varlist of the other variables that are impacted by 'x'*)
+let upEnv (x:element) (env:environment) =
+  let rec aux(x,e,result) = match e with
+    | [] -> x :: result
+    | t :: q -> if String.compare x.var t.var = 0
+      then aux(x,q,x :: result) (* We add the new version of 'x'. *)
+      else begin 
+	if List.mem t.var x.varlist = true
+	then let newt = {var=t.var;label=x.label;nbJoin=t.nbJoin;varlist=x.varlist} in
+	     aux(x,q,newt :: result) (* We change the version of 't'. *)
+	else aux(x,q,t :: result) (* We just keep scanning. *)
+      end
+  in 
+  let newsuite = aux(x,env.suite,[]) in
+  {current=env.current;suite=newsuite}
+;;
+
+
 
 (* The idea of 'adjust' is to provide a modified 'l1' where duplicates with 'l2' are a bit changed
    e.g. l1=[a;b;c] l2=[a;x;y] adjust(l1,l2)=[a1;b;c] *)

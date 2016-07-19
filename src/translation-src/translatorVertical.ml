@@ -2,6 +2,7 @@ open Struct;;    (* Types used. *)
 open Parser;;    (* SPARQL parser. *)
 open Cost;;      (* Optimisation on triples patterns. *)
 open ToScalaVertical;;   (* To return the Scala commands. *)
+open ToScalaUtils;;   (* To return the Scala commands. *)
 
 let read_lines name : string list =
   let ic = open_in name in
