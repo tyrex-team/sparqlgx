@@ -42,7 +42,7 @@ onefile: $(MLI) $(CMI) $(CMX)
 
 
 clean:
-	rm -f *.cm[iox] *.o *.annot *~ compil $(GENERATED)
+	rm -f *.cm[iox] *.o *.annot *~ vertical onefile $(GENERATED)
 	rm -f Parser.output Parser.automaton .depend a.out
 
 .depend depend:$(GENERATED)
