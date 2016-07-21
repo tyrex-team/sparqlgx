@@ -5,7 +5,7 @@
   exception Lexing_error of string
 
   let kwd_tbl = ["SELECT", SELECT; "WHERE", WHERE; "PREFIX", PREFIX; "UNION", UNION; "OPTIONAL",OPTIONAL]
-  let id_or_kwd s = try List.assoc s kwd_tbl with _ -> IDENT s
+  let id_or_kwd s = try List.assoc (String.uppercase s) kwd_tbl with _ -> IDENT s
   let line = ref 1
   let newline () = incr line
 }
