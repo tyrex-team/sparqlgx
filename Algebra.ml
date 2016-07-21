@@ -50,7 +50,7 @@ let rec print_algebra term =
                                                                                                                              
       | Filter(c,v,a) ->
          let code,cols = foo a in
-         "val "^res^"="^code^".filter{case ("^(join cols)^") => "^c^".equals(\""^v^"\")}",cols
+         "val "^res^"="^code^".filter{case ("^(join cols)^") => "^(escape_var c)^".equals("^(escape_var v)^")}",cols
                                                                                             
       | Keep (keepcols,a) ->
          let code,cols = foo a in
@@ -72,11 +72,10 @@ let rec print_algebra term =
            "val "^res^"="^code_a^".cartesian("^code_b^")",cols_union
          else
            "val "^res^"="^code_a^".keyBy{case ("^(join cols_a)^") => ("^(join cols_join)^")}."^join_type^"("^code_b^".keyBy{case ("^(join cols_b)^")=>("^(join cols_join)^")}).values.map{case("^(join cols_all)^")=>("^(join cols_union)^")}",cols_union
-                                                                                                                                                                                                                                                  
+                                                   
       | Rename(o,n,c) ->
          let code_c,cols_c = foo c in
          "val "^res^"="^code_c,(List.map (fun x -> if x=o then n else x) cols_c)
-
 
       | Union (a,b) ->
          let code_a,cols_a = foo a
@@ -99,18 +98,23 @@ let translate vertical stmt =
 
   let rec list_var = function
     | Exact(_)::q -> list_var q
-    | Variable(s)::q -> s::list_var q
+    | Variable(s)::q ->
+       let l = list_var q in
+       if List.mem s l then l else s::l
     | [] -> []
   in
   
-  let translate_el base = function
-    | Exact(v),name -> Filter(name,v,base)
-    | Variable(v),name -> Rename(name,v,base)
+  let translate_el (base,cols) = function
+    | Exact(v),name -> (Filter(name,"\""^v^"\"",base),cols)
+    | Variable(v),name ->
+       if List.mem v cols
+       then Filter(name,v,base),cols
+       else (Rename(name,v,base),v::cols)
   in
 
   let translate_tp = function
-    | s,Exact(p),o when vertical -> Keep(list_var [s;o],List.fold_left translate_el (Readfile2(p)) [s,"s";o,"o"])
-    | s,p,o -> Keep(list_var [s;p;o],List.fold_left translate_el (Readfile3("all")) [s,"s";p,"p";o,"o"])
+    | s,Exact(p),o when vertical -> Keep(list_var [s;o],fst (List.fold_left translate_el (Readfile2(p),[]) [s,"s";o,"o"]))
+    | s,p,o -> Keep(list_var [s;p;o],fst (List.fold_left translate_el (Readfile3("all"),[]) [s,"s";p,"p";o,"o"]))
   in
 
   let rec translate_list_tp = function
