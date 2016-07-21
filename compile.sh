@@ -23,11 +23,9 @@ cp sgrep/sgrep ../../bin/sgrep
 cd ../../
 echo "=== Translation Source Compilation ==="
 cd src/translation-src/
-bash compile.sh
-chmod +x vertical_translator
-chmod +x one_file_translator
-cp vertical_translator ../../bin/vertical_translator
-cp one_file_translator ../../bin/one_file_translator
+make
+chmod +x sparql2scala
+cp sparql2scala ../../bin/
 cd ../../
 echo ""
 
