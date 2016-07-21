@@ -22,7 +22,10 @@ let rec print_algebra term =
   
   let add l = lines := (l^"\n")::(!lines) in 
 
-  let () = add "def readpred (s:String) = if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(s))) {sc.textFile(s).map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1))}} else {sc.emptyRDD[(String,String)]};" in
+  let () = add "def readpred (s:String) = " ;
+           add "    if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(\"DATAHDFSPATH\"+s)))" ;
+           add "         {sc.textFile(\"DATAHDFSPATH\"+s).map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1))}}" ;
+           add "         else {sc.emptyRDD[(String,String)]};" in
  
 let escape_var a =
     if a.[0] = '?' || a.[0] = '$'
@@ -41,6 +44,19 @@ let escape_var a =
     List.map (fun t -> if List.mem t l2 then t^"bis" else t) l1
   in
 
+  let numero(s:string):string=
+    let explode (s:string):char list =
+      let rec exp (i:int) (l:char list):char list = if i < 0 then l else exp (i - 1) (s.[i] :: l) in
+      exp (String.length s - 1) []
+    in
+    let rec sum (l:char list) (result:int):int = match l with
+      | [] -> result
+      | t :: q -> sum q (Char.code(t) + result)
+    in
+    let listchar = explode s in
+    let number = sum listchar 0 in
+    string_of_int number
+  in
   
   let rec foo l = 
     let res = "v"^gid () in 
@@ -48,7 +64,7 @@ let escape_var a =
       | Readfile3(f) ->
          "val "^res^"=sc.textFile(\""^f^"\").map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1),field(2))};",["s";"p";"o"]                                                                                                                                      
       | Readfile2(f) ->
-         "val "^res^"=readpred(\""^f^"\") ",["s";"o"]
+         "val "^res^"=readpred(\""^(numero f)^"\") ",["s";"o"]
                                                                                                                              
       | Filter(c,v,a) ->
          let code,cols = foo a in
