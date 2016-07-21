@@ -20,12 +20,13 @@ let rec print_algebra term =
   
   let lines = ref [] in
   
-  let add l = lines := (l^"\n")::(!lines) in 
+  let add l = lines := ("    "^l^"\n")::(!lines) in 
 
   let () = add "def readpred (s:String) = " ;
-           add "    if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(\"DATAHDFSPATH\"+s)))" ;
-           add "         {sc.textFile(\"DATAHDFSPATH\"+s).map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1))}}" ;
-           add "         else {sc.emptyRDD[(String,String)]};" in
+           add "  if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(\"DATAHDFSPATH\"+s)))" ;
+           add "    {sc.textFile(\"DATAHDFSPATH\"+s).map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1))}}" ;
+           add "  else" ;
+           add "    {sc.emptyRDD[(String,String)]};" in
  
 let escape_var a =
     if a.[0] = '?' || a.[0] = '$'
@@ -64,7 +65,7 @@ let escape_var a =
       | Readfile3(f) ->
          "val "^res^"=sc.textFile(\""^f^"\").map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1),field(2))};",["s";"p";"o"]                                                                                                                                      
       | Readfile2(f) ->
-         "val "^res^"=readpred(\""^(numero f)^"\") ",["s";"o"]
+         "val "^res^"=readpred(\""^(numero f)^".pred\") ",["s";"o"]
                                                                                                                              
       | Filter(c,v,a) ->
          let code,cols = foo a in
