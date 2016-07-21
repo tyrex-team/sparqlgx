@@ -22,9 +22,11 @@ let rec print_algebra term =
   
   let add l = lines := (l^"\n")::(!lines) in 
 
-  let escape_var a =
+  let () = add "def readpred (s:String) = if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(s))) {sc.textFile(s).map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1))}} else {sc.emptyRDD[(String,String)]};" in
+ 
+let escape_var a =
     if a.[0] = '?' || a.[0] = '$'
-    then let b = Bytes.copy a in (Bytes.set b 0 'V' ; b)
+    then let b = Bytes.copy a in (Bytes.set b 0 'v' ; b)
     else a
   in
 
@@ -46,7 +48,7 @@ let rec print_algebra term =
       | Readfile3(f) ->
          "val "^res^"=sc.textFile(\""^f^"\").map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1),field(2))};",["s";"p";"o"]                                                                                                                                      
       | Readfile2(f) ->
-         "val "^res^"=sc.textFile(\""^f^"\").map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1))};",["s";"o"]
+         "val "^res^"=readpred(\""^f^"\") ",["s";"o"]
                                                                                                                              
       | Filter(c,v,a) ->
          let code,cols = foo a in
@@ -62,16 +64,17 @@ let rec print_algebra term =
          and code_b,cols_b = foo b in
          let cols_join = List.filter (fun x -> List.mem x cols_b) cols_a in
          let cols_union = cols_a@(List.filter (fun x -> not (List.mem x cols_join)) cols_b) in
-         let cols_all = cols_a@(renamedup cols_b cols_a) in
+         let cols_b_bis = renamedup cols_b cols_a in
          let join_type = match l with
            | LeftJoin(_) -> "leftjoin"
            | _ -> "join"
          in
-         if cols_join = []
-         then
-           "val "^res^"="^code_a^".cartesian("^code_b^")",cols_union
-         else
-           "val "^res^"="^code_a^".keyBy{case ("^(join cols_a)^") => ("^(join cols_join)^")}."^join_type^"("^code_b^".keyBy{case ("^(join cols_b)^")=>("^(join cols_join)^")}).values.map{case("^(join cols_all)^")=>("^(join cols_union)^")}",cols_union
+         (if cols_join = []
+          then
+            "val "^res^"="^code_a^".cartesian("^code_b^")"
+          else
+            "val "^res^"="^code_a^".keyBy{case ("^(join cols_a)^") => ("^(join cols_join)^")}."^join_type^"("^code_b^".keyBy{case ("^(join cols_b)^")=>("^(join cols_join)^")}).values")
+           ^".map{case( ("^(join cols_a)^"),("^(join cols_b_bis)^"))=>("^(join cols_union)^")}",cols_union
                                                    
       | Rename(o,n,c) ->
          let code_c,cols_c = foo c in
@@ -88,8 +91,8 @@ let rec print_algebra term =
     add code ; res,cols
   in
   let code,cols = foo term in
-  add (code^".collect") ;
-  add ("// order is "^(join cols)) ;
+  add ("val Qfinal="^code^".collect") ;
+  (* add ("//// order is "^(join cols)) ; *)
   List.iter print_string (List.rev (!lines)) 
 ;;
   
