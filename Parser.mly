@@ -31,13 +31,17 @@ prefix:
 | PREFIX s=IDENT LEFTPROG v=IDENT RIGHTPROG
     {add_prefix (s,v)}
 ;				     
-  
+
+vars:
+| l = separated_list(COMMA, VAR)
+ {l} 
+| LEFTPAR l = vars RIGHTPAR
+ {l}
+| JOKER
+ {["*"]}
+ 
 selectclause:
-| SELECT l = separated_list(COMMA, VAR) WHERE c = toplevel
-    { (l,c) }
-| SELECT JOKER WHERE c = toplevel
-    { (["*"],c) }
-| SELECT LEFTPAR l = separated_list(COMMA, VAR) RIGHTPAR WHERE c = toplevel
+| SELECT l=vars WHERE c = toplevel
     { (l,c) }
 ;
   
@@ -60,7 +64,7 @@ toplevel:
 ;
 
 union:
-| a=opt UNION b=toplevel
+| a=opt_tp UNION b=toplevel
   { a::b } 
 | LEFTBRACKET c=union RIGHTBRACKET
   { c }
