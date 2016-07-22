@@ -23,7 +23,7 @@ Requirements
 
 - [Apache Hadoop](http://hadoop.apache.org) (+HDFS) version __2.6.0-cdh5.7.0__
 - [Apache Spark](http://spark.apache.org/) version __1.6.0__
-- [OCaml](http://ocaml.org/) version ≥ __3.0__
+- [OCaml](http://ocaml.org/) version ≥ __4.0__
 - [Menhir] (http://gallium.inria.fr/~fpottier/menhir//)
 
 
