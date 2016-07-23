@@ -1,5 +1,6 @@
 open Sparql ;;
-
+open Reorder ;;
+  
 type algebra =
   | Readfile3 of string
   | Readfile2 of string
@@ -137,10 +138,13 @@ let translate vertical stmt =
     | s,p,o -> Keep(list_var [s;p;o],fst (List.fold_left translate_el (Readfile3("all"),[]) [s,"s";p,"p";o,"o"]))
   in
 
-  let rec translate_list_tp = function
-    | [] -> failwith "Empty list of TP"
-    | [a] -> translate_tp a
-    | a::q -> Join(translate_tp a,translate_list_tp q)
+  let translate_list_tp l =
+    let rec foo = function
+      | [] -> failwith "Empty list of TP"
+      | [a] -> translate_tp a
+      | a::q -> Join(translate_tp a,foo q)
+    in
+    foo (Reorder.reorder l)
   in
 
   let translate_opt  = function
