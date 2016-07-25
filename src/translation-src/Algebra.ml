@@ -116,14 +116,6 @@ let rec print_algebra term =
   
 
 let translate vertical stmt =
-
-  let rec list_var = function
-    | Exact(_)::q -> list_var q
-    | Variable(s)::q ->
-       let l = list_var q in
-       if List.mem s l then l else s::l
-    | [] -> []
-  in
   
   let translate_el (base,cols) = function
     | Exact(v),name -> (Filter(name,"\""^v^"\"",base),cols)

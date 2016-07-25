@@ -25,6 +25,29 @@ let load filename =
   
 let reorder l =
 
+  
+
+  
+  let no_cartesian  = 
+    let rec no_cartesian seen_cols = function
+      | [] -> []
+      | x::t ->
+         let rec find_first = function
+           | [] -> raise Not_found
+           | (s,p,o)::q ->
+              if List.exists (fun x -> List.mem x seen_cols) (list_var [s;p;o])
+              then (s,p,o),q
+              else
+                let fi,tl = find_first q in
+                fi,(s,p,o)::tl
+         in
+         let (s,p,o),ntl = try  find_first (x::t) with Not_found -> x,t in
+         (s,p,o)::(no_cartesian ((list_var [s;p;o])@seen_cols) ntl)
+    in
+    no_cartesian []
+  in
+             
+  
   let rec nb_var (s,p,o) =
     List.fold_left (fun ac el -> match el with Variable _ -> 1 +ac | _ -> ac) 0 [s;p;o]
   in
@@ -60,5 +83,5 @@ let reorder l =
   in
   
   let grade,tps = List.split (sort (List.map grade l)) in
-  tps
+  no_cartesian tps
 ;;
