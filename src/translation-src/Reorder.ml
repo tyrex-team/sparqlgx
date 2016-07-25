@@ -1,8 +1,27 @@
 open Sparql ;;
-
+open Scanf ;;
+  
 let stats = Hashtbl.create 17
 
-let () = Hashtbl.add stats ("s","*") 1 ; Hashtbl.add stats ("p","*") 1 ; Hashtbl.add stats ("o","*") 1 
+(* let () = Hashtbl.add stats ("s","*") 1 ; Hashtbl.add stats ("p","*") 1 ; Hashtbl.add stats ("o","*") 1 *)
+
+let load filename =
+  (try
+    let chan = Scanning.from_file filename in
+    
+    let rec foo name nb =
+      for i = 0 to nb-1 do
+        Scanf.bscanf chan "%s %d\n" (fun i j -> Hashtbl.add stats (name,i) j) ;
+      done
+    in
+    try
+      Scanf.bscanf chan "%d %d %d\n" (fun i j k -> foo "s" i ; foo "p" j ; foo "o" k) ;
+    with | End_of_file -> Scanning.close_in chan
+  with | Sys_error s -> failwith ("Stat file problem, "^s)) ;
+
+(* Hashtbl.iter (fun (x,y) z -> print_string ("("^x^","^y^") "^(string_of_int z)^"\n")) stats *)
+
+;;
   
 let reorder l =
 
@@ -13,9 +32,10 @@ let reorder l =
   let sel name value =
     try 
       Hashtbl.find stats (name,value)
-    with
-      Not_found ->
-      Hashtbl.find stats (name,"*")
+    with Not_found ->
+      try 
+        Hashtbl.find stats (name,"*")
+      with Not_found -> -1
   in
   
   let grade (s,p,o) =

@@ -1,6 +1,7 @@
 open Lexer ;;
 open Parser ;;
 open Algebra ;;
+open Reorder ;;
 
 let file = ref "" 
 let vertical = ref true   
@@ -13,6 +14,9 @@ let _ =
   file := Sys.argv.(1) ;
   for i = 2 to Array.length Sys.argv -1 do
     if Sys.argv.(i) = "onefile" then vertical:=false ;
+    if Sys.argv.(i) = "-stat"
+    then if Array.length Sys.argv > i+1
+         then Reorder.load Sys.argv.(i+1)
   done ;
   try
     let c = open_in (!file) in
