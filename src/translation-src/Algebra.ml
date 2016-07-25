@@ -1,22 +1,21 @@
 open Sparql ;;
 open Reorder ;;
-  
+
 type algebra =
   | Readfile3 of string
   | Readfile2 of string
-  | Filter of string*string*algebra
-  | Keep of (string list)*algebra
-  | Join of algebra*algebra
-  | Union of algebra*algebra
-  | LeftJoin of algebra*algebra
-  | Rename of string*string*algebra
-;;
-  
+  | Filter of string * string * algebra
+  | Keep of string list * algebra
+  | Join of algebra * algebra
+  | Union of algebra * algebra
+  | LeftJoin of algebra * algebra
+  | Rename of string * string * algebra
+
 let rec print_algebra term = 
   
   let gid = 
-     let id = ref 0 in
-     fun () -> incr id ; string_of_int (!id) 
+    let id = ref 0 in
+    fun () -> incr id ; string_of_int (!id) 
   in
   
   let lines = ref [] in
@@ -28,11 +27,14 @@ let rec print_algebra term =
            add "    {sc.textFile(\"DATAHDFSPATH\"+s).map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1))}}" ;
            add "  else" ;
            add "    {sc.emptyRDD[(String,String)]};" in
- 
-let escape_var a =
-    if a.[0] = '?' || a.[0] = '$'
+
+  let escape_var a =
+    if a.[0] = '?'
     then let b = Bytes.copy a in (Bytes.set b 0 'v' ; b)
-    else a
+    else
+      if a.[0] = '$'
+      then let b = Bytes.copy a in (Bytes.set b 0 'd' ; b)
+      else a
   in
 
   let rec join = function
@@ -42,24 +44,22 @@ let escape_var a =
   in
 
   let renamedup l1 l2 =
-    (* Obviously, a problem can occured if a variable has been named ?xbis also... *)
-    List.map (fun t -> if List.mem t l2 then t^"bis" else t) l1
+    (* bis_varname is not a possible variable name *)
+    List.map (fun t -> if List.mem t l2 then "bis_"^t else t) l1
   in
 
+  (* Numero hashes predicate names; in Vertical partionning the
+  (subject,object) associated with pred are stored in (numero
+  pred)^".pred "*)
   let numero(s:string):string=
-    let explode (s:string):char list =
-      let rec exp (i:int) (l:char list):char list = if i < 0 then l else exp (i - 1) (s.[i] :: l) in
-      exp (String.length s - 1) []
-    in
-    let rec sum (l:char list) (result:int):int = match l with
-      | [] -> result
-      | t :: q -> sum q (Char.code(t) + result)
-    in
-    let listchar = explode s in
-    let number = sum listchar 0 in
-    string_of_int number
+    let sum = ref 0 in
+    String.iter (fun c -> sum:=Char.code(c)+ (!sum)) s ;
+    string_of_int (!sum)
   in
   
+  (*foo term returns (id,cols) where "V"id is the variable associated
+  with term and cols is the list of columns of term (in the order they
+  appear in the bdd *)
   let rec foo l = 
     let res = "v"^gid () in 
     let code,cols = match l with 
@@ -67,17 +67,17 @@ let escape_var a =
          "val "^res^"=sc.textFile(\""^f^"\").map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1),field(2))};",["s";"p";"o"]                                                                                                                                      
       | Readfile2(f) ->
          "val "^res^"=readpred(\""^(numero f)^".pred\") ",["s";"o"]
-                                                                                                                             
+                                                            
       | Filter(c,v,a) ->
          let code,cols = foo a in
          "val "^res^"="^code^".filter{case ("^(join cols)^") => "^(escape_var c)^".equals("^(escape_var v)^")}",cols
-                                                                                            
+                                                                                                                  
       | Keep (keepcols,a) ->
          let code,cols = foo a in
          "val "^res^"="^code^".map{case ("^(join cols)^") => ("^(join keepcols)^")}",keepcols
-                                                                                      
+                                                                                       
       | Join(a,b)
-      | LeftJoin(a,b) ->
+        | LeftJoin(a,b) ->
          let code_a,cols_a = foo a
          and code_b,cols_b = foo b in
          let cols_join = List.filter (fun x -> List.mem x cols_b) cols_a in
@@ -92,8 +92,8 @@ let escape_var a =
             "val "^res^"="^code_a^".cartesian("^code_b^")"
           else
             "val "^res^"="^code_a^".keyBy{case ("^(join cols_a)^") => ("^(join cols_join)^")}."^join_type^"("^code_b^".keyBy{case ("^(join cols_b)^")=>("^(join cols_join)^")}).values")
-           ^".map{case( ("^(join cols_a)^"),("^(join cols_b_bis)^"))=>("^(join cols_union)^")}",cols_union
-                                                   
+         ^".map{case( ("^(join cols_a)^"),("^(join cols_b_bis)^"))=>("^(join cols_union)^")}",cols_union
+                                                                                                
       | Rename(o,n,c) ->
          let code_c,cols_c = foo c in
          "val "^res^"="^code_c,(List.map (fun x -> if x=o then n else x) cols_c)
