@@ -15,14 +15,47 @@ object GenerateStat {
     val conf = new SparkConf().setAppName("Simple Application");
     val sc = new SparkContext(conf);
 
-    sc.textFile(args(0))
-      .map{line=>val t=line.split(" "); (t(0)+" subj@#@"+t(1)+" pred@#@"+t(2)+" obj")}
-      .flatMap(line=>line.split("@#@"))
-      .map(word => (word, 1))
-      .reduceByKey(_ + _)
-      .sortByKey()
-      .map{case (a,b)=>a+" "+b}
-      .saveAsTextFile("sparqlgxstatistics.txt");
+    val file = args(0)
+    val numberMax = args(1).toInt
+    val T = sc.textFile(file)
+              .map{line=>val t=line.split(" ",3); ("subj "+t(0)+"@#@pred "+t(1)+"@#@obj "+t(2).substring(0,t(2).lastIndexOf(" ")))}
+	      .flatMap(line=>line.split("@#@"))
+	      .map(word => (word, 1))
+	      .reduceByKey(_+_)
+	      .cache
+
+    val Ts = T.filter{case (w,nb)=>w.split(" ")(0).equals("subj")}
+              .map{case (w,nb)=>(w.split(" ")(1),nb)}
+	      .keyBy{case (a,b)=>b}
+	      .sortByKey(false)
+	      .values
+	      .take(numberMax-1)
+
+    val Tp = T.filter{case (w,nb)=>w.split(" ")(0).equals("pred")}
+              .map{case (w,nb)=>(w.split(" ")(1),nb)}
+	      .keyBy{case (a,b)=>b}
+	      .sortByKey(false)
+	      .values
+	      .take(numberMax-1)
+
+    val To = T.filter{case (w,nb)=>w.split(" ")(0).equals("obj")}
+              .map{case (w,nb)=>(w.split(" ")(1),nb)}
+	      .keyBy{case (a,b)=>b}
+	      .sortByKey(false)
+	      .values
+              .take(numberMax-1)
+
+    println((Ts.length+1) +" "+ (Tp.length+1) +" "+ (To.length+1))
+    ((Ts:+("*",Ts(Ts.length-1)._2)) ++ (Tp:+("*",Tp(Tp.length-1)._2)) ++ (To:+("*",To(To.length-1)._2))).foreach{case (w,n)=>println(w+" "+n)}
+
+    //sc.textFile(args(0))
+    //  .map{line=>val t=line.split(" "); (t(0)+" subj@#@"+t(1)+" pred@#@"+t(2)+" obj")}
+    //  .flatMap(line=>line.split("@#@"))
+    //  .map(word => (word, 1))
+    //  .reduceByKey(_ + _)
+    //  .sortByKey()
+    //  .map{case (a,b)=>a+" "+b}
+    //  .saveAsTextFile("sparqlgxstatistics.txt");
 
   }
 }
