@@ -24,7 +24,7 @@ let rec print_algebra term =
 
   let () = add "def readpred (s:String) = " ;
            add "  if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(\"DATAHDFSPATH\"+s)))" ;
-           add "    {sc.textFile(\"DATAHDFSPATH\"+s).map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1))}}" ;
+           add "    {sc.textFile(\"DATAHDFSPATH\"+s).map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}}" ;
            add "  else" ;
            add "    {sc.emptyRDD[(String,String)]};" in
 
@@ -64,7 +64,7 @@ let rec print_algebra term =
     let res = "v"^gid () in 
     let code,cols = match l with 
       | Readfile3(f) ->
-         "val "^res^"=sc.textFile(\""^f^"\").map{line => val field:Array[String]=line.split(\" \"); (field(0),field(1),field(2))};",["s";"p";"o"]                                                                                                                                      
+         "val "^res^"=sc.textFile(\""^f^"\").map{line => val field:Array[String]=line.split(\" \",3); (field(0),field(1),field(2))};",["s";"p";"o"]
       | Readfile2(f) ->
          "val "^res^"=readpred(\""^(numero f)^".pred\") ",["s";"o"]
                                                             

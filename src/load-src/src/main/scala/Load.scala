@@ -8,7 +8,8 @@ object Load {
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("Simple Application");
     val sc = new SparkContext(conf);
-    val T = sc.textFile(args(0)).map{line => val field:Array[String]=line.split(" "); (field(0),field(1),field(2))}.cache;
+    val T = sc.textFile(args(0)).map{line => val field:Array[String]=line.split(" ",3); (field(0),field(1),field(2).substring(0,field(2).lastIndexOf(" ")))}.cache;
+    //val T = sc.textFile(args(0)).map{line => val field:Array[String]=line.split(" "); (field(0),field(1),field(2))}.cache;
 
     val confhadoop = sc.hadoopConfiguration
     val fshadoop = org.apache.hadoop.fs.FileSystem.get(confhadoop)
