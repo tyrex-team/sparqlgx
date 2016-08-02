@@ -45,7 +45,7 @@ let rec print_algebra term =
 
   let renamedup l1 l2 =
     (* bis_varname is not a possible variable name *)
-    List.map (fun t -> if List.mem t l2 then "bis_"^t else t) l1
+    List.map (fun t -> if List.mem t l2 then "bis_"^(escape_var t) else t) l1
   in
 
   (* Numero hashes predicate names; in Vertical partionning the
