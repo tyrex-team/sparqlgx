@@ -18,7 +18,7 @@ localdbpath=$(sed "s|~|$HOME|g" <<< "$SPARQLGX_LOCAL/$dbName")
 spark-submit --driver-memory $SPARK_DRIVER_MEM \
     --executor-memory $SPARK_EXECUT_MEM \
     --class=GenerateStat \
-    ${PATH_CMD}/sparqlgx-stat-0.1.jar $tripleFile $SPARQLGX_STAT_SIZE \
+    ${PATH_CMD}/sparqlgx-stat.jar $tripleFile $SPARQLGX_STAT_SIZE \
     > $localdbpath/stat.txt ;
 
 exit 0

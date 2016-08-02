@@ -10,7 +10,7 @@ echo "====== SPARQLGX compilation chain ======"
 echo "=== Load Source Compilation ==="
 cd src/load-src/
 sbt package
-cp target/scala*/sparqlgx* ../../bin/sparqlgx-load-0.1.jar
+cp target/scala*/sparqlgx* ../../bin/sparqlgx-load.jar
 cd ../../
 echo "=== Stat Source Compilation ==="
 cd src/stat-src/
@@ -18,14 +18,14 @@ sbt package
 cd sgrep/
 make
 cd ../
-cp target/scala*/sparqlgx* ../../bin/sparqlgx-stat-0.1.jar
+cp target/scala*/sparqlgx* ../../bin/sparqlgx-stat.jar
 cp sgrep/sgrep ../../bin/sgrep
 cd ../../
 echo "=== Translation Source Compilation ==="
 cd src/translation-src/
 make
 chmod +x sparql2scala
-cp sparql2scala ../../bin/
+cp sparql2scala ../../bin/sparqlgx-translator
 cd ../../
 echo ""
 

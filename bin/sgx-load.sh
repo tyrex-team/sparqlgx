@@ -22,6 +22,6 @@ hadoop fs -mkdir -p $hdfsdbpath ;
 spark-submit --driver-memory $SPARK_DRIVER_MEM \
     --executor-memory $SPARK_EXECUT_MEM \
     --class=Load \
-    ${PATH_CMD}/sparqlgx-load-0.1.jar $tripleFile $hdfsdbpath ;
+    ${PATH_CMD}/sparqlgx-load.jar $tripleFile $hdfsdbpath ;
 
 exit 0
