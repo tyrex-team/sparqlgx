@@ -64,7 +64,7 @@ let rec print_algebra term =
     let res = "v"^gid () in 
     let code,cols = match l with 
       | Readfile3(f) ->
-         "val "^res^"=sc.textFile(\""^f^"\").map{line => val field:Array[String]=line.split(\" \",3); (field(0),field(1),field(2))};",["s";"p";"o"]
+         "val "^res^"=sc.textFile(\""^f^"\").map{line => val field:Array[String]=line.split(\" \",3); (field(0),field(1),field(2).substring(0,field(2).lastIndexOf(\" \")))};",["s";"p";"o"]
       | Readfile2(f) ->
          "val "^res^"=readpred(\""^(numero f)^".pred\") ",["s";"o"]
                                                             
