@@ -10,7 +10,7 @@
   let newline () = incr line
 }
 
-let alphanum = ['a'-'z' 'A'-'Z' '0'-'9' '_' '/' '-']+
+let alphanum = ['a'-'z' 'A'-'Z' '0'-'9' '_' '/' '-' '#' '~']+
 let var = ['?' '$']['a'-'z' 'A'-'Z' '0'-'9' '_']*
 let space = ' ' | '\t'
 		    
