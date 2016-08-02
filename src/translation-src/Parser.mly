@@ -44,16 +44,23 @@ selectclause:
 | SELECT l=vars WHERE c = toplevel
     { (l,c) }
 ;
-  
-ident_or_var:
+
+ident:
 | s = IDENT
-   { Exact(s) }
-| LEFTPROG pref = IDENT COLON v = IDENT RIGHTPROG
-   { Exact("<"^(replace_prefix pref)^":"^(v)^">") }
+   {s}
+| s1 = ident POINT s2 = ident
+   {(s1)^"."^(s2)}
+| s1 = ident COLON s2 = ident
+   {(s1)^":"^(s2)}
+;
+
+ident_or_var:
 | s = VAR
    { Variable(s) }
-| LEFTPROG s = VAR RIGHTPROG
-   { Variable(s) }
+| pref = IDENT COLON v = IDENT
+   { Exact((replace_prefix pref)^":"^(v)) }
+| LEFTPROG s = ident RIGHTPROG
+   { Exact("<"^(s)^">") }
 ;  
 
 toplevel:
