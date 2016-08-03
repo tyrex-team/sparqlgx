@@ -29,6 +29,12 @@ cp sparql2scala ../../bin/sparqlgx-translator
 cd ../../
 echo ""
 
+echo "----------------------------------------"
+echo "Before using SPARQLGX, make sure that:"
+echo "  1. The conf file in conf/ is correct"
+echo "  2. alias bin/sparqlgx.sh"
+echo "----------------------------------------"
+
 stop_time=$(date +%s)
 echo "The compilation process took $(($stop_time-$start_time)) seconds."
 
