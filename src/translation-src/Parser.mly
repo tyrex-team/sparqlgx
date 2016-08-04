@@ -1,12 +1,12 @@
 %{
    open Sparql
    let prefixes = ref []
-   let add_prefix s = prefixes := s::(!prefixes) 
-   let replace_prefix s =
+   let add_prefix (k,s) = prefixes := (k,Bytes.sub s 1 (Bytes.length s-2)) ::(!prefixes) 
+   let replace_prefix s v =
        try 
-         List.assoc s (!prefixes)
+         "<"^List.assoc s (!prefixes)^v^">"
        with
-         Not_found -> s
+         Not_found -> s^":"^v
 %}
 
 %token <string> VAR
@@ -54,14 +54,14 @@ vars:
 
 ident:
 | LEFTPROG s=separated_list(COLON,IDENT) RIGHTPROG
-   {"<"^(List.fold_left (fun ac el -> match ac with  | "" ->el | ac -> el^","^ac ) "" s)^">"}
+   {"<"^(List.fold_left (fun ac el -> match ac with  | "" ->el | ac -> ac^":"^el ) "" s)^">"}
 ;
 
 ident_or_var:
 | s = VAR
    { Variable(s) }
 | pref = IDENT COLON v = IDENT
-   { Exact((replace_prefix pref)^":"^(v)) }
+   { Exact(replace_prefix pref v) }
 | LEFTPROG s = ident RIGHTPROG
    { Exact("<"^(s)^">") }
 ;  
