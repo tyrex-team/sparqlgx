@@ -21,10 +21,8 @@ let _ =
   try
     let c = open_in (!file) in
     let lb = Lexing.from_channel c in
-    let distinguished,term =  (Parser.query Lexer.next_token lb) in
-    match distinguished with
-    | ["*"] -> print_algebra (translate (!vertical) term)
-    | _ -> print_algebra (Keep(distinguished,translate (!vertical) term))
+    let (distinguished,term),modifiers =  (Parser.query Lexer.next_token lb) in
+    print_algebra (translate distinguished modifiers (!vertical) term)
   with
   | Lexer.Lexing_error s ->
      print_string ("lexical error: "^s);

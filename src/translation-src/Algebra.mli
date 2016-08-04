@@ -7,7 +7,9 @@ type algebra =
   | Union of algebra * algebra
   | LeftJoin of algebra * algebra
   | Rename of string * string * algebra
+  | Distinct of algebra
+  | Order of string list*bool*algebra
                                   
 val print_algebra : algebra -> unit
 
-val translate :  bool -> Sparql.unionoptbgp -> algebra
+val translate :  string list -> Sparql.modifier list -> bool -> Sparql.unionoptbgp -> algebra

@@ -10,7 +10,9 @@ type algebra =
   | Union of algebra * algebra
   | LeftJoin of algebra * algebra
   | Rename of string * string * algebra
-
+  | Distinct of algebra
+  | Order of string list*bool*algebra
+                                  
 let rec print_algebra term = 
   
   let gid = 
@@ -105,6 +107,13 @@ let rec print_algebra term =
          let new_cols_a = List.map (fun x -> if List.mem x cols_a then x else "\"\"") cols_union in
          let new_cols_b = List.map (fun x -> if List.mem x cols_b then x else "\"\"") cols_union in
          "val "^res^"= ("^code_a^".map{case ("^(join cols_a)^")=>("^(join new_cols_a)^")}).union("^code_b^".map{case("^(join cols_b)^") => ("^(join new_cols_b)^")})",cols_union
+      | Distinct(a) ->
+         let code_a,cols_a = foo a in
+         "val "^res^" ="^code_a^".distinct() ",cols_a
+      | Order(l,side,a) ->
+         let code_a,cols_a = foo a in
+         "val "^res^" ="^code_a^".KeyBy(("^join cols_a^")=>("^join l
+         ^")).sortByKey("^(if side then "true" else "false")^") ",cols_a
     in
     add code ; res,cols
   in
@@ -115,7 +124,7 @@ let rec print_algebra term =
 ;;
   
 
-let translate vertical stmt =
+let translate distinguished modifiers vertical stmt =
   
   let translate_el (base,cols) = function
     | Exact(v),name -> (Filter(name,"\""^v^"\"",base),cols)
@@ -148,8 +157,18 @@ let translate vertical stmt =
     | [] -> failwith "Empty query!"
     | [a] -> translate_opt a
     | a::q -> Union(translate_opt a,translate_toplevel q)
-  in                     
-  translate_toplevel stmt
+  in
+
+  let rec add_modifiers t = function
+    | [] -> t
+    | OrderBy(l,v)::q -> Order(l,v,add_modifiers t q)
+    | Distinct::q -> Distinct(add_modifiers t q)
+  in
+  
+  add_modifiers (match distinguished with
+   | ["*"] -> translate_toplevel stmt
+   | _ ->  Keep(distinguished,  translate_toplevel stmt))
+   modifiers 
   
   (* let _ = *)
 (*    print_algebra (Union(Join ( *)

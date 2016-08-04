@@ -4,13 +4,23 @@
 
   exception Lexing_error of string
 
-  let kwd_tbl = ["SELECT", SELECT; "WHERE", WHERE; "PREFIX", PREFIX; "UNION", UNION; "OPTIONAL",OPTIONAL]
+  let kwd_tbl = [
+      "SELECT", SELECT;
+      "WHERE", WHERE;
+      "PREFIX", PREFIX;
+      "UNION", UNION;
+      "OPTIONAL",OPTIONAL;
+      "ORDER",ORDER;
+      "BY",BY;
+      "ASC",ASC;
+      "DESC",DESC;
+      "DISTINCT",DISTINCT]
   let id_or_kwd s = try List.assoc (String.uppercase s) kwd_tbl with _ -> IDENT s
   let line = ref 1
   let newline () = incr line
 }
 
-let alphanum = ['a'-'z' 'A'-'Z' '0'-'9' '_' '/' '-' '#' '~']+
+let alphanum = ['a'-'z' 'A'-'Z' '0'-'9' '_' '/' '-' '#' '~']['a'-'z' 'A'-'Z' '0'-'9' '_' '/' '-' '#' '~' '.' ]*
 let var = ['?' '$']['a'-'z' 'A'-'Z' '0'-'9' '_']*
 let space = ' ' | '\t'
 		    

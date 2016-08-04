@@ -42,7 +42,7 @@ sparql2scala: $(MLI) $(CMI) $(CMX)
 
 clean:
 	rm -f *.cm[iox] *.o *.annot *~ sparql2scala $(GENERATED)
-	rm -f Parser.output Parser.automaton .depend a.out
+	rm -f Parser.output Parser.automaton Parser.conflicts .depend a.out
 
 .depend depend:$(GENERATED)
 	rm -f .depend

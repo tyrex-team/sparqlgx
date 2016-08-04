@@ -16,42 +16,45 @@
 %token LEFTPAR RIGHTPAR LEFTPROG RIGHTPROG LEFTBRACKET RIGHTBRACKET
 %token SELECT WHERE UNION OPTIONAL
 %token POINT COMMA COLON JOKER
-
+%token DISTINCT ORDER BY ASC DESC
 %start query
 
 %type <Sparql.query> query
 %%
 
+
 query:
-| pre = list(prefix) s=selectclause EOF
-    { s  }
+| pre = list(prefix) SELECT  dis=distinct? l=vars WHERE c = toplevel ord=orderby? EOF
+    { (l,c),(List.fold_left (fun ac el -> match el with | Some v ->v::ac | None -> ac ) [] [ord;dis])   }
 ;
 
+
+orderby:
+| ORDER BY v=separated_list(COMMA, VAR) ASC?
+   { OrderBy(v,true) }
+| ORDER BY v=separated_list(COMMA, VAR) DESC
+   { OrderBy(v,false) }
+
+distinct:
+| DISTINCT
+   { Distinct }
+
 prefix:
-| PREFIX s=IDENT LEFTPROG v=IDENT RIGHTPROG
+| PREFIX s=IDENT COLON  v=ident
     {add_prefix (s,v)}
 ;				     
 
 vars:
 | l = separated_list(COMMA, VAR)
  {l} 
-| LEFTPAR l = vars RIGHTPAR
+| LEFTPAR l = separated_list(COMMA, VAR) RIGHTPAR
  {l}
 | JOKER
  {["*"]}
- 
-selectclause:
-| SELECT l=vars WHERE c = toplevel
-    { (l,c) }
-;
 
 ident:
-| s = IDENT
-   {s}
-| s1 = ident POINT s2 = ident
-   {(s1)^"."^(s2)}
-| s1 = ident COLON s2 = ident
-   {(s1)^":"^(s2)}
+| LEFTPROG s=separated_list(COLON,IDENT) RIGHTPROG
+   {"<"^(List.fold_left (fun ac el -> match ac with  | "" ->el | ac -> el^","^ac ) "" s)^">"}
 ;
 
 ident_or_var:
@@ -80,7 +83,7 @@ union:
 opt_tp:
 | c=opt
   { c }
-| a=tplist
+| a=tplist 
   { a,[]}
 
 opt:
@@ -90,15 +93,23 @@ opt:
   { a }
 ;
 
+ptp:
+| a=tp POINT b=ptp
+  { a::b }
+| a=tp
+  { [a] }
+| a=tp POINT
+  { [a] }
+
 tplist:
-| a=list(tp)
+| a=ptp
   { a }
-| LEFTBRACKET a=list(tp) RIGHTBRACKET
+| LEFTBRACKET a=ptp RIGHTBRACKET
   {a}
 ;
 
 tp:
-| sub = ident_or_var pred = ident_or_var obj = ident_or_var POINT
+| sub = ident_or_var pred = ident_or_var obj = ident_or_var 
    { sub,pred,obj}
 ;  
 

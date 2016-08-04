@@ -10,7 +10,12 @@ type optbgp = bgp*bgp ;;
 
 type unionoptbgp = optbgp list ;;
 
-type query = string list * unionoptbgp ;;
+type modifier =
+  | Distinct
+  | OrderBy of string list*bool
+;;
+
+type query = (string list * unionoptbgp)*modifier list ;;
 
   
 let rec list_var = function
