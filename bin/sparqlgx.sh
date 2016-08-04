@@ -14,6 +14,7 @@ function help_msg {
     echo "Usage:"
     echo "   $0 light-load dbName tripleFile_HDFSPath"
     echo "   $0 load dbName tripleFile_HDFSPath"
+    echo "   $0 generate-stat dbName tripleFile_HDFSPath"
     echo "   $0 query [-o responseFile_HDFSPath] [--stat] [--clean] dbName queryFile_LocalPath"
     echo "   $0 direct-query [-o responseFile_HDFSPath] [--clean] queryFile_LocalPath tripleFile_HDFSPath"
     echo "   $0 remove dbName"
@@ -44,6 +45,10 @@ case "$1" in
     remove )
 	shift
 	bash ${PATH_CMD}/sgx-purge.sh $@
+	;;
+    generate-stat )
+	shift
+	bash ${PATH_CMD}/sgx-stat.sh $@
 	;;
     query )
 	shift
