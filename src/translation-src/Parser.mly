@@ -25,14 +25,14 @@
 
 query:
 | pre = list(prefix) SELECT  dis=distinct? l=vars WHERE c = toplevel ord=orderby? EOF
-    { (l,c),(List.fold_left (fun ac el -> match el with | Some v ->v::ac | None -> ac ) [] [ord;dis])   }
+    { (l,c),(List.fold_left (fun ac el -> match el with | Some v ->v::ac | None -> ac ) [] [dis;ord])   }
 ;
 
 
 orderby:
-| ORDER BY v=separated_list(COMMA, VAR) ASC?
+| ORDER BY ASC? v=separated_list(COMMA, VAR)
    { OrderBy(v,true) }
-| ORDER BY v=separated_list(COMMA, VAR) DESC
+| ORDER BY DESC v=separated_list(COMMA, VAR)
    { OrderBy(v,false) }
 
 distinct:

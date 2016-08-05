@@ -112,8 +112,8 @@ let rec print_algebra term =
          "val "^res^" ="^code_a^".distinct() ",cols_a
       | Order(l,side,a) ->
          let code_a,cols_a = foo a in
-         "val "^res^" ="^code_a^".KeyBy(("^join cols_a^")=>("^join l
-         ^")).sortByKey("^(if side then "true" else "false")^") ",cols_a
+         "val "^res^" ="^code_a^".keyBy(("^join cols_a^")=>("^join l
+         ^")).sortByKey("^(if side then "true" else "false")^").values ",cols_a
     in
     add code ; res,cols
   in
