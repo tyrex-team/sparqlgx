@@ -1,1 +1,0 @@
-select ?X where ?X httpwwww3org19990222-rdf-syntax-nstype httpwwwlehigheduzhp220040401univ-benchowlGraduateStudent . ?X httpwwwlehigheduzhp220040401univ-benchowltakesCourse httpwwwDepartment0University0eduGraduateCourse0 .

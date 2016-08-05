@@ -1,1 +1,0 @@
-select ?v0, ?v2, ?v3, ?v4, ?v5 where ?v0 httpogpmenstag httpdbuwaterloocagalucwsdbmTopic13 . ?v0 httpwwww3org19990222-rdf-syntax-nstype ?v2 . ?v3 httpschemaorgtrailer ?v4 . ?v3 httpschemaorgkeywords ?v5 . ?v3 httpdbuwaterloocagalucwsdbmhasGenre ?v0 . ?v3 httpwwww3org19990222-rdf-syntax-nstype httpdbuwaterloocagalucwsdbmProductCategory2 .
