@@ -23,12 +23,8 @@ let load filename =
 
 ;;
   
-let reorder l =
 
-  
-
-  
-  let no_cartesian  = 
+let no_cartesian  = 
     let rec no_cartesian seen_cols = function
       | [] -> []
       | x::t ->
@@ -45,9 +41,11 @@ let reorder l =
          (s,p,o)::(no_cartesian ((list_var [s;p;o])@seen_cols) ntl)
     in
     no_cartesian []
-  in
+;;
+
+
+let reorder l =  
              
-  
   let rec nb_var (s,p,o) =
     List.fold_left (fun ac el -> match el with Variable _ -> 1 +ac | _ -> ac) 0 [s;p;o]
   in

@@ -124,7 +124,7 @@ let rec print_algebra term =
 ;;
   
 
-let translate distinguished modifiers vertical stmt =
+let translate distinguished modifiers vertical optim stmt =
   
   let translate_el (base,cols) = function
     | Exact(v),name -> (Filter(name,"\""^v^"\"",base),cols)
@@ -145,7 +145,11 @@ let translate distinguished modifiers vertical stmt =
       | [a] -> translate_tp a
       | a::q -> Join(translate_tp a,foo q)
     in
-    foo (Reorder.reorder l)
+    match optim with
+    | 0 -> foo (List.rev l)
+    | 1 -> foo (Reorder.no_cartesian l)
+    | 2 -> foo (Reorder.reorder l)
+    | _ -> foo (Reorder.no_cartesian l)
   in
 
   let translate_opt  = function

@@ -12,4 +12,4 @@ type algebra =
                                   
 val print_algebra : algebra -> unit
 
-val translate :  string list -> Sparql.modifier list -> bool -> Sparql.unionoptbgp -> algebra
+val translate :  string list -> Sparql.modifier list -> bool -> int -> Sparql.unionoptbgp -> algebra
