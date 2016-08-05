@@ -1,7 +1,7 @@
 %{
    open Sparql
    let prefixes = ref []
-   let add_prefix (k,s) = prefixes := (k,Bytes.sub s 1 (Bytes.length s-2)) ::(!prefixes) 
+   let add_prefix (k,s) = prefixes := (k,s) ::(!prefixes) 
    let replace_prefix s v =
        try 
          "<"^List.assoc s (!prefixes)^v^">"
@@ -40,7 +40,7 @@ distinct:
    { Distinct }
 
 prefix:
-| PREFIX s=IDENT COLON  v=ident
+| PREFIX s=IDENT COLON LEFTPROG v=ident RIGHTPROG
     {add_prefix (s,v)}
 ;				     
 
@@ -53,8 +53,8 @@ vars:
  {["*"]}
 
 ident:
-| LEFTPROG s=separated_list(COLON,IDENT) RIGHTPROG
-   {"<"^(List.fold_left (fun ac el -> match ac with  | "" ->el | ac -> ac^":"^el ) "" s)^">"}
+| s=separated_list(COLON,IDENT)
+   {List.fold_left (fun ac el -> match ac with  | "" ->el | ac -> ac^":"^el ) "" s}
 ;
 
 ident_or_var:
