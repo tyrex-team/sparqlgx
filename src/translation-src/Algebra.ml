@@ -137,7 +137,7 @@ let rec print_algebra term =
          add " { 0 } }" ;
                                                     
          
-         "val "^res^" ="^code_a^".sortBy{case ("^join cols_a^")=>("^join (List.map fst l)
+         "val "^res^" ="^code_a^".keyBy{case ("^join cols_a^")=>("^join (List.map fst l)
          ^")}.sortByKey(true).values ",cols_a
     in
     add code ; res,cols
