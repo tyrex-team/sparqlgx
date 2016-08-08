@@ -92,7 +92,7 @@ let rec print_algebra term =
           else
             "val "^res^"="^code_a^".keyBy{case ("^(join cols_a)^") => ("^(join cols_join)
             ^")}.leftOuterJoin("^code_b^".keyBy{case ("^(join cols_b)^")=>("^(join cols_join)^")}).values")
-         ^".map{case( ("^(join cols_a)^"), opt_b)=> opt_b match { case None => ("^(join cols_union_none)^") case Some("^join cols_b_bis^") => ("^join cols_union_some ^") }}",cols_union_some
+         ^".map{case( ("^(join cols_a)^"), opt_b)=> opt_b match { case None => ("^(join cols_union_none)^") case Some( ("^join cols_b_bis^") ) => ("^join cols_union_some ^") }}",cols_union_some
                                                                                                            
       | Join(a,b) ->
          let code_a,cols_a = foo a
