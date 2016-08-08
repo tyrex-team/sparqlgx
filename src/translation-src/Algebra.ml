@@ -124,7 +124,8 @@ let rec print_algebra term =
          "val "^res^" ="^code_a^".distinct() ",cols_a
       | Order(l,a) ->
          let code_a,cols_a = foo a in
-         let type_sort = "("^join (List.map (fun s -> "String") l)^")" in
+         let cols_sort = List.filter (fun x -> List.mem_assoc x l) cols_a in
+         let type_sort = "("^join (List.map (fun s -> "String") cols_sort)^")" in
          let rec foo x = function
            | [] -> failwith "sort column not present!"
            | a::q -> if x=a then 1 else (1+foo x q)
@@ -137,7 +138,7 @@ let rec print_algebra term =
          add " { 0 } }" ;
                                                     
          
-         "val "^res^" ="^code_a^".keyBy{case ("^join cols_a^")=>("^join (List.map fst l)
+         "val "^res^" ="^code_a^".keyBy{case ("^join cols_a^")=>("^join cols_sort
          ^")}.sortByKey(true).values ",cols_a
     in
     add code ; res,cols
