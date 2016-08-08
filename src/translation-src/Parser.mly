@@ -30,7 +30,7 @@ query:
 
 
 orderby:
-| ORDER BY ASC? v=separated_list(COMMA, VAR)
+| ORDER BY v=separated_list(COMMA, VAR)  ASC?
    { OrderBy(v,true) }
 | ORDER BY DESC v=separated_list(COMMA, VAR)
    { OrderBy(v,false) }

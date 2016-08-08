@@ -77,23 +77,35 @@ let rec print_algebra term =
       | Keep (keepcols,a) ->
          let code,cols = foo a in
          "val "^res^"="^code^".map{case ("^(join cols)^") => ("^(join keepcols)^")}",keepcols
-                                                                                       
-      | Join(a,b)
-        | LeftJoin(a,b) ->
+
+      | LeftJoin(a,b) ->
+         let code_a,cols_a = foo a
+         and code_b,cols_b = foo b in
+         let cols_join = List.filter (fun x -> List.mem x cols_b) cols_a in
+         let cols_of_b = List.filter (fun x -> not (List.mem x cols_join)) cols_b in
+         let cols_union_some = cols_a@(cols_of_b) in
+         let cols_union_none = cols_a@(List.map (fun x -> "\"\"") cols_of_b) in
+         let cols_b_bis = renamedup cols_b cols_a in
+         (if cols_join = []
+          then
+            "val "^res^"="^code_a^".cartesian("^code_b^")"
+          else
+            "val "^res^"="^code_a^".keyBy{case ("^(join cols_a)^") => ("^(join cols_join)
+            ^")}.leftOuterJoin("^code_b^".keyBy{case ("^(join cols_b)^")=>("^(join cols_join)^")}).values")
+         ^".map{case( ("^(join cols_a)^"), opt_b)=> opt_b match { case None => ("^(join cols_union_none)^") case Some("^join cols_b_bis^") => "^join cols_union_some ^"}}",cols_union_some
+                                                                                                           
+      | Join(a,b) ->
          let code_a,cols_a = foo a
          and code_b,cols_b = foo b in
          let cols_join = List.filter (fun x -> List.mem x cols_b) cols_a in
          let cols_union = cols_a@(List.filter (fun x -> not (List.mem x cols_join)) cols_b) in
          let cols_b_bis = renamedup cols_b cols_a in
-         let join_type = match l with
-           | LeftJoin(_) -> "leftjoin"
-           | _ -> "join"
-         in
          (if cols_join = []
           then
             "val "^res^"="^code_a^".cartesian("^code_b^")"
           else
-            "val "^res^"="^code_a^".keyBy{case ("^(join cols_a)^") => ("^(join cols_join)^")}."^join_type^"("^code_b^".keyBy{case ("^(join cols_b)^")=>("^(join cols_join)^")}).values")
+            "val "^res^"="^code_a^".keyBy{case ("^(join cols_a)^") => ("^(join cols_join)
+            ^")}.join("^code_b^".keyBy{case ("^(join cols_b)^")=>("^(join cols_join)^")}).values")
          ^".map{case( ("^(join cols_a)^"),("^(join cols_b_bis)^"))=>("^(join cols_union)^")}",cols_union
                                                                                                 
       | Rename(o,n,c) ->
