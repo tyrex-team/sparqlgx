@@ -12,7 +12,7 @@ type unionoptbgp = optbgp list ;;
 
 type modifier =
   | Distinct
-  | OrderBy of string list*bool
+  | OrderBy of (string*bool) list
 ;;
 
 type query = (string list * unionoptbgp)*modifier list ;;

@@ -30,10 +30,18 @@ query:
 
 
 orderby:
-| ORDER BY v=separated_list(COMMA, VAR)  ASC?
-   { OrderBy(v,true) }
-| ORDER BY DESC v=separated_list(COMMA, VAR)
-   { OrderBy(v,false) }
+| ORDER BY v=nonempty_list(orderlist) EOF
+   { OrderBy(List.flatten v) }
+| ORDER BY v=separated_nonempty_list(COMMA, VAR) EOF
+  { OrderBy(List.map (fun x -> (x,true)) v) }
+
+orderlist:
+| ASC LEFTPAR v=separated_list(COMMA, VAR) RIGHTPAR
+  { print_string "ASC\n" ; List.map (fun x -> (x,true)) v }
+| DESC LEFTPAR v=separated_list(COMMA, VAR) RIGHTPAR
+  { print_string "DESC\n" ; List.map (fun x -> (x,false)) v }
+
+
 
 distinct:
 | DISTINCT

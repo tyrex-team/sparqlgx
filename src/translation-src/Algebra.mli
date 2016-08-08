@@ -8,7 +8,7 @@ type algebra =
   | LeftJoin of algebra * algebra
   | Rename of string * string * algebra
   | Distinct of algebra
-  | Order of string list*bool*algebra
+  | Order of (string*bool)  list*algebra
                                   
 val print_algebra : algebra -> unit
 
