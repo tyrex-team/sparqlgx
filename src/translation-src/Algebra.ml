@@ -15,7 +15,6 @@ type algebra =
                                   
 let rec print_algebra term = 
   
-  print_string "printing algebra\n" ;
   let gid = 
     let id = ref 0 in
     fun () -> incr id ; string_of_int (!id) 
@@ -128,23 +127,21 @@ let rec print_algebra term =
          let type_sort = "("^join (List.map (fun s -> "String") l)^")" in
          let rec foo x = function
            | [] -> failwith "sort column not present!"
-           | a::q -> if x=a then 0 else (1+foo x q)
+           | a::q -> if x=a then 1 else (1+foo x q)
          in
-         print_string "sort\n" ;
          let ith = List.map (fun (v,s) -> string_of_int (foo v cols_a),s) l in
-         add ("implicit val caseInsensitiveOrdering = new Ordering["^type_sort^"] {") ;
+         add ("implicit val specifiedOrdering = new Ordering["^type_sort^"] {") ;
          add ("       override def compare(a: "^type_sort^", b: "^type_sort^") = " );
          List.iter (fun (v,s) -> let side = if s then "" else "(-1)*" in
                                  add ("if ( a._"^v^" != b._"^v^" ) { "^side^"(a._"^v^".compare(b._"^v^")) } else ")) ith ;
          add " { 0 } }" ;
                                                     
          
-         "val "^res^" ="^code_a^".sortBy(("^join cols_a^")=>("^join (List.map fst l)
-         ^")).sortByKey("^(if true then "true" else "false")^").values ",cols_a
+         "val "^res^" ="^code_a^".sortBy{case ("^join cols_a^")=>("^join (List.map fst l)
+         ^")}.sortByKey(true).values ",cols_a
     in
     add code ; res,cols
   in
-  print_string "printing\n" ;
   let code,cols = foo term in
   add ("val Qfinal="^code^".collect") ;
   (* add ("//// order is "^(join cols)) ; *)

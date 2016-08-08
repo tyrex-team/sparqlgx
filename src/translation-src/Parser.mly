@@ -37,9 +37,9 @@ orderby:
 
 orderlist:
 | ASC LEFTPAR v=separated_list(COMMA, VAR) RIGHTPAR
-  { print_string "ASC\n" ; List.map (fun x -> (x,true)) v }
+  { List.map (fun x -> (x,true)) v }
 | DESC LEFTPAR v=separated_list(COMMA, VAR) RIGHTPAR
-  { print_string "DESC\n" ; List.map (fun x -> (x,false)) v }
+  { List.map (fun x -> (x,false)) v }
 
 
 
