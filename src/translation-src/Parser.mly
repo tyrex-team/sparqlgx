@@ -32,7 +32,7 @@ query:
 orderby:
 | ORDER BY v=nonempty_list(orderlist) EOF
    { OrderBy(List.flatten v) }
-| ORDER BY v=separated_nonempty_list(COMMA, VAR) EOF
+| ORDER BY v=separated_list(COMMA, VAR) EOF
   { OrderBy(List.map (fun x -> (x,true)) v) }
 
 orderlist:

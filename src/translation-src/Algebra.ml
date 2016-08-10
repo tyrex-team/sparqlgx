@@ -136,7 +136,7 @@ let rec print_algebra term =
          | [] -> "val "^res^"="^code_a,cols_a
          | [col_sort] ->
             let side = List.assoc col_sort l in 
-            "val "^res^"="^code_a^".keyBy{case ("^join cols_a^")=>"^col_sort^").sortByKey("^string_of_bool side^").values",cols_a
+            "val "^res^"="^code_a^".keyBy{case ("^join cols_a^")=>"^(escape_var col_sort)^"}.sortByKey("^string_of_bool side^").values",cols_a
          | cols_sort ->
             begin
               add ("implicit val specifiedOrdering = new Ordering["^type_sort^"] {") ;
