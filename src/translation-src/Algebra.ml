@@ -131,15 +131,22 @@ let rec print_algebra term =
            | a::q -> if x=a then 1 else (1+foo x q)
          in
          let ith = List.map (fun (v,s) -> string_of_int (foo v cols_a),s) l in
-         add ("implicit val specifiedOrdering = new Ordering["^type_sort^"] {") ;
-         add ("       override def compare(a: "^type_sort^", b: "^type_sort^") = " );
-         List.iter (fun (v,s) -> let side = if s then "" else "(-1)*" in
-                                 add ("if ( a._"^v^" != b._"^v^" ) { "^side^"(a._"^v^".compare(b._"^v^")) } else ")) ith ;
-         add " { 0 } }" ;
-                                                    
-         
-         "val "^res^" ="^code_a^".keyBy{case ("^join cols_a^")=>("^join cols_sort
-         ^")}.sortByKey(true).values ",cols_a
+         match cols_sort
+         with
+         | [] -> "val "^res^"="^code_a,cols_a
+         | [col_sort] ->
+            let side = List.assoc col_sort l in 
+            "val "^res^"="^code_a^".keyBy{case ("^join cols_a^")=>"^col_sort^").sortByKey("^string_of_bool side^").values",cols_a
+         | cols_sort ->
+            begin
+              add ("implicit val specifiedOrdering = new Ordering["^type_sort^"] {") ;
+              add ("       override def compare(a: "^type_sort^", b: "^type_sort^") = " );
+              List.iter (fun (v,s) -> let side = if s then "" else "(-1)*" in
+                                      add ("if ( a._"^v^" != b._"^v^" ) { "^side^"(a._"^v^".compare(b._"^v^")) } else ")) ith ;
+              add " { 0 } }" ;
+              "val "^res^" ="^code_a^".keyBy{case ("^join cols_a^")=>("^join cols_sort
+              ^")}.sortByKey(true).values ",cols_a
+            end
     in
     add code ; res,cols
   in
