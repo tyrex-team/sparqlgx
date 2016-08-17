@@ -29,7 +29,7 @@ Related Publications
   Laya&iuml;da. __SPARQLGX: Efficient Distributed Evaluation of SPARQL
   with Apache Spark__. _The 15th International Semantic Web
   Conference, Oct 2016, Kobe,
-  Japan_. [pdf](https://hal.inria.fr/hal-01344915/document) 
+  Japan_. [link](https://hal.inria.fr/hal-01344915)
 
 - Damien Graux, Louis Jachiet, Pierre Genev&egrave;s, Nabil
   Laya&iuml;da. __SPARQLGX in action: Efficient Distributed Evaluation
@@ -116,6 +116,7 @@ reordering of SPARQL query clauses (triple patterns in the WHERE{...})
 according to data repartition. Finally, it will also try to avoid
 cartesian products from the new statistic-based order.
 
+<!-- Dirty Markdown Hack -->
 
     bin/sparqlgx.sh query dbName local_query.rq ;
     bin/sparqlgx.sh direct-query local_query.rq hdfs_file.nt ;
