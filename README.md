@@ -3,11 +3,13 @@ SPARQLGX
 
 >Efficient Distributed Evaluation of SPARQL with Apache Spark.
 
-__Overview__: SPARQL is the W3C standard query language for
-querying data expressed in the Resource Description Framework
-(RDF). The increasing amounts of RDF data available raise a major need
-and research interest in building efficient and scalable distributed
-SPARQL query evaluators.
+__Overview:__ SPARQL is the W3C standard query language for querying
+data expressed in
+[RDF](https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/)
+(Resource Description Framework). The increasing amounts of RDF data
+available raise a major need and research interest in building
+efficient and scalable distributed
+[SPARQL](https://www.w3.org/TR/sparql11-query/) query evaluators.
 
 In this context, we propose and share SPARQLGX: our implementation of
 a distributed RDF datastore based on Apache Spark. SPARQLGX is
@@ -18,7 +20,21 @@ to (1) the storage method used and (2) statistics on data. Using a
 simple design, SPARQLGX already represents an interesting alternative
 in several scenarios.
 
-__Version__: 1.0
+__Version:__ 1.0
+
+Related Publications
+--------------------
+
+- Damien Graux, Louis Jachiet, Pierre Genev&egrave;s, Nabil
+  Laya&iuml;da. __SPARQLGX: Efficient Distributed Evaluation of SPARQL
+  with Apache Spark__. _The 15th International Semantic Web
+  Conference, Oct 2016, Kobe,
+  Japan_. [pdf](https://hal.inria.fr/hal-01344915/document) 
+
+- Damien Graux, Louis Jachiet, Pierre Genev&egrave;s, Nabil
+  Laya&iuml;da. __SPARQLGX in action: Efficient Distributed Evaluation
+  of SPARQL with Apache Spark__. _The 15th International Semantic Web
+  Conference, Oct 2016, Kobe, Japan_.
 
 Requirements
 ------------
@@ -26,7 +42,7 @@ Requirements
 - [Apache Hadoop](http://hadoop.apache.org) (+HDFS) version __2.6.0-cdh5.7.0__
 - [Apache Spark](http://spark.apache.org/) version __1.6.0__
 - [OCaml](http://ocaml.org/) version ≥ __4.0__
-- [Menhir](http://gallium.inria.fr/~fpottier/menhir//) version __20160526__
+- [Menhir](http://gallium.inria.fr/~fpottier/menhir/) version __20160526__
 
 How to use it?
 --------------
@@ -100,6 +116,7 @@ reordering of SPARQL query clauses (triple patterns in the WHERE{...})
 according to data repartition. Finally, it will also try to avoid
 cartesian products from the new statistic-based order.
 
+
     bin/sparqlgx.sh query dbName local_query.rq ;
     bin/sparqlgx.sh direct-query local_query.rq hdfs_file.nt ;
 
@@ -133,4 +150,4 @@ Louis Jachiet
 Pierre Genev&egrave;s  
 Nabil Laya&iuml;da  
 
-[Tyrex](tyrex.inria.fr) Team, Inria (France), 2016
+[Tyrex Team](tyrex.inria.fr), Inria (France), 2016
