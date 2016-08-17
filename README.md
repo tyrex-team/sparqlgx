@@ -1,21 +1,23 @@
 SPARQLGX
 ========
 
->A distributed RDF store mapping SPARQL to Spark.
+>Efficient Distributed Evaluation of SPARQL with Apache Spark.
 
 __Overview__: SPARQL is the W3C standard query language for
 querying data expressed in the Resource Description Framework
 (RDF). The increasing amounts of RDF data available raise a major need
 and research interest in building efficient and scalable distributed
-SPARQL query evaluators. <br/> In this context, we propose and share
-SPARQLGX: our implementation of a distributed RDF datastore based on
-Apache Spark. SPARQLGX is designed to leverage existing Hadoop
-infrastructures for evaluating SPARQL queries. SPARQLGX relies on a
-translation of SPARQL queries into executable Spark code that adopts
-evaluation strategies according to (1) the storage method used and (2)
-statistics on data. Using a simple design, SPARQLGX already represents
-an interesting alternative in several scenarios.  </p> </div>
-      
+SPARQL query evaluators.
+
+In this context, we propose and share SPARQLGX: our implementation of
+a distributed RDF datastore based on Apache Spark. SPARQLGX is
+designed to leverage existing Hadoop infrastructures for evaluating
+SPARQL queries. SPARQLGX relies on a translation of SPARQL queries
+into executable Spark code that adopts evaluation strategies according
+to (1) the storage method used and (2) statistics on data. Using a
+simple design, SPARQLGX already represents an interesting alternative
+in several scenarios.
+
 __Version__: 1.0
 
 Requirements
@@ -24,63 +26,97 @@ Requirements
 - [Apache Hadoop](http://hadoop.apache.org) (+HDFS) version __2.6.0-cdh5.7.0__
 - [Apache Spark](http://spark.apache.org/) version __1.6.0__
 - [OCaml](http://ocaml.org/) version ≥ __4.0__
-- [Menhir] (http://gallium.inria.fr/~fpottier/menhir//)
-
+- [Menhir](http://gallium.inria.fr/~fpottier/menhir//) version __20160526__
 
 How to use it?
 --------------
 
-In this package, we provide sources to load and query RDF
-datasets with SPARQLGX and S-DE (a SPARQL direct
-evaluator). We also present a test-suite where two famous
-RDF/SPARQL benchmarks can be runned : [LUBM](http://swat.cse.lehigh.edu/projects/lubm/) and [WatDiv](http://dsg.uwaterloo.ca/watdiv/). For space reasons, these two datasets only contain a few hundred of thousand RDF triples.
+In this package, we provide sources to load and query RDF datasets
+with SPARQLGX and SDE (a SPARQL direct evaluator). We also present a
+test-suite where two popular RDF/SPARQL benchmarks can be run:
+[LUBM](http://swat.cse.lehigh.edu/projects/lubm/) and
+[WatDiv](http://dsg.uwaterloo.ca/watdiv/). For space reasons, these
+two datasets only contain a few hundred of thousand RDF triples, but
+determinist generators are available on benchmarks' webpages.
 
-1. Get the sources and compile:  
-`git clone github.com/dgraux/sparqlgx.git`  
-`cd sparqlgx/ ;`  
-`bash dependencies.sh ;`  
-`bash compile.sh ;`  
+### Get the sources, compile and configure.
 
-2. Load an RDF dataset: SPARQLGX can only load RDF data written according to
-	  the [N-Triples
-	  format](https://www.w3.org/TR/n-triples/); however, as many datasets come in other
-	  standards (e.g. RDF/XML...) we also provide a .jar
-	  file from an external developer able to translate RDF data
-	  from a standard to an other one.
-`hadoop fs -copyFromLocal local_file.nt hdfs_file.nt ;`  
-`hadoop fs -mkdir dataset_hdfs_dir/ ;`  
-`spark-submit --class "Load" bin/sparqlgx-load-0.1.jar hdfs_file.nt dataset_hdfs_dir/ ;`  
+Firstly, clone this repository. Secondly, check that all the needed
+commands are available on your (main) machine and that your HDFS is
+correctly configured. Thirdly, compile the whole project. Fourthly,
+you can modify the parameters listed in the configuration file (in
+conf/) according to your own cluster.
 
-3. Execute a SPARQL query: To execute a SPARQL
-	  query over a loaded RDF dataset, users first need to
-	  translate it into executable Spark-Scala-code. Then, the
-	  Spark engine is able to evaluate the generated sequence. The
-	  following command summarizes this entire process:
-`bash bin/sparqlgx-eval.sh local_query.rq dataset_hdfs_dir/ ;`  
+    git clone github.com/tyrex-team/sparqlgx.git
+    cd sparqlgx/ ;
+    bash dependencies.sh ;
+    bash compile.sh ;
 
-4. Use the additional tools: Moreover, we give
-	  two supplementary modules as extensions.
-	  - A SPARQL query re-writer based on RDF data
-	  statistics. Users first have to compute statistics; and then
-	  SPARQL query clauses (Triple Patterns in the WHERE{...}) can
-	  be re-ordered according to the data repartition.  
-`bash bin/generate-stat.sh hdfs_file.nt output_local_stat.txt # Generate Statistics`  
-`bash bin/order-with-stat.sh local_query.rq local_stat.txt # Use Statistics`
-	  - A SPARQL Direct Evaluator (S-DE) i.e. no loading
-	  phase needed. S-DE directly evaluates SPARQL queries of RDF
-	  datasets saved on the HDFS.  
-`bash bin/sparqlgx-direct-eval.sh local_query.rq hdfs_file.nt ;`  
+### Load an RDF dataset.
 
-5. Run the test-suite:
+SPARQLGX can only load RDF data written according to the [N-Triples
+format](https://www.w3.org/TR/n-triples/); however, as many datasets
+come in other standards (e.g. RDF/XML...) we also provide a .jar file
+(rdf2rdf in bin/) from an external developer able to translate RDF
+data from a standard to an other one.
 
-```
-cd tests/ ;  
-bash run-me-first.sh ;          # Creates a workspace on the HDFS  
-bash run-sde-watdiv.sh ;        # Directly evaluates L1 on watdiv.nt  
-bash run-sparqlgx-lubm.sh ;     # Loads lubm.nt and executes Q1  
-bash run-sparqlgx-watdiv.sh ;   # Loads watdiv.nt and executes C1  
-bash run-statistics.sh ;        # Generates statistic files for the two datasets  
-```
+Before, loading an RDF triple file, you have to copy it directly on
+the HDFS. Then, the complete preprocessing routine can be realized
+using the `load` parameter; it will partition the HDFS triple file and
+compute statistics on data. These two distinct steps can be executed
+separately with respectively `light-load` and `generate-stat`.
+
+    hadoop fs -copyFromLocal local_file.nt hdfs_file.nt ;
+    bash bin/sparqlgx.sh light-load dbName hdfs_file.nt ;
+    bash bin/sparqlgx.sh generate-stat dbName hdfs_file.nt ;
+    bash bin/sparqlgx.sh load dbName hdfs_file.nt ;
+
+### Remove a dataset.
+
+    bash bin/sparqlgx.sh remove dbName ;
+
+### Execute a SPARQL query.
+
+To execute a SPARQL query over a loaded RDF dataset, users can use
+`query` which translates the SPARQL query into Scala, compiles it and
+runs it with Apache Spark. Moreover, users can call SDE (the SPARQLGX
+Direct Evaluator) with `direct-query` which directly evaluates SPARQL
+queries on RDF datasets saved on the HDFS. Finally, three levels of
+optimizations are available:
+
+1. __No Optimization__ If `--no-optim` is specified in the command
+line, SPARQLGX or SDE will execute the given query following exactly
+the order of clauses in the WHERE.
+
+2. __Avoid Cartesian Products__ [Default] If no optimization option is
+given to either SPARQLGX or SDE, the translation engine will try to
+avoid (if possible) cartesian product in its translation output.
+
+3. __Query Planning with Statistics__ The `--stat` option is only
+available with SPARQLGX since SDE directly evaluates queries without
+preprocessing phase; in addition, you should have already generate
+statistics either with `generate-stat` or with `load`. It will imply a
+reordering of SPARQL query clauses (triple patterns in the WHERE{...})
+according to data repartition. Finally, it will also try to avoid
+cartesian products from the new statistic-based order.
+
+    bin/sparqlgx.sh query dbName local_query.rq ;
+    bin/sparqlgx.sh direct-query local_query.rq hdfs_file.nt ;
+
+### Run the test suite.
+
+We also provide a basic test suite using two popular benchmarks (LUBM
+and WatDiv). To that purpose, we pre-generated two small RDF datasets
+and give the various queries required for these benchmarks. The test
+suite is divided into three parts: `preliminaries.sh` sets up files
+and directories on the HDFS, `run-benchmarks.sh` executes everything
+(preprocessing, querying with SDE or SPARQLGX and with various
+optimization options), `clean-all.sh` puts everything back in place.
+
+    cd tests/ ;
+    bash preliminaries.sh ;
+    bash run-benchmarks.sh ; # This step can take a while!
+    bash clean-all.sh
 
 License
 -------
