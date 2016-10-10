@@ -17,6 +17,7 @@ function help_msg {
     echo "   $0 generate-stat dbName tripleFile_HDFSPath"
     echo "   $0 query [-o responseFile_HDFSPath] [--no-optim] [--stat] [--clean] dbName queryFile_LocalPath"
     echo "   $0 direct-query [-o responseFile_HDFSPath] [--no-optim] [--clean] queryFile_LocalPath tripleFile_HDFSPath"
+    echo "   $0 translate [--no-optim] [--stat] dbName queryFile_LocalPath"
     echo "   $0 remove dbName"
     echo ""
     echo "   $0 --version"
@@ -41,6 +42,10 @@ case "$1" in
 	shift
 	bash ${PATH_CMD}/sgx-load.sh $@
 	bash ${PATH_CMD}/sgx-stat.sh $@
+	;;
+    translate )
+	shift
+	bash ${PATH_CMD}/sgx-translate.sh $@
 	;;
     remove )
 	shift
