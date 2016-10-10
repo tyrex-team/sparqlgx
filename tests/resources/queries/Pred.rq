@@ -1,1 +1,1 @@
-SELECT DISTINCT ?p WHERE { ?s ?p ?o . } ORDER BY DESC ?p
+SELECT DISTINCT ?p, ?o WHERE { ?s ?p ?o . } ORDER BY ?p
