@@ -156,6 +156,63 @@ let rec print_algebra term =
   List.iter print_string (List.rev (!lines)) 
 ;;
   
+let print_query distinguished modifiers optim stmt =
+  let print_list_tp l =
+    let rec foo = function
+      | [] -> failwith "Empty list of TP"
+      | [a] -> print_tp a
+      | a::q -> print_tp a ; foo q
+    in
+    match optim with
+    | 0 -> foo (List.rev l)
+    | 1 -> foo (Reorder.no_cartesian l)
+    | 2 -> foo (Reorder.reorder l)
+    | _ -> foo (Reorder.no_cartesian l)
+  in
+
+  let print_opt  = function
+    | (a,[]) -> print_list_tp a
+    | (a,b) -> print_list_tp a ; print_list_tp b
+  in
+
+  let rec print_toplevel = function
+    | [] -> failwith "Empty query!"
+    | [a] -> print_opt a
+    | a::q -> print_opt a ; print_string "UNION {" ; print_toplevel q ; print_string " }"
+  in
+
+  let rec print_list_order = function
+    | [] -> print_string ""
+    | (x,true)::q -> print_string x ; print_list_order q
+    | _::q -> print_list_order q
+  in
+
+  let rec print_modifiers bgp = function
+    | [] -> 
+       begin
+        List.iter (Printf.printf "%s ") distinguished ;
+        print_string "\nWHERE {\n" ;
+        print_toplevel stmt ;
+        print_string "}\n" ;
+       end
+    | OrderBy(l)::q ->
+       begin
+        print_modifiers bgp q ;
+	print_string "Order By { " ;
+        print_list_order l ;
+	print_string " }" ;
+       end
+    | Distinct::q ->
+       begin 
+        print_string "DISTINCT " ; 
+	print_modifiers bgp q ;
+       end
+  in
+  
+  print_string "SELECT ";
+  print_modifiers stmt modifiers ;
+
+;;
 
 let translate distinguished modifiers vertical optim stmt =
   
