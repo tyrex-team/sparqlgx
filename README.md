@@ -118,8 +118,18 @@ cartesian products from the new statistic-based order.
 
 <!-- Dirty Markdown Hack -->
 
-    bin/sparqlgx.sh query dbName local_query.rq ;
-    bin/sparqlgx.sh direct-query local_query.rq hdfs_file.nt ;
+    bash bin/sparqlgx.sh query dbName local_query.rq ;
+    bash bin/sparqlgx.sh direct-query local_query.rq hdfs_file.nt ;
+
+### Translate Only (for debugging).
+
+It is also possible to translate only the SPARQL query (without
+executing the output) into the Scala code. This routine returns the
+origin query, the one that is actually translated after the potential
+optimizations (`--no-optim` or `--stat` or nothing) and the obtained
+Scala code.
+
+    bash bin/sparqlgx.sh translate dbName local_query.rq ;
 
 ### Run the test suite.
 
@@ -151,4 +161,4 @@ Louis Jachiet
 Pierre Genev&egrave;s  
 Nabil Laya&iuml;da  
 
-[Tyrex Team](tyrex.inria.fr), Inria (France), 2016
+[Tyrex Team](http://tyrex.inria.fr), Inria (France), 2016
