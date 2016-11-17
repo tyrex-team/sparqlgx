@@ -79,7 +79,8 @@ let reorder l =
   let rec sort =
     List.sort (fun x y -> if x>y then 1 else -1)
   in
-  
+
   let grade,tps = List.split (sort (List.map grade l)) in
+
   no_cartesian tps
 ;;
