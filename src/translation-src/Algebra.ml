@@ -64,11 +64,59 @@ let rec print_algebra term =
   appear in the bdd *)
 
   let trad_one = Hashtbl.create 17 in
-  
+
+  let normalize_var_name code =
+    let rename =
+      let a = ref [] in
+      let cur = ref 0 in
+      fun s ->
+      try
+        List.assoc s (!a)
+      with
+        Not_found ->
+        let trad=string_of_int (!cur) in
+        a:= (s,trad)::!a ;
+        incr cur ;
+        trad
+    in
+    let rec foo = function
+      | Filter(s,v,c) -> Filter(rename s, v,foo c)
+      | Keep(l,c) -> Keep (List.map rename l,foo c)
+      | Join(a,b) -> Join(foo a, foo b)
+      | Union(a,b) -> Union(foo a, foo b)
+      | LeftJoin(a,b) -> LeftJoin(foo a, foo b)
+      | Rename(o,n,c) -> Rename(rename o, rename n,foo c)
+      | Distinct c -> Distinct (foo c)
+      | Order(l,c) -> Order(List.map (fun (x,b) -> rename x,b) l,foo c)
+      | v -> v
+    in
+    foo code
+  in
+
+  let rec cols = function
+    | Readfile3(f) -> ["s";"p";"o"]
+    | Readfile2(f) -> ["s";"o"]
+                    
+    | Distinct c
+    | Order(_,c)
+      | Filter(_,_,c) -> cols c
+                       
+    | Keep(k,c) -> k
+                 
+    | Union(a,b) 
+      | LeftJoin(a,b)
+      | Join(a,b) ->
+       let c_a = cols a in
+       c_a @ (List.filter (fun x -> not (List.mem x c_a)) (cols b))
+       
+    | Rename(o,n,c) -> List.map (fun x -> if x=o then n else x) (cols c)
+  in
+       
   let rec foo l =
-    
+    let normalized = normalize_var_name l in
     try
-      Hashtbl.find trad_one l
+      let calc=Hashtbl.find trad_one normalized in
+      calc,cols l
     with
       Not_found ->        
         let res = "v"^gid () in 
@@ -84,7 +132,12 @@ let rec print_algebra term =
                                                                                                                   
           | Keep (keepcols,a) ->
              let code,cols = foo a in
-             "val "^res^"="^code^".map{case ("^(join cols)^") => ("^(join keepcols)^")}",keepcols
+             "val "^res^"="^code^
+             (if cols <> keepcols
+             then
+               ".map{case ("^(join cols)^") => ("^(join keepcols)^")}"
+             else
+               " // useless keepcols"),keepcols
                
           | LeftJoin(a,b) ->
              let code_a,cols_a = foo a
@@ -157,8 +210,7 @@ let rec print_algebra term =
                 end
         in
         add code ;
-        let ret = res,cols in
-        Hashtbl.add trad_one l ret ; ret
+        Hashtbl.add trad_one normalized res ; res,cols
   in
   let code,cols = foo term in
   add ("val Qfinal="^code^".collect") ;
