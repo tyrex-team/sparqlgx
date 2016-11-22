@@ -39,12 +39,27 @@ let rec print_algebra term =
       else a
   in
 
-  let rec join = function
-    | [] -> ""
-    | [a] -> escape_var a
-    | a::q -> escape_var a^","^join q
+  let rec join keys cols =
+    let rec foo = function
+      | [] -> ""
+      | [a] -> escape_var a
+      | a::q -> escape_var a^","^foo q
+    in
+    match (keys) with
+    | [] -> foo cols
+    | k  -> "(keys,("^foo cols^"))"
   in
 
+  let mapkeys cols keys newkeys =
+    let values = if keys = [] then "" else ".values" in
+    if newkeys = []
+    then values
+    else
+      if List.map (List.nth cols) keys = newkeys
+      then ""
+      else values^".keyBy{case ("^(join [] cols)^")=>("^(join [] newkeys)^")}"
+  in
+  
   let renamedup l1 l2 =
     (* bis_varname is not a possible variable name *)
     List.map (fun t -> if List.mem t l2 then "bis_"^(escape_var t) else t) l1
@@ -115,78 +130,80 @@ let rec print_algebra term =
   let rec foo l =
     let normalized = normalize_var_name l in
     try
-      let calc=Hashtbl.find trad_one normalized in
-      calc,cols l
+      let id_code,by_keys=Hashtbl.find trad_one normalized in
+      id_code,by_keys,cols l
     with
       Not_found ->        
         let res = "v"^gid () in 
-        let code,cols = match l with 
+        let code,keys,cols = match l with 
           | Readfile3(f) ->
-             "val "^res^"=sc.textFile(\""^f^"\").map{line => val field:Array[String]=line.split(\" \",3); (field(0),field(1),field(2).substring(0,field(2).lastIndexOf(\" \")))};",["s";"p";"o"]
+             "val "^res^"=sc.textFile(\""^f^"\").map{line => val field:Array[String]=line.split(\" \",3); (field(0),field(1),field(2).substring(0,field(2).lastIndexOf(\" \")))};",[],["s";"p";"o"]
           | Readfile2(f) ->
-             "val "^res^"=readpred(\""^(numero f)^".pred\") //"^f,["s";"o"]
+             "val "^res^"=readpred(\""^(numero f)^".pred\") //"^f,[],["s";"o"]
                
           | Filter(c,v,a) ->
-             let code,cols = foo a in
-             "val "^res^"="^code^".filter{case ("^(join cols)^") => "^(escape_var c)^".equals("^(escape_var v)^")}",cols
+             let code,keys,cols = foo a in
+             "val "^res^"="^code^".filter{case ("^(join keys cols)^") => "^(escape_var c)^".equals("^(escape_var v)^")}",keys,cols
                                                                                                                   
           | Keep (keepcols,a) ->
-             let code,cols = foo a in
-             "val "^res^"="^code^
-             (if cols <> keepcols
+             let code,keys,cols = foo a in
+             if cols <> keepcols
              then
-               ".map{case ("^(join cols)^") => ("^(join keepcols)^")}"
+               "val "^res^"="^code^".map{case ("^(join keys cols)^") => ("^(join [] keepcols)^")}",keys,keepcols
              else
-               " // useless keepcols"),keepcols
+               "val "^res^"="^code^" // useless keepcols",keys,keepcols
                
           | LeftJoin(a,b) ->
-             let code_a,cols_a = foo a
-             and code_b,cols_b = foo b in
+             let code_a,keys_a,cols_a = foo a
+             and code_b,keys_b,cols_b = foo b in
              let cols_join = List.filter (fun x -> List.mem x cols_b) cols_a in
              let cols_of_b = List.filter (fun x -> not (List.mem x cols_join)) cols_b in
              let cols_union_some = cols_a@(cols_of_b) in
              let cols_union_none = cols_a@(List.map (fun x -> "\"\"") cols_of_b) in
              let cols_b_bis = renamedup cols_b cols_a in
-             (if cols_join = []
-              then
-                 "val "^res^"="^code_a^".cartesian("^code_b^")"
-              else
-                 "val "^res^"="^code_a^".keyBy{case ("^(join cols_a)^") => ("^(join cols_join)
-                 ^")}.leftOuterJoin("^code_b^".keyBy{case ("^(join cols_b)^")=>("^(join cols_join)^")}).values")
-             ^".map{case( ("^(join cols_a)^"), opt_b)=> opt_b match { case None => ("^(join cols_union_none)^") case Some( ("^join cols_b_bis^") ) => ("^join cols_union_some ^") }}",cols_union_some
-               
+             if cols_join = []
+             then
+               "val "^res^"="^code_a^mapkeys cols_a keys_a []^".cartesian("^code_b^mapkeys cols_b keys_b []^")",[],cols_union_some
+             else
+               let cols_int = List.mapi (fun i s -> s,i) cols_union_some in 
+               "val "^res^"="^code_a^mapkeys cols_a keys_a cols_join
+               ^".leftOuterJoin("^code_b^mapkeys cols_b keys_b cols_join^")"
+               ^".mapValues{case( ("^(join [] cols_a)^"), opt_b)=> opt_b match { case None => ("^(join [] cols_union_none)^") case Some( ("^join [] cols_b_bis^") ) => ("^join [] cols_union_some ^") }}",(List.map (fun s -> List.assoc s cols_int) cols_join),cols_union_some
+             
           | Join(a,b) ->
-             let code_a,cols_a = foo a
-             and code_b,cols_b = foo b in
+             let code_a,keys_a,cols_a = foo a
+             and code_b,keys_b,cols_b = foo b in
              let cols_join = List.filter (fun x -> List.mem x cols_b) cols_a in
              let cols_union = cols_a@(List.filter (fun x -> not (List.mem x cols_join)) cols_b) in
              let cols_b_bis = renamedup cols_b cols_a in
-             (if cols_join = []
+             if cols_join = []
               then
-                 "val "^res^"="^code_a^".cartesian("^code_b^")"
+                "val "^res^"="^code_a^mapkeys cols_a keys_a []^".cartesian("^code_b^mapkeys cols_b keys_b []^")",[],cols_union
               else
-                 "val "^res^"="^code_a^".keyBy{case ("^(join cols_a)^") => ("^(join cols_join)
-                 ^")}.join("^code_b^".keyBy{case ("^(join cols_b)^")=>("^(join cols_join)^")}).values")
-             ^".map{case( ("^(join cols_a)^"),("^(join cols_b_bis)^"))=>("^(join cols_union)^")}",cols_union
+                let cols_int = List.mapi (fun i s -> s,i) cols_union in 
+                "val "^res^"="^code_a^mapkeys cols_a keys_a cols_join 
+                ^".join("^code_b^mapkeys cols_b keys_b cols_join^")"
+                ^".mapValues{case( ("^(join [] cols_a)^"),("^(join [] cols_b_bis)^"))=>("^(join [] cols_union)^")}",(List.map (fun s -> List.assoc s cols_int) cols_join),cols_union
                
           | Rename(o,n,c) ->
-             let code_c,cols_c = foo c in
-             "val "^res^"="^code_c,(List.map (fun x -> if x=o then n else x) cols_c)
+             let code_c,keys_c,cols_c = foo c in
+             "val "^res^"="^code_c,keys_c,(List.map (fun x -> if x=o then n else x) cols_c)
 
           | Union (a,b) ->
-             let code_a,cols_a = foo a
-             and code_b,cols_b = foo b in
+             let code_a,keys_a,cols_a = foo a
+             and code_b,keys_b,cols_b = foo b in
              let cols_union = cols_a@(List.filter (fun x -> not (List.mem x cols_a)) cols_b) in
              let new_cols_a = List.map (fun x -> if List.mem x cols_a then x else "\"\"") cols_union in
              let new_cols_b = List.map (fun x -> if List.mem x cols_b then x else "\"\"") cols_union in
-             "val "^res^"= ("^code_a^".map{case ("^(join cols_a)^")=>("^(join new_cols_a)^")}).union("^code_b^".map{case("^(join cols_b)^") => ("^(join new_cols_b)^")})",cols_union
+             "val "^res^"= ("^code_a^mapkeys cols_a keys_a []^".map{case ("^(join [] cols_a)^")=>("^(join [] new_cols_a)^")}).union("^code_b^mapkeys cols_a keys_a []^".map{case("^(join [] cols_b)^") => ("^(join [] new_cols_b)^")})",[],cols_union
+             
           | Distinct(a) ->
-             let code_a,cols_a = foo a in
-             "val "^res^" ="^code_a^".distinct() ",cols_a
+             let code_a,keys_a,cols_a = foo a in
+             "val "^res^" ="^code_a^mapkeys cols_a keys_a []^".distinct() ",[],cols_a
           | Order(l,a) ->
-             let code_a,cols_a = foo a in
+             let code_a,keys_a,cols_a = foo a in
              let cols_sort = List.filter (fun x -> List.mem_assoc x l) cols_a in
-             let type_sort = "("^join (List.map (fun s -> "String") cols_sort)^")" in
+             let type_sort = "("^join [] (List.map (fun s -> "String") cols_sort)^")" in
              let rec foo x = function
                | [] -> failwith "sort column not present!"
                | a::q -> if x=a then 1 else (1+foo x q)
@@ -194,10 +211,10 @@ let rec print_algebra term =
              let ith = List.map (fun (v,s) -> string_of_int (foo v cols_a),s) l in
              match cols_sort
              with
-             | [] -> "val "^res^"="^code_a,cols_a
+             | [] -> "val "^res^"="^code_a^mapkeys cols_a keys_a [],[],cols_a
              | [col_sort] ->
                 let side = List.assoc col_sort l in 
-                "val "^res^"="^code_a^".keyBy{case ("^join cols_a^")=>"^(escape_var col_sort)^"}.sortByKey("^string_of_bool side^").values",cols_a
+                "val "^res^"="^code_a^mapkeys cols_a keys_a cols_sort^"}.sortByKey("^string_of_bool side^").values",[],cols_a
              | cols_sort ->
                 begin
                   add ("implicit val specifiedOrdering = new Ordering["^type_sort^"] {") ;
@@ -205,14 +222,15 @@ let rec print_algebra term =
                   List.iter (fun (v,s) -> let side = if s then "" else "(-1)*" in
                                           add ("if ( a._"^v^" != b._"^v^" ) { "^side^"(a._"^v^".compare(b._"^v^")) } else ")) ith ;
                   add " { 0 } }" ;
-                  "val "^res^" ="^code_a^".keyBy{case ("^join cols_a^")=>("^join cols_sort
-                  ^")}.sortByKey(true).values ",cols_a
+                  "val "^res^" ="^code_a^mapkeys cols_a keys_a cols_sort^".sortByKey(true).values ",[],cols_a
                 end
         in
         add code ;
-        Hashtbl.add trad_one normalized res ; res,cols
+        Hashtbl.add trad_one normalized (res,keys) ; res,keys,cols
   in
-  let code,cols = foo term in
+  let code,cols = match foo term with
+    | code,[],cols -> code,cols
+    | code,_,cols -> code^".values",cols in
   add ("val Qfinal="^code^".collect") ;
   (* add ("//// order is "^(join cols)) ; *)
   List.iter print_string (List.rev (!lines)) 
