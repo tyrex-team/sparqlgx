@@ -1,10 +1,10 @@
 open Sparql ;;
 open Scanf ;;
+open Algebra ;;
   
 let stats = Hashtbl.create 17
 
 (* let () = Hashtbl.add stats ("s","*") 1 ; Hashtbl.add stats ("p","*") 1 ; Hashtbl.add stats ("o","*") 1 *)
-
 let load filename =
   (try
     let chan = Scanning.from_file filename in
@@ -22,29 +22,37 @@ let load filename =
 (* Hashtbl.iter (fun (x,y) z -> print_string ("("^x^","^y^") "^(string_of_int z)^"\n")) stats *)
 
 ;;
-  
 
-let no_cartesian  = 
-    let rec no_cartesian seen_cols = function
-      | [] -> []
-      | x::t ->
-         let rec find_first = function
-           | [] -> raise Not_found
-           | (s,p,o)::q ->
-              if List.exists (fun x -> List.mem x seen_cols) (list_var [s;p;o])
-              then (s,p,o),q
-              else
-                let fi,tl = find_first q in
-                fi,(s,p,o)::tl
-         in
-         let (s,p,o),ntl = try  find_first (x::t) with Not_found -> x,t in
-         (s,p,o)::(no_cartesian ((list_var [s;p;o])@seen_cols) ntl)
-    in
-    no_cartesian []
+let rec comb = function
+  | [] -> failwith "TP error"
+  | [a] -> a
+  | a::q -> Join(a,comb q)
+;;
+  
+let no_optim trad_tp l =
+  comb (List.map trad_tp l)
+;;
+let graded_no_cartesian trad_tp =
+  let rec combine acc = function
+    | [] -> comb (List.map snd acc)
+    | (grade_tp,(s,p,o))::q ->
+       let rec do_join c_term c_cols = function
+         | [] -> [c_cols,c_term]
+         | (o_cols,o_term)::q ->
+            if List.exists (fun x -> List.mem x c_cols) o_cols
+            then do_join (Join(c_term,o_term)) (c_cols@o_cols) q
+            else (o_cols,o_term)::(do_join c_term c_cols q)
+       in
+       combine (do_join (trad_tp (s,p,o)) (list_var [s;p;o]) acc) q
+  in
+  combine []
+;;
+  
+let no_cartesian trad_tp l  = 
+  graded_no_cartesian trad_tp (List.map (fun x -> (),x) l)
 ;;
 
-
-let reorder l =  
+let reorder trad_tp l =  
              
   let rec nb_var (s,p,o) =
     List.fold_left (fun ac el -> match el with Variable _ -> 1 +ac | _ -> ac) 0 [s;p;o]
@@ -79,8 +87,10 @@ let reorder l =
   let rec sort =
     List.sort (fun x y -> if x>y then 1 else -1)
   in
+  
+  List.map grade l |>
+    sort |>
+    graded_no_cartesian trad_tp
+  
 
-  let grade,tps = List.split (sort (List.map grade l)) in
-
-  no_cartesian tps
 ;;

@@ -1,5 +1,5 @@
 MLI=
-CMX=Sparql.cmx Parser.cmx Lexer.cmx Reorder.cmx Algebra.cmx main.cmx
+CMX=Sparql.cmx Parser.cmx Lexer.cmx Algebra.cmx Reorder.cmx Translate.cmx main.cmx
 #CMO=struct.cmo parser.cmo cost.cmo toScalaUtils.cmo toScalaOneFile.cmo toScalaVertical.cmo
 CMXA=
 #str.cmxa

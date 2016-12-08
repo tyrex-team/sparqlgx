@@ -2,7 +2,7 @@ open Lexer ;;
 open Parser ;;
 open Algebra ;;
 open Reorder ;;
-
+open Translate ;;
 (*
  Brief:
    sparql2scala translates SPARQL query files into Scala code able to

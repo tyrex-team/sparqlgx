@@ -11,7 +11,3 @@ type algebra =
   | Order of (string*bool)  list*algebra
                                   
 val print_algebra : algebra -> unit
-
-val print_query :  string list -> Sparql.modifier list -> int -> Sparql.unionoptbgp -> unit
-
-val translate :  string list -> Sparql.modifier list -> bool -> int -> Sparql.unionoptbgp -> algebra
