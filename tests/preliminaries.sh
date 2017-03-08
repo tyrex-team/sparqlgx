@@ -8,8 +8,8 @@ source $PATH_CMD/../conf/sparqlgx.conf
 nbStep="3"
 # HDFS Directories.
 echo -e "[1/$nbStep]  HDFS test directories\tcreated at\t$SPARQLGX_HDFS/sparqlgx-test/"
-hadoop fs -mkdir $SPARQLGX_HDFS/sparqlgx-test/ &> $logs
-hadoop fs -mkdir $SPARQLGX_HDFS/sparqlgx-test/results/ &> $logs
+hadoop fs -mkdir -p $SPARQLGX_HDFS/sparqlgx-test/ &> $logs
+hadoop fs -mkdir -p $SPARQLGX_HDFS/sparqlgx-test/results/ &> $logs
 # Copy N-Triples RDF files.
 echo -e "[2/$nbStep]  Dataset 1 (lubm.nt)\tadded in\t$SPARQLGX_HDFS/sparqlgx-test/"
 hadoop fs -copyFromLocal ${PATH_CMD}/resources/datasets/lubm.nt $SPARQLGX_HDFS/sparqlgx-test/ &> $logs
