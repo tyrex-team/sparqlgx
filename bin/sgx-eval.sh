@@ -78,7 +78,7 @@ cd - > /dev/null
 spark-submit --driver-memory $SPARK_DRIVER_MEM \
     --executor-memory $SPARK_EXECUT_MEM \
     --class=Query \
-    $localpath/eval/target/scala-2.10/evaluation_2.10-0.1.jar ;
+    $localpath/eval/target/scala*/evaluation_*.jar ;
 
 # Step 4 [optional]: Cleaning.
 if [[ $clean == "1" ]]; then rm -rf $localpath/eval/ ; fi
