@@ -59,7 +59,7 @@ fi
 if [[ ! -d $localpath/eval/src/main/scala ]];
 then mkdir -p $localpath/eval/src/main/scala/ ;
 fi
-echo -e "name := \"evaluation\"\n\nversion := \"0.1\"\n\nscalaVersion := \"2.10.4\"\n\nlibraryDependencies += \"org.apache.spark\" %% \"spark-core\" % \"1.2.0\"" > $localpath/eval/build.sbt
+echo -e "name := \"evaluation\"\n\nversion := \"0.1\"\n\nscalaVersion := \"2.11.0\"\n\nlibraryDependencies += \"org.apache.spark\" %% \"spark-core\" % \"2.1.0\"" > $localpath/eval/build.sbt
 echo -e "import org.apache.spark.SparkContext\nimport org.apache.spark.SparkContext._\nimport org.apache.spark.SparkConf\nimport org.apache.spark._\nimport org.apache.spark.rdd.RDD\nimport org.apache.log4j.Logger\nimport org.apache.log4j.Level\nobject Query {\ndef main(args: Array[String]) {\nLogger.getLogger(\"org\").setLevel(Level.OFF);\nLogger.getLogger(\"akka\").setLevel(Level.OFF);\nval conf = new SparkConf().setAppName(\"Simple Application\");\nval sc = new SparkContext(conf);\n" > $localpath/eval/src/main/scala/Query.scala
 if [[ -z $saveFile ]];
 then
