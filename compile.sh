@@ -1,5 +1,38 @@
 #!/bin/bash
 
+# Counting given arguments
+if [[ $# > 1 ]];
+then
+    echo "Too many arguments..."
+    echo "  To compile: >bash compile.sh"
+    echo "  To clean:   >bash compile.sh clean"
+    exit 1
+fi
+
+# Simple switch to remove compiled files...
+case "$1" in
+    "clean" )
+	echo "Cleaning the project."
+	cd $(dirname $0)
+	rm -rf bin/sparqlgx-load.jar bin/sparqlgx-stat.jar bin/sparqlgx-translator
+	rm -rf src/load-src/project/ src/load-src/target/ src/stat-src/project/ src/stat-src/target/
+	cd src/translation-src/
+	make clean
+	cd ../../
+	exit 0
+	;;
+    
+    "" )
+	# Skip and compile :)
+	;;
+    * )
+	echo "Usage:"
+	echo "  To compile   >bash compile.sh"
+	echo "  To clean     >bash compile.sh clean"
+	exit 1 
+	;;
+esac
+
 start_time=$(date +%s)
 cd $(dirname $0) # Execution from correct location.
 echo "====== SPARQLGX compilation chain ======"
