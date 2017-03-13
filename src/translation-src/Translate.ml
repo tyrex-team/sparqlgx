@@ -1,7 +1,8 @@
 open Sparql ;;
 open Reorder ;;
 open Algebra ;;
-let print_query distinguished modifiers optim stmt =
+
+let print_query =
   (* let print_list_tp l = *)
   (*   let rec foo = function *)
   (*     | [] -> failwith "Empty list of TP" *)
@@ -20,45 +21,72 @@ let print_query distinguished modifiers optim stmt =
   (*   | (a,[]) -> print_list_tp a *)
   (*   | (a,b) -> print_list_tp a ; print_list_tp b *)
   (* in *)
-
-  (* let rec print_toplevel = function *)
-  (*   | [] -> failwith "Empty query!" *)
-  (*   | [a] -> print_opt a *)
-  (*   | a::q -> print_opt a ; print_string "UNION {" ; print_toplevel q ; print_string " }" *)
-  (* in *)
-
-  (* let rec print_list_order = function *)
-  (*   | [] -> print_string "" *)
-  (*   | (x,true)::q -> print_string x ; print_list_order q *)
-  (*   | _::q -> print_list_order q *)
-  (* in *)
-
-  (* let rec print_modifiers bgp = function *)
-  (*   | [] ->  *)
-  (*      begin *)
-  (*       List.iter (Printf.printf "%s ") distinguished ; *)
-  (*       print_string "\nWHERE {\n" ; *)
-  (*       print_toplevel stmt ; *)
-  (*       print_string "}\n" ; *)
-  (*      end *)
-  (*   | OrderBy(l)::q -> *)
-  (*      begin *)
-  (*       print_modifiers bgp q ; *)
-  (*       print_string "Order By { " ; *)
-  (*       print_list_order l ; *)
-  (*       print_string " }" ; *)
-  (*      end *)
-  (*   | Distinct::q -> *)
-  (*      begin  *)
-  (*       print_string "DISTINCT " ;  *)
-  (*       print_modifiers bgp q ; *)
-  (*      end *)
-  (* in *)
   
-  (* print_string "SELECT "; *)
-  (* print_modifiers stmt modifiers ; *)
 ()
-;;
+
+let rec print_query distinguished modifiers optim stmt =
+
+  let rec get_tp = function
+    | Readfile2(p) -> ["p",p]
+    | Readfile3(_) -> []
+    | Filter(col,value,term) -> (col,value)::get_tp term 
+    | Rename(col,value,term) -> (col,value)::get_tp term
+    | _ -> failwith "unrecognized pattern!"
+  in
+  
+  let rec print_toplevel ps t =
+    let s = "  "^ps in
+    match t with 
+    | Union(a,b) ->
+       "\n"^ps^"{"^print_toplevel s a^"}\n"^ps^"UNION"^ps^"\n"^ps^"{"^print_toplevel s b^"}"
+    | Join (a,b) ->
+       "\n"^ps^"{"^print_toplevel s a^print_toplevel s b^"\n"^ps^"}"
+    | LeftJoin(a,b) ->
+       "\n"^ps^"{"^print_toplevel s a^"\n"^ps^"} OPTIONAL {"^print_toplevel s b^"\n"^ps^"}"
+    | Keep(_,l) ->
+       let tp = get_tp l in
+       "\n"^ps^(List.assoc "s" tp)^" "^(List.assoc "p" tp)^" "^(List.assoc "o" tp)^" ."
+    | Distinct a | Order (_,a) -> print_toplevel ps a
+     
+    | _ -> failwith "Unrecognized pattern2!\n"
+         
+       
+  in
+
+  let rec print_list_order = function
+    | [] -> ()
+    | (x,true)::q -> print_string x ; print_list_order q
+    | _::q -> print_list_order q
+  in
+
+  let rec print_modifiers stmt = function
+    | [] ->
+       begin
+        List.iter (Printf.printf "%s ") distinguished ;
+        print_string "\nWHERE {" ;
+        print_string (print_toplevel "" stmt );
+        print_string "}\n" ;
+       end
+    | OrderBy(l)::q ->
+       print_modifiers stmt q ;
+       if List.exists snd l then
+       begin
+        print_string "Order By { " ;
+        print_list_order l ;
+        print_string " }" ;
+       end
+    | Distinct::q ->
+       begin
+        print_string "DISTINCT " ;
+        print_modifiers stmt q ;
+       end
+  in
+
+
+  print_string "SELECT ";
+  print_modifiers stmt modifiers 
+  
+
 
   
 let translate distinguished modifiers vertical optim stmt =
@@ -77,17 +105,11 @@ let translate distinguished modifiers vertical optim stmt =
   in
 
   let translate_list_tp l =
-    let rec foo = function
-      | [] -> failwith "Empty list of TP"
-      | [a] -> translate_tp a
-      | a::q -> Join(translate_tp a,foo q)
-    in
-    let rec foo x = x in
     match optim with
-    | 0 -> foo (Reorder.no_optim translate_tp (List.rev l))
-    | 1 -> foo (Reorder.no_cartesian translate_tp l)
-    | 2 -> foo (Reorder.reorder  translate_tp l)
-    | _ -> foo (Reorder.no_cartesian  translate_tp l)
+    | 0 -> Reorder.no_optim translate_tp (List.rev l)
+    | 1 -> Reorder.no_cartesian translate_tp l
+    | 2 -> Reorder.reorder  translate_tp l
+    | _ -> Reorder.no_cartesian  translate_tp l
   in
 
   let translate_opt  = function
@@ -119,4 +141,5 @@ let translate distinguished modifiers vertical optim stmt =
 (*                       ), *)
 (*                       Keep(["a"],Rename("s","a",Readfile2("age") )) *)
 (*                       )) *)
+  
   

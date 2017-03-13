@@ -45,15 +45,17 @@ let _ =
     let c = open_in (!file) in
     let lb = Lexing.from_channel c in
     let (distinguished,term),modifiers =  (Parser.query Lexer.next_token lb) in
+    let translated = (translate distinguished modifiers (!vertical) (!optim) term) in
     if (!debug) then
      begin
       print_string "\nInitial Query is:\n-----------------\n" ;
-      print_query distinguished modifiers 0 term ;
+    let translated_stupid = (translate distinguished modifiers (!vertical) 0 term) in
+      print_query distinguished modifiers 0 translated_stupid ;
       print_string "\nOptimized Query is:\n-------------------\n" ;
-      print_query distinguished modifiers (!optim) term ;
+      print_query distinguished modifiers (!optim) translated ;
       print_string "\nObtained Scala Code is:\n-----------------------\n" ;
      end ;
-    print_algebra (translate distinguished modifiers (!vertical) (!optim) term)
+    print_algebra translated
   with
   | Lexer.Lexing_error s ->
      print_string ("lexical error: "^s);
