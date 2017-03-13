@@ -55,7 +55,11 @@ let rec print_query distinguished modifiers optim stmt =
 
   let rec print_list_order = function
     | [] -> ()
-    | (x,true)::q -> print_string x ; print_list_order q
+    | (x,b)::q ->
+       print_string (if b then " ASC(" else " DESC(") ;
+       print_string x;
+       print_string (if q != [] then  ")," else ")") ;
+       print_list_order q
     | _::q -> print_list_order q
   in
 
@@ -69,11 +73,10 @@ let rec print_query distinguished modifiers optim stmt =
        end
     | OrderBy(l)::q ->
        print_modifiers stmt q ;
-       if List.exists snd l then
+       if l <> [] then
        begin
-        print_string "Order By { " ;
+        print_string "Order By " ;
         print_list_order l ;
-        print_string " }" ;
        end
     | Distinct::q ->
        begin
