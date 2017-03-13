@@ -148,7 +148,7 @@ let rec print_algebra term =
              let code,keys,cols = foo a in
              if cols <> keepcols
              then
-               "val "^res^"="^code^".map{case ("^(join keys cols)^") => ("^(join [] keepcols)^")}",keys,keepcols
+               "val "^res^"="^code^".map{case ("^(join keys cols)^") => ("^(join keys keepcols)^")}",keys,keepcols
              else
                "val "^res^"="^code^" // useless keepcols",keys,keepcols
                
