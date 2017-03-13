@@ -162,7 +162,7 @@ let rec print_algebra term =
              let cols_b_bis = renamedup cols_b cols_a in
              if cols_join = []
              then
-               "val "^res^"="^code_a^mapkeys cols_a keys_a []^".cartesian("^code_b^mapkeys cols_b keys_b []^")",[],cols_union_some
+               "val "^res^"="^code_a^mapkeys cols_a keys_a []^".cartesian("^code_b^mapkeys cols_b keys_b []^").mapValues{case (("^join [] cols_a^"),("^join [] cols_b^"))}",[],cols_union_some
              else
                let cols_int = List.mapi (fun i s -> s,i) cols_union_some in 
                "val "^res^"="^code_a^mapkeys cols_a keys_a cols_join
