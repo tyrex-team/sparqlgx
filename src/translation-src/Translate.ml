@@ -31,26 +31,29 @@ let rec print_query distinguished modifiers optim stmt =
     | Readfile3(_) -> []
     | Filter(col,value,term) -> (col,value)::get_tp term 
     | Rename(col,value,term) -> (col,value)::get_tp term
-    | _ -> failwith "unrecognized pattern!"
+    | _ -> failwith ("Unrecognized pattern @ "^__LOC__)
   in
   
-  let rec print_toplevel ps t =
-    let s = "  "^ps in
-    match t with 
-    | Union(a,b) ->
-       "\n"^ps^"{"^print_toplevel s a^"}\n"^ps^"UNION"^ps^"\n"^ps^"{"^print_toplevel s b^"}"
-    | Join (a,b) ->
-       "\n"^ps^"{"^print_toplevel s a^print_toplevel s b^"\n"^ps^"}"
-    | LeftJoin(a,b) ->
-       "\n"^ps^"{"^print_toplevel s a^"\n"^ps^"} OPTIONAL {"^print_toplevel s b^"\n"^ps^"}"
-    | Keep(_,l) ->
-       let tp = get_tp l in
-       "\n"^ps^(List.assoc "s" tp)^" "^(List.assoc "p" tp)^" "^(List.assoc "o" tp)^" ."
-    | Distinct a | Order (_,a) -> print_toplevel ps a
-     
-    | _ -> failwith "Unrecognized pattern2!\n"
-         
-       
+  let rec print_toplevel t =
+
+    let rec foo  ps t =
+      let s = "  "^ps in
+      match t with 
+      | Union(a,b) ->
+         "\n"^ps^"{"^foo s a^"}\n"^ps^"UNION"^ps^"\n"^ps^"{"^foo s b^"}"
+      | Join (a,b) ->
+         "\n"^ps^"{"^foo s a^foo s b^"\n"^ps^"}"
+      | LeftJoin(a,b) ->
+         "\n"^ps^"{"^foo s a^"\n"^ps^"} OPTIONAL {"^foo s b^"\n"^ps^"}"
+      | Keep(_,l) ->
+         let tp = get_tp l in
+         "\n"^ps^(List.assoc "s" tp)^" "^(List.assoc "p" tp)^" "^(List.assoc "o" tp)^" ."
+      | Distinct a | Order (_,a) -> foo ps a
+                                  
+      | _ -> failwith ("Unrecognized pattern @ "^__LOC__)
+    in
+
+    print_string (match t with | Keep(_,l) | l -> foo "" l) 
   in
 
   let rec print_list_order = function
@@ -68,7 +71,7 @@ let rec print_query distinguished modifiers optim stmt =
        begin
         List.iter (Printf.printf "%s ") distinguished ;
         print_string "\nWHERE {" ;
-        print_string (print_toplevel "" stmt );
+        print_toplevel stmt ;
         print_string "}\n" ;
        end
     | OrderBy(l)::q ->
