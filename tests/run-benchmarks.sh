@@ -26,13 +26,6 @@ else
 fi
 
 # Brief remind of parameters.
-echo "'$(bash ${PATH_SGX}sparqlgx.sh -v)' test suite using the following parameters:"
-echo -e "\tHDFS path is:\t\t$SPARQLGX_HDFS"
-echo -e "\tLocal path is:\t\t$SPARQLGX_LOCAL"
-echo -e "\tStatistic size:\t\t$SPARQLGX_STAT_SIZE"
-echo -e "\tExecution with:\t\tspark-submit"
-echo -e "\t\tDriver   ->\t$SPARK_DRIVER_MEM"
-echo -e "\t\tExecutor ->\t$SPARK_EXECUT_MEM"
 # Query names.
 QUERIES[0]="Q1 Q2 Q3 Q4 Q5 Q6 Q7 Q8 Q9 Q10 Q11 Q12 Q13 Q14";
 QUERIES[1]="C1 C2 C3 F1 F2 F3 F4 F5 L1 L2 L3 L4 L5 S1 S2 S3 S4 S5 S6 S7";
@@ -46,7 +39,16 @@ start_time=$(date +%s)
 tokname=$(cat ../.git/refs/heads/master)__$(date "+%Y-%m-%d_%H-%M-%S") ;
 token="$SPARQLGX_HDFS/$tokname"
 logs="logs.$tokname"                                                                                    
+tl="time.$tokname"                                                                                    
 ln -sf $logs logs.latest
+
+(echo "'$(bash ${PATH_SGX}sparqlgx.sh -v)' test suite using the following parameters:"
+echo -e "\tHDFS path is:\t\t$SPARQLGX_HDFS"
+echo -e "\tLocal path is:\t\t$SPARQLGX_LOCAL"
+echo -e "\tStatistic size:\t\t$SPARQLGX_STAT_SIZE"
+echo -e "\tExecution with:\t\tspark-submit"
+echo -e "\t\tDriver   ->\t$SPARK_DRIVER_MEM"
+echo -e "\t\tExecutor ->\t$SPARK_EXECUT_MEM"
 echo -e "\t\tToken: $tokname"
 echo -e "\t\tResults: $token"
 echo -e "\t\tLogs: $logs"
@@ -98,7 +100,7 @@ do
     done
     echo "---------------------------------------------------------------------------------------------------------"
 done ;
-echo ""
+echo "") | tee -a $tl
 
 stop_time=$(date +%s)
 
