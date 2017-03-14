@@ -21,7 +21,9 @@ object Load {
     val fshadoop = org.apache.hadoop.fs.FileSystem.get(confhadoop)
 
     val Apred = T.map{case (s,p,o)=>p}.distinct.collect;
-    val Avalue = Apred.map{case lambda => lambda.map(_.toInt).sum};
+    val Avalue = Apred.map{case lambda => lambda.map{ case c =>
+          if(c=='/' || c==':' || c=='<' || c=='>'){ '_'} else {c}
+          }};
     
     for( i <- 0 to Apred.length -1){
       val exists = fshadoop.exists(new org.apache.hadoop.fs.Path(args(1)+Avalue(i)+".pred"))

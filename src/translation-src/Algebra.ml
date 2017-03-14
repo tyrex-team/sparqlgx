@@ -68,9 +68,7 @@ let rec print_algebra term =
   (subject,object) associated with pred are stored in (numero
   pred)^".pred "*)
   let numero(s:string):string=
-    let sum = ref 0 in
-    String.iter (fun c -> sum:=Char.code(c)+ (!sum)) s ;
-    string_of_int (!sum)
+    String.map (fun c -> if c = '/' || c=':' || c='<' || c='>' then '_' else c) s
   in
   
   (*foo term returns (id,cols) where "V"id is the variable associated
