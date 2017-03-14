@@ -14,7 +14,7 @@
 ##                                                                   ##
 #######################################################################
 
-logs=" /dev/null"
+logs="logs"
 PATH_SGX=$(dirname $0)/../bin/
 source ${PATH_SGX}/../conf/sparqlgx.conf
 
