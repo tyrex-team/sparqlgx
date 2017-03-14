@@ -74,31 +74,27 @@ do
     for i in ${QUERIES[$b]}; do
         # The same query is done 5 times: depending on optimizations
         # sketches (with or without any, statistics or not...).
-        tmpf=$(mktemp -u) ;
-        mkfifo $tmpf ;
-        (tail -f $tmpf)&
-        tail_pid="$!" ;
+        exec 3>&1
         (
-            echo -n -e "| $i\t|";
+            echo -n -e "| $i\t|" 1>&3;
             t1=$(date +%s);
             bash ${PATH_SGX}/sparqlgx.sh direct-query --no-optim -o $token/results/$i.sde.nooptim.txt $(dirname $0)/resources/queries/$i.rq ${DATASET[$b]} ;
             t2=$(date +%s);
-            echo -n -e "\t$((t2-t1))" >> $tmpf;
+            echo -n -e "\t$((t2-t1))" 1>&3;
             bash ${PATH_SGX}/sparqlgx.sh direct-query -o $token/results/$i.sde.txt $(dirname $0)/resources/queries/$i.rq ${DATASET[$b]}  ;
             t3=$(date +%s);
-            echo -n -e "\t\t$((t3-t2))">> $tmpf;
+            echo -n -e "\t\t$((t3-t2))" 1>&3;
             bash ${PATH_SGX}/sparqlgx.sh query --no-optim -o $token/results/$i.sgx.nooptim.txt ${BENCHNAME[$b]} $(dirname $0)/resources/queries/$i.rq ;
             t4=$(date +%s);
-            echo -n -e "\t\t|\t$((t4-t3))" >> $tmpf;
+            echo -n -e "\t\t|\t$((t4-t3))" 1>&3;
             bash ${PATH_SGX}/sparqlgx.sh query -o $token/results/$i.sgx.txt ${BENCHNAME[$b]} $(dirname $0)/resources/queries/$i.rq  ;
             t5=$(date +%s);
-            echo -n -e "\t\t$((t5-t4))" >> $tmpf;
+            echo -n -e "\t\t$((t5-t4))" 1>&3;
             bash ${PATH_SGX}/sparqlgx.sh query --stat -o $token/results/$i.sgx.stat.txt ${BENCHNAME[$b]} $(dirname $0)/resources/queries/$i.rq  ;
             t6=$(date +%s);
-            echo -e "\t\t$((t6-t5))\t\t|" >> $tmpf;
+            echo -e "\t\t$((t6-t5))\t\t|" 1>&3;
         ) | sed -u "s/^/[$i] /" &>>$logs ;
-        kill $tail_pid ;
-
+        exec 3>&- ;
     done
     echo "---------------------------------------------------------------------------------------------------------"
 done ;
