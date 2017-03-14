@@ -95,7 +95,7 @@ do
             bash ${PATH_SGX}/sparqlgx.sh query --stat -o $token/results/$i.sgx.stat.txt ${BENCHNAME[$b]} $(dirname $0)/resources/queries/$i.rq  ;
             t6=$(date +%s);
             echo -e "\t\t$((t6-t5))\t\t|" 1>&3;
-        ) | sed -u "s/^/[$i] /" &>>$logs ;
+        ) 2>&1 | sed -u "s/^/[$i] /" &>>$logs ;
         exec 3>&- ;
     done
     echo "---------------------------------------------------------------------------------------------------------"
