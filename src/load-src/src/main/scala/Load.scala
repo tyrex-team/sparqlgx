@@ -22,7 +22,7 @@ object Load {
 
     val Apred = T.map{case (s,p,o)=>p}.distinct.collect;
     val Avalue = Apred.map{case lambda => lambda.map{ case c =>
-          if(c=='/' || c==':' || c=='<' || c=='>'){ '_'} else {c}
+          if(c=='#' ||c=='/' || c==':' || c=='<' || c=='>'){ '_'} else {c}
           }};
     
     for( i <- 0 to Apred.length -1){
