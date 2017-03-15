@@ -68,7 +68,7 @@ let rec print_algebra term =
   (subject,object) associated with pred are stored in (numero
   pred)^".pred "*)
   let numero(s:string):string=
-     String.map (fun c -> if c <'a' || c>'z' then '0' else c) (String.lowercase s)
+     String.map (fun c -> if (c <'a' || c>'z') && (c<'0' || c>'9') then 'z' else c) (String.lowercase s)
   in
   
   (*foo term returns (id,cols) where "V"id is the variable associated

@@ -21,8 +21,8 @@ object Load {
     val fshadoop = org.apache.hadoop.fs.FileSystem.get(confhadoop)
 
     val Apred = T.map{case (s,p,o)=>p}.distinct.collect;
-    val Avalue = Apred.map{case lambda => lambda.lowercase.map{ case c =>
-          if(c<'a' || c>'z'){ '_'} else {c}
+    val Avalue = Apred.map{case lambda => lambda.toLowerCase.map{ case c =>
+          if( (c<'a' || c>'z') && (c<'0' || c>'9')){ 'z'} else {c}
           }};
     
     for( i <- 0 to Apred.length -1){
