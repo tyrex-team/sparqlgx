@@ -68,7 +68,7 @@ let rec print_algebra term =
   (subject,object) associated with pred are stored in (numero
   pred)^".pred "*)
   let numero(s:string):string=
-     String.map (fun c -> if (c <'a' || c>'z') && (c<'0' || c>'9') then 'z' else c) (String.lowercase s)
+     String.map (fun c -> if (c <'a' || c>'z') && (c<'0' || c>'9') then '_' else c) (String.lowercase s)
   in
   
   (*foo term returns (id,cols) where "V"id is the variable associated
@@ -136,7 +136,7 @@ let rec print_algebra term =
           | Readfile3(f) ->
              "val "^res^"=sc.textFile(\""^f^"\").map{line => val field:Array[String]=line.split(\" \",3); (field(0),field(1),field(2).substring(0,field(2).lastIndexOf(\" \")))};",[],["s";"p";"o"]
           | Readfile2(f) ->
-             "val "^res^"=readpred(\""^(numero f)^".pred\") //"^f,[],["s";"o"]
+             "val "^res^"=readpred(\"p"^(numero f)^"\") //"^f,[],["s";"o"]
                
           | Filter(c,v,a) ->
              let code,keys,cols = foo a in

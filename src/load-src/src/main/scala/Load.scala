@@ -22,13 +22,13 @@ object Load {
 
     val Apred = T.map{case (s,p,o)=>p}.distinct.collect;
     val Avalue = Apred.map{case lambda => lambda.toLowerCase.map{ case c =>
-          if( (c<'a' || c>'z') && (c<'0' || c>'9')){ 'z'} else {c}
+          if( (c<'a' || c>'z') && (c<'0' || c>'9')){ '_'} else {c}
           }};
     
     for( i <- 0 to Apred.length -1){
       val exists = fshadoop.exists(new org.apache.hadoop.fs.Path(args(1)+Avalue(i)+".pred"))
       if(!exists){
-        T.filter{case (s,p,o) => p.equals(Apred(i))}.map{case (s,p,o) => s + " " + o}.saveAsTextFile(args(1)+Avalue(i)+".pred");
+        T.filter{case (s,p,o) => p.equals(Apred(i))}.map{case (s,p,o) => s + " " + o}.saveAsTextFile("p"+args(1)+Avalue(i));
       }
     }
   }
