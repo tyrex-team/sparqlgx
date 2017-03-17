@@ -33,6 +33,22 @@ DATASET[0]=$SPARQLGX_HDFS/sparqlgx-test/lubm.nt ;
 DATASET[1]=$SPARQLGX_HDFS/sparqlgx-test/watdiv.nt ;
 BENCHNAME[0]="lubm";
 BENCHNAME[1]="watdiv";
+EXPNAME[0]="sde.nooptim"
+EXPNAME[1]="sde.normal"
+EXPNAME[2]="sgx.nooptim"
+EXPNAME[3]="sgx.normal"
+EXPNAME[4]="sgx.stats"
+EXPCMD[0]="direct-query"
+EXPCMD[1]="direct-query"
+EXPCMD[2]="query"
+EXPCMD[3]="query"
+EXPCMD[4]="query"
+EXPOPT[0]="--no-optim"
+EXPOPT[1]=""
+EXPOPT[2]="--no-optim"
+EXPOPT[3]=""
+EXPOPT[4]="--stat"
+
 # Time beginning.
 start_time=$(date +%s)
 # Loads.
@@ -66,40 +82,43 @@ do
     echo "---------------------"
     echo "";
     echo "--------------------- LOAD ----------------------"
+    echo "Start loading 1/2" >>${logs}.err
+    echo "Start loading 1/2" >>${logs}.out
     t1=$(date +%s);
     bash ${PATH_SGX}/sparqlgx.sh light-load ${BENCHNAME[$b]} ${DATASET[$b]} 1>>${logs}.out 2>>${logs}.err ;
     t2=$(date +%s);
+    echo "Start loading 2/2" >>${logs}.err
+    echo "Start loading 2/2" >>${logs}.out
     bash ${PATH_SGX}/sparqlgx.sh generate-stat ${BENCHNAME[$b]} ${DATASET[$b]} 1>>${logs}.out 2>>${logs}.err ;
     t3=$(date +%s);
+    echo "Finished loading" >>${logs}.err
+    echo "Finished loading" >>${logs}.out
     echo "> ${BENCHNAME[$b]} dataset loaded in $((t2-t1))s and its statistics generated in $((t3-t2))s."
     echo "----------------------------------------------- EVAL ----------------------------------------------------"
     echo -e "| \t|\t     Direct Evaluation\t\t|\t\t    Standard Evaluation\t\t\t|"
     echo -e "| Query\t|\tNo Optim\tStandard\t|\tNo Optim\tStandard\tWith Statistics\t|"
-    for i in ${QUERIES[$b]}; do
+    for query in ${QUERIES[$b]}; do
         # The same query is done 5 times: depending on optimizations
         # sketches (with or without any, statistics or not...).
-        exec 3>&1
-        (
-            echo -n -e "| $i\t|" 1>&3;
-            t1=$(date +%s);
-            bash ${PATH_SGX}/sparqlgx.sh direct-query --no-optim -o $token/results/$i.sde.nooptim.txt $(dirname $0)/resources/queries/$i.rq ${DATASET[$b]} ;
-            t2=$(date +%s);
-            echo -n -e "\t$((t2-t1))" 1>&3;
-            bash ${PATH_SGX}/sparqlgx.sh direct-query -o $token/results/$i.sde.txt $(dirname $0)/resources/queries/$i.rq ${DATASET[$b]}  ;
-            t3=$(date +%s);
-            echo -n -e "\t\t$((t3-t2))" 1>&3;
-            bash ${PATH_SGX}/sparqlgx.sh query --no-optim -o $token/results/$i.sgx.nooptim.txt ${BENCHNAME[$b]} $(dirname $0)/resources/queries/$i.rq ;
-            t4=$(date +%s);
-            echo -n -e "\t\t|\t$((t4-t3))" 1>&3;
-            bash ${PATH_SGX}/sparqlgx.sh query -o $token/results/$i.sgx.txt ${BENCHNAME[$b]} $(dirname $0)/resources/queries/$i.rq  ;
-            t5=$(date +%s);
-            echo -n -e "\t\t$((t5-t4))" 1>&3;
-            bash ${PATH_SGX}/sparqlgx.sh query --stat -o $token/results/$i.sgx.stat.txt ${BENCHNAME[$b]} $(dirname $0)/resources/queries/$i.rq  ;
-            t6=$(date +%s);
-            echo -e "\t\t$((t6-t5))\t\t|" 1>&3;
-        ) 2>>${logs}.err | sed -u "s/^/[$i] /" >>${logs}.out ;
+        queryfile=$(dirname $0)/resources/queries/$query.rq
+        echo -n -e "| $query\t|" 1>&3;
+        for exp in $(seq 0 4) ;
+        do
+                exec 3>&1
+                (
+                    echo "[$query:${EXPNAME[$exp]}] Start" >> ${logs}.out
+                    echo "[$query:${EXPNAME[$exp]}] Start" >> ${logs}.err
+                    t1=$(date +%s);
+                    bash ${PATH_SGX}/sparqlgx.sh ${EXPCMD[$exp]} ${EXPOPT[$exp]} -o $token/results/$query.${EXPNAME[$exp]}.txt $queryfile ${DATASET[$b]} ;
+                    t2=$(date +%s);
+                    tim=$((t2-t1)) ;
+                    echo -n -e "\t$tim" 1>&3;
+                    echo "[$query:${EXPNAME[$exp]}] End : $tim" >> ${logs}.out
+                    echo "[$query:${EXPNAME[$exp]}] End : $tim" >> ${logs}.err
+                ) 2>>${logs}.err | sed -u "s/^/[${i}:${EXPNAME[$exp]}] /" >>${logs}.out ;
+        done ;
         exec 3>&- ;
-    done
+    done ;
     echo "---------------------------------------------------------------------------------------------------------"
 done ;
 echo "") | tee -a $tl

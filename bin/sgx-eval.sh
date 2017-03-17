@@ -71,7 +71,11 @@ echo -e "}}" >> $localpath/eval/src/main/scala/Query.scala
 
 # Step 2: Compilation.
 cd $localpath/eval/
-sbt package
+if ! sbt package ;
+then
+    echo "Compilation failed!" ;
+    exit 1 ;
+fi ;
 cd - > /dev/null
 
 # Step 3: Execution.
