@@ -15,7 +15,7 @@ object Load {
     val reg = new Regex("\\s+.\\s*$") ;
     val conf = new SparkConf().setAppName("Simple Application");
     val sc = new SparkContext(conf);
-    val T = sc.textFile(args(0)).map{line => val field:Array[String]=line.split("\\s+",3); if(field.length!=3){throw new IOException("Invalid line: "+line);}else{(field(0),field(1),reg.replaceFirstIn(field(2),""))}}.cache;
+    val T = sc.textFile(args(0)).map{line => val field:Array[String]=line.split("\\s+",3); if(field.length!=3){throw new RuntimeException("Invalid line: "+line);}else{(field(0),field(1),reg.replaceFirstIn(field(2),""))}}.cache;
     //val T = sc.textFile(args(0)).map{line => val field:Array[String]=line.split(" "); (field(0),field(1),field(2))}.cache;
 
     val confhadoop = sc.hadoopConfiguration
