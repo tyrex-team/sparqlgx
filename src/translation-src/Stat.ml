@@ -1,10 +1,4 @@
-
-let t = Hashtbl.create 17 ;;
-
-Hashtbl.add t "42" 42 ;;
-  t;;
-
-type 'a summary = ('a,int) Hashtbl.t * int * int ) ;;
+type 'a summary = ('a,int) Hashtbl.t * int * int 
     
 type 'a stat =
     ('a  * ('a summary)) list;;
