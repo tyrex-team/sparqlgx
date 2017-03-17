@@ -8,10 +8,10 @@ import org.apache.log4j.Level;
 import scala.util.matching.Regex
 
 object GenerateStat {
-
-
+  
+  
   var numberMax = 100;
-
+  
   def merge(xs: List[(Int,String)], ys: List[(Int,String)],n:Int): List[(Int,String)] = {
     if (n==0) { Nil }
     else
@@ -23,18 +23,13 @@ object GenerateStat {
           else y :: merge(xs, ys1,n-1)
       }
   }
-
-
+  
+  
   def combine(acc:List[(Int,String)],size:Int,el:(Int,String)) : (List[(Int,String)],Int) = {
-     val na = el::acc ;
-     if(size+1==numberMax*2) {
-         (na.sortWith( case (a,b) => a._1 > b._1).slice(0,numberMax),numberMax)
-     }
-     else {
-       (na,size+1)
-     }   
+     val na = merge(el::Nil,acc,numberMax) ;
+       (na,(size+1) min numberMax)
   }
-
+  
   def main(args: Array[String]) {
     // Cut of spark logs.
     Logger.getLogger("org").setLevel(Level.OFF);
@@ -60,7 +55,7 @@ object GenerateStat {
         { case ((a1,s1),(a2,s2)) => (merge(a1,a2,numberMax),((s1+s2) min numberMax)) }
         ).collect
    for(i <- 0 to 2)
-   {
+   { 
      val (k,(v,s))=t(i);
      println(k.toString+" "+s) ;
      v foreach { case (n,iri) => println (iri+" "+n.toString) }  ;
