@@ -32,7 +32,7 @@ object Load {
 
     val confhadoop = sc.hadoopConfiguration
     val fshadoop = org.apache.hadoop.fs.FileSystem.get(confhadoop)
-    T.saveAsHadoopFile("output/", String.class, String.class,
+    T.saveAsHadoopFile(args(1), String.class, String.class,
                         RDDMultipleTextOutputFormat.class);
     }
 }
