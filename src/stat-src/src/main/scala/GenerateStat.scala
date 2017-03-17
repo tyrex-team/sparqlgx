@@ -10,7 +10,7 @@ import scala.util.matching.Regex
 object GenerateStat {
 
 
-  var numberMax = 0;
+  var numberMax = 100;
 
   def merge(xs: List[(Int,String)], ys: List[(Int,String)],n:Int): List[(Int,String)] = {
     if (n==0) { Nil }
@@ -28,7 +28,7 @@ object GenerateStat {
   def combine(acc:List[(Int,String)],size:Int,el:(Int,String)) : (List[(Int,String)],Int) = {
      val na = el::acc ;
      if(size+1==numberMax*2) {
-         (na.sortWith(_._1>_._1).slice(0,numberMax),numberMax)
+         (na.sortWith(_._1._1>_._2._1).slice(0,numberMax),numberMax)
      }
      else {
        (na,size+1)
