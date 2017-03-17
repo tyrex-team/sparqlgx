@@ -39,8 +39,10 @@ start_time=$(date +%s)
 tokname=$(cat ../.git/refs/heads/master)__$(date "+%Y-%m-%d_%H-%M-%S") ;
 token="$SPARQLGX_HDFS/$tokname"
 logs="logs.$tokname"                                                                                    
-tl="time.$tokname"                                                                                    
-ln -sf $logs logs.latest
+tl="time.$tokname"                                                                                   
+
+ln -sf ${logs}.out out.latest
+ln -sf ${logs}.err err.latest
 
 (echo "'$(bash ${PATH_SGX}sparqlgx.sh -v)' test suite using the following parameters:"
 echo -e "\tHDFS path is:\t\t$SPARQLGX_HDFS"
@@ -65,9 +67,9 @@ do
     echo "";
     echo "--------------------- LOAD ----------------------"
     t1=$(date +%s);
-    bash ${PATH_SGX}/sparqlgx.sh light-load ${BENCHNAME[$b]} ${DATASET[$b]} &>> $logs ;
+    bash ${PATH_SGX}/sparqlgx.sh light-load ${BENCHNAME[$b]} ${DATASET[$b]} 1>>${logs}.out 2>>${logs}.err ;
     t2=$(date +%s);
-    bash ${PATH_SGX}/sparqlgx.sh generate-stat ${BENCHNAME[$b]} ${DATASET[$b]} &>> $logs ;
+    bash ${PATH_SGX}/sparqlgx.sh generate-stat ${BENCHNAME[$b]} ${DATASET[$b]} 1>>${logs}.out 2>>${logs}.err ;
     t3=$(date +%s);
     echo "> ${BENCHNAME[$b]} dataset loaded in $((t2-t1))s and its statistics generated in $((t3-t2))s."
     echo "----------------------------------------------- EVAL ----------------------------------------------------"
@@ -95,7 +97,7 @@ do
             bash ${PATH_SGX}/sparqlgx.sh query --stat -o $token/results/$i.sgx.stat.txt ${BENCHNAME[$b]} $(dirname $0)/resources/queries/$i.rq  ;
             t6=$(date +%s);
             echo -e "\t\t$((t6-t5))\t\t|" 1>&3;
-        ) 2>${logs}.err | sed -u "s/^/[$i] /" >>${logs}.out ;
+        ) 2>>${logs}.err | sed -u "s/^/[$i] /" >>${logs}.out ;
         exec 3>&- ;
     done
     echo "---------------------------------------------------------------------------------------------------------"
