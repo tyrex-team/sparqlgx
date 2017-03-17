@@ -101,10 +101,10 @@ do
         # The same query is done 5 times: depending on optimizations
         # sketches (with or without any, statistics or not...).
         queryfile=$(dirname $0)/resources/queries/$query.rq
+        exec 3>&1
         echo -n -e "| $query\t|" 1>&3;
         for exp in $(seq 0 4) ;
         do
-                exec 3>&1
                 (
                     echo "[$query:${EXPNAME[$exp]}] Start" >> ${logs}.out
                     echo "[$query:${EXPNAME[$exp]}] Start" >> ${logs}.err
@@ -115,7 +115,7 @@ do
                     echo -n -e "\t$tim" 1>&3;
                     echo "[$query:${EXPNAME[$exp]}] End : $tim" >> ${logs}.out
                     echo "[$query:${EXPNAME[$exp]}] End : $tim" >> ${logs}.err
-                ) 2>>${logs}.err | sed -u "s/^/[${i}:${EXPNAME[$exp]}] /" >>${logs}.out ;
+                ) 2>>${logs}.err | sed -u "s/^/[${query}:${EXPNAME[$exp]}] /" >>${logs}.out ;
         done ;
         exec 3>&- ;
     done ;
