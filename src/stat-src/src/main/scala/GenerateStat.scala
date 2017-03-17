@@ -28,7 +28,7 @@ object GenerateStat {
   def combine(acc:List[(Int,String)],size:Int,el:(Int,String)) : (List[(Int,String)],Int) = {
      val na = el::acc ;
      if(size+1==numberMax*2) {
-         (na.sortWith(_._1._1>_._2._1).slice(0,numberMax),numberMax)
+         (na.sortWith( case (a,b) => a._1 > b._1).slice(0,numberMax),numberMax)
      }
      else {
        (na,size+1)
