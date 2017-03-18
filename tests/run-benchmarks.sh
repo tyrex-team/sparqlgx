@@ -95,8 +95,8 @@ do
     echo "Finished loading" >>${logs}.out
     echo "> ${BENCHNAME[$b]} dataset loaded in $((t2-t1))s and its statistics generated in $((t3-t2))s."
     echo "----------------------------------------------- EVAL ----------------------------------------------------"
-    echo -e "| \t|\t     Direct Evaluation\t\t|\t\t    Standard Evaluation\t\t\t|"
-    echo -e "| Query\t|\tNo Optim\tStandard\t|\tNo Optim\tStandard\tWith Statistics\t|"
+    echo -e "| \t|\t     Direct Evaluation\t|\t\t    Standard Evaluation\t\t\t|"
+    echo -e "| Query\t|  No Optim\t|  Standard\t|  No Optim\t|  Standard\t| With Stats\t|"
     for query in ${QUERIES[$b]}; do
         # The same query is done 5 times: depending on optimizations
         # sketches (with or without any, statistics or not...).
@@ -118,11 +118,12 @@ do
                     bash ${PATH_SGX}/sparqlgx.sh ${EXPCMD[$exp]} ${EXPOPT[$exp]} -o $token/results/$query.${EXPNAME[$exp]}.txt $endcmd ;
                     t2=$(date +%s);
                     tim=$((t2-t1)) ;
-                    echo -n -e "\t$tim\t" 1>&3;
+                    echo -n -e "\t$tim\t|" 1>&3;
                     echo "[$query:${EXPNAME[$exp]}] End : $tim" >> ${logs}.out
                     echo "[$query:${EXPNAME[$exp]}] End : $tim" >> ${logs}.err
                 ) 2>>${logs}.err | sed -u "s/^/[${query}:${EXPNAME[$exp]}] /" >>${logs}.out ;
         done ;
+        echo "" ;
         exec 3>&- ;
     done ;
     echo "---------------------------------------------------------------------------------------------------------"
