@@ -27,7 +27,10 @@ let rec print_algebra term =
            add "  if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(\"DATAHDFSPATH\"+s)))" ;
            add "    {sc.textFile(\"DATAHDFSPATH\"+s).map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}}" ;
            add "  else" ;
-           add "    {sc.emptyRDD[(String,String)]};" in
+           add "    {sc.emptyRDD[(String,String)]};" ;
+           add "def readwhole (s:String) = " ;
+           add "  sc.textFile(s).map{line => val field:Array[String]=line.split(\"\\s+\",3); if(field.length!=3){throw new RuntimeException(\"Invalid line: \"+line);}else{(field(0),field(1),reg.replaceFirstIn(field(2),\"\"))}}" 
+  in
 
   let escape_var a =
     if a.[0] = '?'
@@ -134,7 +137,7 @@ let rec print_algebra term =
         let res = "v"^gid () in 
         let code,keys,cols = match l with 
           | Readfile3(f) ->
-             "val "^res^"=sc.textFile(\""^f^"\").map{line => val field:Array[String]=line.split(\" \",3); (field(0),field(1),field(2).substring(0,field(2).lastIndexOf(\" \")))};",[],["s";"p";"o"]
+             "val "^res^"=readwhole(\""^f^"\");",[],["s";"p";"o"]
           | Readfile2(f) ->
              "val "^res^"=readpred(\"p"^(numero f)^"\") //"^f,[],["s";"o"]
                
