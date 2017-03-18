@@ -17,7 +17,7 @@ localdbpath=$(sed "s|~|$HOME|g" <<< "$SPARQLGX_LOCAL/$dbName")
 hdfsdbpath="$SPARQLGX_HDFS/$dbName/"
 
 mkdir -p $localdbpath ;
-hadoop fs -mkdir -p $hdfsdbpath ;
+#hadoop fs -mkdir -p $hdfsdbpath ;
 
 spark-submit --driver-memory $SPARK_DRIVER_MEM \
     --executor-memory $SPARK_EXECUT_MEM \
