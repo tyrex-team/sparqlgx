@@ -109,7 +109,7 @@ do
                     echo "[$query:${EXPNAME[$exp]}] Start" >> ${logs}.out
                     echo "[$query:${EXPNAME[$exp]}] Start" >> ${logs}.err
                     t1=$(date +%s);
-                    if test $exp -lt 1 ;
+                    if $EXPCMD[$exp] = "direct-query" ;
                     then
                         endcmd="$queryfile ${DATASET[$b]}"
                     else
