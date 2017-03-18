@@ -28,8 +28,10 @@ let rec print_algebra term =
            add "    {sc.textFile(\"DATAHDFSPATH\"+s).map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}}" ;
            add "  else" ;
            add "    {sc.emptyRDD[(String,String)]};" ;
-           add "def readwhole (s:String) = " ;
-           add "  sc.textFile(s).map{line => val field:Array[String]=line.split(\"\\s+\",3); if(field.length!=3){throw new RuntimeException(\"Invalid line: \"+line);}else{(field(0),field(1),reg.replaceFirstIn(field(2),\"\"))}}" 
+           add "def readwhole (s:String) = { " ;
+           add "    val reg = new Regex(\"\\\\s+.\\\\s*$\") ;" ;
+           add "  sc.textFile(s).map{line => val field:Array[String]=line.split(\"\\\\s+\",3); if(field.length!=3){throw new RuntimeException(\"Invalid line: \"+line);}else{(field(0),field(1),reg.replaceFirstIn(field(2),\"\"))}}}"
+           
   in
 
   let escape_var a =
