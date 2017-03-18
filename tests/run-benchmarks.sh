@@ -109,7 +109,7 @@ do
                     echo "[$query:${EXPNAME[$exp]}] Start" >> ${logs}.out
                     echo "[$query:${EXPNAME[$exp]}] Start" >> ${logs}.err
                     t1=$(date +%s);
-                    if $EXPCMD[$exp] = "direct-query" ;
+                    if "${EXPCMD[$exp]}" = "direct-query" ;
                     then
                         endcmd="$queryfile ${DATASET[$b]}"
                     else
@@ -118,7 +118,7 @@ do
                     bash ${PATH_SGX}/sparqlgx.sh ${EXPCMD[$exp]} ${EXPOPT[$exp]} -o $token/results/$query.${EXPNAME[$exp]}.txt $endcmd ;
                     t2=$(date +%s);
                     tim=$((t2-t1)) ;
-                    echo -n -e "\t$tim" 1>&3;
+                    echo -n -e "\t$tim\t" 1>&3;
                     echo "[$query:${EXPNAME[$exp]}] End : $tim" >> ${logs}.out
                     echo "[$query:${EXPNAME[$exp]}] End : $tim" >> ${logs}.err
                 ) 2>>${logs}.err | sed -u "s/^/[${query}:${EXPNAME[$exp]}] /" >>${logs}.out ;
