@@ -58,7 +58,7 @@ object Main {
     var curArg = 0 ;
     while(curArg < args.length) {
       args(curArg) match {
-        case "--noLoad" =>
+        case "--no-load" =>
           noLoad = true
         case "--hdfs-path" =>
           if(curArg+1 == args.length)
