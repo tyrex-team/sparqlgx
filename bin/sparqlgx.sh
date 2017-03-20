@@ -35,13 +35,13 @@ case "$1" in
 	help_msg
 	;;
     light-load )
-	shift
 	bash ${PATH_CMD}/sgx-load.sh $@
 	;;
     load )
-	shift
 	bash ${PATH_CMD}/sgx-load.sh $@
-	bash ${PATH_CMD}/sgx-stat.sh $@
+	;;
+    stat )
+	bash ${PATH_CMD}/sgx-load.sh $@
 	;;
     translate )
 	shift
@@ -50,10 +50,6 @@ case "$1" in
     remove )
 	shift
 	bash ${PATH_CMD}/sgx-purge.sh $@
-	;;
-    generate-stat )
-	shift
-	bash ${PATH_CMD}/sgx-stat.sh $@
 	;;
     query )
 	shift
