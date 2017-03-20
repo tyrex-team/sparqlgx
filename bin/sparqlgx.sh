@@ -1,11 +1,11 @@
 #!/bin/bash
 
-PATH_CMD=$(dirname $0) ;
+PATH_CMD=$(dirname $0)
 
 source ${PATH_CMD}/../conf/sparqlgx.conf
 
 function version {
-    echo "1.0"
+    cat ${PATH_CMD}/../VERSION
 }
 
 function help_msg {
@@ -24,7 +24,7 @@ function help_msg {
     echo "   $0 --help"
     echo ""
     echo "Tyrex <tyrex.inria.fr>"
-    echo "2016"
+    echo "2017"
 }
 
 case "$1" in
