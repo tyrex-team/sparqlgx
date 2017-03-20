@@ -28,7 +28,7 @@ let rec print_query distinguished modifiers optim stmt =
 
   let rec get_tp = function
     | Readfile2(p) -> ["p",p]
-    | Readfile3(_) -> []
+    | Readfile3 -> []
     | Filter(col,value,term) -> (col,value)::get_tp term 
     | Rename(col,value,term) -> (col,value)::get_tp term
     | _ -> failwith ("Unrecognized pattern @ "^__LOC__)
@@ -107,7 +107,7 @@ let translate distinguished modifiers vertical optim stmt =
 
   let translate_tp = function
     | s,Exact(p),o when vertical -> Keep(list_var [s;o],fst (List.fold_left translate_el (Readfile2(p),[]) [s,"s";o,"o"]))
-    | s,p,o -> Keep(list_var [s;p;o],fst (List.fold_left translate_el (Readfile3("all"),[]) [s,"s";p,"p";o,"o"]))
+    | s,p,o -> Keep(list_var [s;p;o],fst (List.fold_left translate_el (Readfile3,[]) [s,"s";p,"p";o,"o"]))
   in
 
   let translate_list_tp l =

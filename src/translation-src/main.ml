@@ -34,10 +34,10 @@ let _ =
     failwith "Not enough args!" ;
   file := Sys.argv.(1) ;
   for i = 2 to Array.length Sys.argv -1 do
-    if Sys.argv.(i) = "onefile" then vertical:=false ;
-    if Sys.argv.(i) = "-debug" then debug:=true ;
-    if Sys.argv.(i) = "-no-optim" then optim:=0 ;
-    if Sys.argv.(i) = "-stat"
+    if Sys.argv.(i) = "--onefile" then vertical:=false ;
+    if Sys.argv.(i) = "--debug" then debug:=true ;
+    if Sys.argv.(i) = "--no-optim" then optim:=0 ;
+    if Sys.argv.(i) = "--stat"
     then if Array.length Sys.argv > i+1
          then begin Reorder.load Sys.argv.(i+1) ; optim:=2 ; end ;
   done ;

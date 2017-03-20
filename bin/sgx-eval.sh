@@ -19,7 +19,7 @@ while true; do
 	    shift
 	    ;;
 	--no-optim )
-	    noOptim="-no-optim"
+	    noOptim="--no-optim"
 	    shift
 	    ;;
 	-o )
@@ -43,7 +43,7 @@ queryFile=$2
 localpath=$(sed "s|~|$HOME|g" <<< "$SPARQLGX_LOCAL/$dbName")
 hdfsdbpath="$SPARQLGX_HDFS/$dbName/"
 if [[ $statBool == "1" ]] && [[ ! -f $localpath/stat.txt ]];
-then stat="-stat $localpath/stat.txt";
+then stat="--stat $localpath/stat.txt";
 else stat="";
 fi
 
@@ -60,14 +60,7 @@ if [[ ! -d $localpath/eval/src/main/scala ]];
 then mkdir -p $localpath/eval/src/main/scala/ ;
 fi
 bash ${PATH_CMD}/generate-build.sh "SPARQLGX Evaluation" > $localpath/eval/build.sbt
-echo -e "import scala.util.matching.Regex\nimport org.apache.spark.SparkContext\nimport org.apache.spark.SparkContext._\nimport org.apache.spark.SparkConf\nimport org.apache.spark._\nimport org.apache.spark.rdd.RDD\nimport org.apache.log4j.Logger\nimport org.apache.log4j.Level\nobject Query {\ndef main(args: Array[String]) {\nLogger.getLogger(\"org\").setLevel(Level.OFF);\nLogger.getLogger(\"akka\").setLevel(Level.OFF);\nval conf = new SparkConf().setAppName(\"SPARQLGX Evaluation $noOptim $stat $queryFile\");\nval sc = new SparkContext(conf);\n" > $localpath/eval/src/main/scala/Query.scala
-if [[ -z $saveFile ]];
-then
-    ${PATH_CMD}/sparqlgx-translator $queryFile $noOptim $stat | sed "s|\"DATAHDFSPATH\"|\"$hdfsdbpath\"|" | sed "s|collect|collect().foreach(println)|g" >> $localpath/eval/src/main/scala/Query.scala
-else 
-    ${PATH_CMD}/sparqlgx-translator $queryFile $noOptim $stat | sed "s|\"DATAHDFSPATH\"|\"$hdfsdbpath\"|" | sed "s|collect|saveAsTextFile(\"$saveFile\")|g" >> $localpath/eval/src/main/scala/Query.scala
-fi
-echo -e "}}" >> $localpath/eval/src/main/scala/Query.scala
+${PATH_CMD}/sparqlgx-translator $queryFile $noOptim $stat
 
 # Step 2: Compilation.
 cd $localpath/eval/
@@ -82,7 +75,7 @@ cd - > /dev/null
 spark-submit --driver-memory $SPARK_DRIVER_MEM \
     --executor-memory $SPARK_EXECUT_MEM \
     --class=Query \
-    $localpath/eval/target/scala*/evaluation_*.jar ;
+    $localpath/eval/target/scala*/evaluation_*.jar "$hdfsdbpath" "$saveFile" ;
 
 # Step 4 [optional]: Cleaning.
 if [[ $clean == "1" ]]; then rm -rf $localpath/eval/ ; fi

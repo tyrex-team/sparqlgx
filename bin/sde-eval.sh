@@ -14,7 +14,7 @@ while true; do
 	    shift
 	    ;;
 	--no-optim )
-	    noOptim="-no-optim"
+	    noOptim="--no-optim"
 	    shift
 	    ;;
 	-o )
@@ -50,14 +50,7 @@ if [[ ! -d $localpath ]];
 then mkdir -p $localpath/src/main/scala/ ;
 fi
 bash ${PATH_CMD}/generate-build.sh "SPARQLGX Direct Evaluation" > $localpath/build.sbt
-echo -e "import scala.util.matching.Regex\nimport org.apache.spark.SparkContext\nimport org.apache.spark.SparkContext._\nimport org.apache.spark.SparkConf\nimport org.apache.spark._\nimport org.apache.spark.rdd.RDD\nimport org.apache.log4j.Logger\nimport org.apache.log4j.Level\nobject Query {\ndef main(args: Array[String]) {\nLogger.getLogger(\"org\").setLevel(Level.OFF);\nLogger.getLogger(\"akka\").setLevel(Level.OFF);\nval conf = new SparkConf().setAppName(\"SDE $noOptim $queryFile\");\nval sc = new SparkContext(conf);\n" > $localpath/src/main/scala/Query.scala
-if [[ -z $saveFile ]];
-then
-    ${PATH_CMD}/sparqlgx-translator $queryFile onefile $noOptim | sed "s|\"all\"|\"$tripleFile\"|" | sed "s|collect|collect().foreach(println)|g" >> $localpath/src/main/scala/Query.scala
-else 
-    ${PATH_CMD}/sparqlgx-translator $queryFile onefile $noOptim | sed "s|\"all\"|\"$tripleFile\"|" | sed "s|collect|saveAsTextFile(\"$saveFile\")|g" >> $localpath/src/main/scala/Query.scala
-fi
-echo -e "}}" >> $localpath/src/main/scala/Query.scala
+${PATH_CMD}/sparqlgx-translator $queryFile --onefile $noOptim
 
 # Step 2: Compilation.
 cd $localpath
@@ -68,7 +61,7 @@ cd - > /dev/null
 spark-submit --driver-memory $SPARK_DRIVER_MEM \
     --executor-memory $SPARK_EXECUT_MEM \
     --class=Query \
-    $localpath/target/scala*/direct-evaluation_*.jar ;
+    $localpath/target/scala*/direct-evaluation_*.jar "$hdfsdbpath" "$saveFile" ;
 
 # Step 4 [optional]: Cleaning.
 if [[ $clean == "1" ]]; then rm -rf $localpath ; fi

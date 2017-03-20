@@ -1,5 +1,5 @@
 type algebra =
-    Readfile3 of string
+    Readfile3
   | Readfile2 of string
   | Filter of string * string * algebra
   | Keep of string list * algebra

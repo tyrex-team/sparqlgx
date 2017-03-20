@@ -1,7 +1,7 @@
 open Sparql ;;
 
 type algebra =
-  | Readfile3 of string
+  | Readfile3 
   | Readfile2 of string
   | Filter of string * string * algebra
   | Keep of string list * algebra
@@ -23,17 +23,59 @@ let rec print_algebra term =
   
   let add l = lines := ("    "^l^"\n")::(!lines) in 
 
-  let () = add "def readpred (s:String) = " ;
-           add "  if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(\"DATAHDFSPATH\"+s)))" ;
-           add "    {sc.textFile(\"DATAHDFSPATH\"+s).map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}}" ;
-           add "  else" ;
-           add "    {sc.emptyRDD[(String,String)]};" ;
-           add "def readwhole (s:String) = { " ;
-           add "    val reg = new Regex(\"\\\\s+.\\\\s*$\") ;" ;
-           add "  sc.textFile(s).map{line => val field:Array[String]=line.split(\"\\\\s+\",3); if(field.length!=3){throw new RuntimeException(\"Invalid line: \"+line);}else{(field(0),field(1),reg.replaceFirstIn(field(2),\"\"))}}}"
-           
-  in
+  let header = "
+import scala.util.matching.Regex
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkContext._
+import org.apache.spark.SparkConf
+import org.apache.spark._
+import org.apache.spark.rdd.RDD
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
 
+object Query {
+  def main(args: Array[String]) {
+     Logger.getLogger(\"org\").setLevel(Level.OFF);
+     Logger.getLogger(\"akka\").setLevel(Level.OFF);
+     val conf = new SparkConf().setAppName(\"SPARQLGX Evaluation   \");
+     val sc = new SparkContext(conf);
+     if(args.length <= 1) {
+       throw new Exception(\"We need the path of the queried data!\")
+     }
+     def readpred (s:String) = 
+        if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(args(1)+\"/\"+s))) {
+           sc.textFile(args(1)+\"/\"+s).map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}
+        }
+        else {
+           sc.emptyRDD[(String,String)]
+        };
+
+        def readwhole () = { 
+          val reg = new Regex(\"\\\\s+.\\\\s*$\") ;
+          sc.textFile(args(1)).map{
+               line => 
+                   val field:Array[String]=line.split(\"\\\\s+\",3); 
+                   if(field.length!=3) { 
+                     throw new RuntimeException(\"Invalid line: \"+line);
+                   }
+                   else { 
+                     (field(0),field(1),reg.replaceFirstIn(field(2),\"\"))
+                   }
+          }
+      }
+"  in
+
+  let footer = "
+    if(args.length <= 2 || args(2) == \"\" || args(2) == \"-\") {
+       Qfinal.collect().foreach(println)
+    }
+    else {
+       Qfinal.saveAsTextFile(\"s\")
+    }
+  }
+}
+" in
+  
   let escape_var a =
     if a.[0] = '?'
     then let b = Bytes.copy a in (Bytes.set b 0 'v' ; b)
@@ -111,7 +153,7 @@ let rec print_algebra term =
   in
 
   let rec cols = function
-    | Readfile3(f) -> ["s";"p";"o"]
+    | Readfile3 -> ["s";"p";"o"]
     | Readfile2(f) -> ["s";"o"]
                     
     | Distinct c
@@ -138,8 +180,8 @@ let rec print_algebra term =
       Not_found ->        
         let res = "v"^gid () in 
         let code,keys,cols = match l with 
-          | Readfile3(f) ->
-             "val "^res^"=readwhole(\""^f^"\");",[],["s";"p";"o"]
+          | Readfile3 ->
+             "val "^res^"=readwhole();",[],["s";"p";"o"]
           | Readfile2(f) ->
              "val "^res^"=readpred(\"p"^(numero f)^"\") //"^f,[],["s";"o"]
                
@@ -230,11 +272,15 @@ let rec print_algebra term =
         add code ;
         Hashtbl.add trad_one normalized (res,keys) ; res,keys,cols
   in
+
+  add header ; 
+  
   let code,cols = match foo term with
     | code,[],cols -> code,cols
-    | code,_,cols -> code^".values",cols in
-  add ("val Qfinal="^code^".collect") ;
-  (* add ("//// order is "^(join cols)) ; *)
+    | code,_,cols -> code^".values",cols
+  in
+  add ("val Qfinal="^code) ;
+  add footer ;     
   List.iter print_string (List.rev (!lines)) 
 ;;
   
