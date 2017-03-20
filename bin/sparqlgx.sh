@@ -35,13 +35,13 @@ case "$1" in
 	help_msg
 	;;
     light-load )
-	bash ${PATH_CMD}/sgx-load.sh light-load $@
+	bash ${PATH_CMD}/sgx-load.sh $@
 	;;
     load )
-	bash ${PATH_CMD}/sgx-load.sh load $@
+	bash ${PATH_CMD}/sgx-load.sh $@
 	;;
     stat )
-	bash ${PATH_CMD}/sgx-load.sh stat $@
+	bash ${PATH_CMD}/sgx-load.sh $@
 	;;
     translate )
 	shift
