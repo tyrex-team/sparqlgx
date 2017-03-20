@@ -62,7 +62,7 @@ ${PATH_CMD}/sparqlgx-translator $queryFile $noOptim $stat > $localpath/eval/src/
 
 # Step 2: Compilation.
 cd $localpath/eval/
-rm -f target/scala*/sparqlgx_evaluation_*.jar
+rm -f target/scala*/sparqlgx-evaluation_*.jar
 if ! sbt package ;
 then
     echo "Compilation failed!" ;
@@ -74,7 +74,7 @@ cd - > /dev/null
 spark-submit --driver-memory $SPARK_DRIVER_MEM \
     --executor-memory $SPARK_EXECUT_MEM \
     --class=Query \
-    $localpath/eval/target/scala*/sparqlgx_evaluation_*.jar "$hdfsdbpath" "$saveFile" ;
+    $localpath/eval/target/scala*/sparqlgx-evaluation_*.jar "$hdfsdbpath" "$saveFile" ;
 
 # Step 4 [optional]: Cleaning.
 if [[ $clean == "1" ]]; then rm -rf $localpath/eval/ ; fi

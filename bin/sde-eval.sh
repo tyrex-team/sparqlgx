@@ -52,6 +52,7 @@ ${PATH_CMD}/sparqlgx-translator $queryFile --onefile $noOptim > $localpath/src/m
 
 # Step 2: Compilation.
 cd $localpath
+rm -f $localpath/target/scala*/sparqlgx-direct-evaluation_*.jar
 sbt package
 cd - > /dev/null
 
@@ -59,7 +60,7 @@ cd - > /dev/null
 spark-submit --driver-memory $SPARK_DRIVER_MEM \
     --executor-memory $SPARK_EXECUT_MEM \
     --class=Query \
-    $localpath/target/scala*/direct-evaluation_*.jar "$hdfsdbpath" "$saveFile" ;
+    $localpath/target/scala*/sparqlgx-direct-evaluation_*.jar "$hdfsdbpath" "$saveFile" ;
 
 # Step 4 [optional]: Cleaning.
 if [[ $clean == "1" ]]; then rm -rf $localpath ; fi
