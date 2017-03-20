@@ -4,7 +4,7 @@ PATH_CMD=$(dirname $0) ;
 
 source ${PATH_CMD}/../conf/sparqlgx.conf
 
-if [[ $# -le 4 ]];
+if [[ $# -le 3 ]];
 then
     echo "Usage: $0 [light-load|load|stat] dbName tripleFile_HDFSPath"
     exit 1
