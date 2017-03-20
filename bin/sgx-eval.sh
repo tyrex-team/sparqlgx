@@ -60,7 +60,7 @@ if [[ ! -d $localpath/eval/src/main/scala ]];
 then mkdir -p $localpath/eval/src/main/scala/ ;
 fi
 bash ${PATH_CMD}/generate-build.sh "SPARQLGX Evaluation" > $localpath/eval/build.sbt
-${PATH_CMD}/sparqlgx-translator $queryFile $noOptim $stat
+${PATH_CMD}/sparqlgx-translator $queryFile $noOptim $stat > $localpath/src/main/scala/Query.scala
 
 # Step 2: Compilation.
 cd $localpath/eval/
