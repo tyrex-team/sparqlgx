@@ -82,15 +82,11 @@ do
     echo "---------------------"
     echo "";
     echo "--------------------- LOAD ----------------------"
-    echo "Start loading 1/2" >>${logs}.err
-    echo "Start loading 1/2" >>${logs}.out
+    echo "Start loading" >>${logs}.err
+    echo "Start loading" >>${logs}.out
     t1=$(date +%s);
-    bash ${PATH_SGX}/sparqlgx.sh light-load ${BENCHNAME[$b]} ${DATASET[$b]} 1>>${logs}.out 2>>${logs}.err ;
+    bash ${PATH_SGX}/sparqlgx.sh load ${BENCHNAME[$b]} ${DATASET[$b]} 1>>${logs}.out 2>>${logs}.err ;
     t2=$(date +%s);
-    echo "Start loading 2/2" >>${logs}.err
-    echo "Start loading 2/2" >>${logs}.out
-    bash ${PATH_SGX}/sparqlgx.sh generate-stat ${BENCHNAME[$b]} ${DATASET[$b]} 1>>${logs}.out 2>>${logs}.err ;
-    t3=$(date +%s);
     echo "Finished loading" >>${logs}.err
     echo "Finished loading" >>${logs}.out
     echo "> ${BENCHNAME[$b]} dataset loaded in $((t2-t1))s and its statistics generated in $((t3-t2))s."
