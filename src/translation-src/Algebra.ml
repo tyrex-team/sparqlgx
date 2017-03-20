@@ -70,7 +70,7 @@ object Query {
        Qfinal.collect().foreach(println)
     }
     else {
-       Qfinal.saveAsTextFile(\"s\")
+       Qfinal.saveAsTextFile(args(2))
     }
   }
 }
