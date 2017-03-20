@@ -123,7 +123,7 @@ object Main {
         val list_el=stat(i)._2._1;
         val last = list_el.last._2;
         list_el foreach { case (n,iri) => val v = if(iri==last) "*" else iri ;  println (v+" "+n.toString) } ;
-        println();
+        //println();
       }
     }
   }
