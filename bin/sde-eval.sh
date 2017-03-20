@@ -46,9 +46,7 @@ localpath=$(sed "s|~|$HOME|g" <<< "$SPARQLGX_LOCAL/sde")
 ########################################################
 
 # Step 1: Translation.
-if [[ ! -d $localpath ]];
-then mkdir -p $localpath/src/main/scala/ ;
-fi
+mkdir -p $localpath/src/main/scala/ ;
 bash ${PATH_CMD}/generate-build.sh "SPARQLGX Direct Evaluation" > $localpath/build.sbt
 ${PATH_CMD}/sparqlgx-translator $queryFile --onefile $noOptim > $localpath/src/main/scala/Query.scala
 

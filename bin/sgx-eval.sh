@@ -56,11 +56,9 @@ fi
 ########################################################
 
 # Step 1: Translation.
-if [[ ! -d $localpath/eval/src/main/scala ]];
-then mkdir -p $localpath/eval/src/main/scala/ ;
-fi
+mkdir -p $localpath/eval/src/main/scala/ ;
 bash ${PATH_CMD}/generate-build.sh "SPARQLGX Evaluation" > $localpath/eval/build.sbt
-${PATH_CMD}/sparqlgx-translator $queryFile $noOptim $stat > $localpath/src/main/scala/Query.scala
+${PATH_CMD}/sparqlgx-translator $queryFile $noOptim $stat > $localpath/eval/src/main/scala/Query.scala
 
 # Step 2: Compilation.
 cd $localpath/eval/
