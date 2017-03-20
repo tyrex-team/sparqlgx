@@ -14,9 +14,9 @@ case "$1" in
     "clean" )
 	echo "Cleaning the project."
 	cd $(dirname $0)
-	rm src/load-src/build.sbt src/stat-src/build.sbt
-	rm -rf bin/sparqlgx-load.jar bin/sparqlgx-stat.jar bin/sparqlgx-translator
-	rm -rf src/load-src/project/ src/load-src/target/ src/stat-src/project/ src/stat-src/target/
+	rm src/load-src/build.sbt
+	rm -rf bin/sparqlgx-load.jar bin/sparqlgx-translator
+	rm -rf src/load-src/project/ src/load-src/target/ 
 	cd src/translation-src/
 	make clean
 	cd ../../
@@ -46,11 +46,6 @@ echo "---- Load Source Compilation ----"
 cd src/load-src/
 sbt package
 cp target/scala*/sparqlgx* ../../bin/sparqlgx-load.jar
-cd ../../
-echo "---- Stat Source Compilation ----"
-cd src/stat-src/
-sbt package
-cp target/scala*/sparqlgx* ../../bin/sparqlgx-stat.jar
 cd ../../
 echo "---- Translation Source Compilation ----"
 cd src/translation-src/
