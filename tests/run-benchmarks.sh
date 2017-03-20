@@ -31,6 +31,11 @@ QUERIES[0]="Q1 Q2 Q3 Q4 Q5 Q6 Q7 Q8 Q9 Q10 Q11 Q12 Q13 Q14";
 QUERIES[1]="C1 C2 C3 F1 F2 F3 F4 F5 L1 L2 L3 L4 L5 S1 S2 S3 S4 S5 S6 S7";
 DATASET[0]=$SPARQLGX_HDFS/sparqlgx-test/lubm.nt ;
 DATASET[1]=$SPARQLGX_HDFS/sparqlgx-test/watdiv.nt ;
+EXPCMD[0]="direct-query"
+EXPCMD[1]="direct-query"
+EXPCMD[2]="query"
+EXPCMD[3]="query"
+EXPCMD[4]="query"
 BENCHNAME[0]="lubm";
 BENCHNAME[1]="watdiv";
 EXPNAME[0]="sde.nooptim"
@@ -38,11 +43,6 @@ EXPNAME[1]="sde.normal"
 EXPNAME[2]="sgx.nooptim"
 EXPNAME[3]="sgx.normal"
 EXPNAME[4]="sgx.stats"
-EXPCMD[0]="direct-query"
-EXPCMD[1]="direct-query"
-EXPCMD[2]="query"
-EXPCMD[3]="query"
-EXPCMD[4]="query"
 EXPOPT[0]="--no-optim"
 EXPOPT[1]=""
 EXPOPT[2]="--no-optim"
@@ -95,8 +95,8 @@ do
     echo "Finished loading" >>${logs}.out
     echo "> ${BENCHNAME[$b]} dataset loaded in $((t2-t1))s and its statistics generated in $((t3-t2))s."
     echo "----------------------------------------------- EVAL ----------------------------------------------------"
-    echo -e "| \t|\t     Direct Evaluation\t\t|\t\t    Standard Evaluation\t\t\t|"
-    echo -e "| Query\t|\tNo Optim\tStandard\t|\tNo Optim\tStandard\tWith Statistics\t|"
+    echo -e "| \t|\t     Direct Evaluation\t|\t\t    Standard Evaluation\t\t\t|"
+    echo -e "| Query\t|  No Optim\t|  Standard\t|  No Optim\t|  Standard\t| With Stats\t|"
     for query in ${QUERIES[$b]}; do
         # The same query is done 5 times: depending on optimizations
         # sketches (with or without any, statistics or not...).
@@ -109,14 +109,21 @@ do
                     echo "[$query:${EXPNAME[$exp]}] Start" >> ${logs}.out
                     echo "[$query:${EXPNAME[$exp]}] Start" >> ${logs}.err
                     t1=$(date +%s);
-                    bash ${PATH_SGX}/sparqlgx.sh ${EXPCMD[$exp]} ${EXPOPT[$exp]} -o $token/results/$query.${EXPNAME[$exp]}.txt $queryfile ${DATASET[$b]} ;
+                    if test "${EXPCMD[$exp]}" = "direct-query" ;
+                    then
+                        endcmd="$queryfile ${DATASET[$b]}"
+                    else
+                        endcmd="${BENCHNAME[$b]} $queryfile"
+                    fi ;
+                    bash ${PATH_SGX}/sparqlgx.sh ${EXPCMD[$exp]} ${EXPOPT[$exp]} -o $token/results/$query.${EXPNAME[$exp]}.txt $endcmd ;
                     t2=$(date +%s);
                     tim=$((t2-t1)) ;
-                    echo -n -e "\t$tim" 1>&3;
+                    echo -n -e "\t$tim\t|" 1>&3;
                     echo "[$query:${EXPNAME[$exp]}] End : $tim" >> ${logs}.out
                     echo "[$query:${EXPNAME[$exp]}] End : $tim" >> ${logs}.err
                 ) 2>>${logs}.err | sed -u "s/^/[${query}:${EXPNAME[$exp]}] /" >>${logs}.out ;
         done ;
+        echo "" ;
         exec 3>&- ;
     done ;
     echo "---------------------------------------------------------------------------------------------------------"

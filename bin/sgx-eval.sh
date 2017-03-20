@@ -60,7 +60,7 @@ if [[ ! -d $localpath/eval/src/main/scala ]];
 then mkdir -p $localpath/eval/src/main/scala/ ;
 fi
 bash ${PATH_CMD}/generate-build.sh "SPARQLGX Evaluation" > $localpath/eval/build.sbt
-echo -e "import org.apache.spark.SparkContext\nimport org.apache.spark.SparkContext._\nimport org.apache.spark.SparkConf\nimport org.apache.spark._\nimport org.apache.spark.rdd.RDD\nimport org.apache.log4j.Logger\nimport org.apache.log4j.Level\nobject Query {\ndef main(args: Array[String]) {\nLogger.getLogger(\"org\").setLevel(Level.OFF);\nLogger.getLogger(\"akka\").setLevel(Level.OFF);\nval conf = new SparkConf().setAppName(\"SPARQLGX Evaluation $noOptim $stat $queryFile\");\nval sc = new SparkContext(conf);\n" > $localpath/eval/src/main/scala/Query.scala
+echo -e "import scala.util.matching.Regex\nimport org.apache.spark.SparkContext\nimport org.apache.spark.SparkContext._\nimport org.apache.spark.SparkConf\nimport org.apache.spark._\nimport org.apache.spark.rdd.RDD\nimport org.apache.log4j.Logger\nimport org.apache.log4j.Level\nobject Query {\ndef main(args: Array[String]) {\nLogger.getLogger(\"org\").setLevel(Level.OFF);\nLogger.getLogger(\"akka\").setLevel(Level.OFF);\nval conf = new SparkConf().setAppName(\"SPARQLGX Evaluation $noOptim $stat $queryFile\");\nval sc = new SparkContext(conf);\n" > $localpath/eval/src/main/scala/Query.scala
 if [[ -z $saveFile ]];
 then
     ${PATH_CMD}/sparqlgx-translator $queryFile $noOptim $stat | sed "s|\"DATAHDFSPATH\"|\"$hdfsdbpath\"|" | sed "s|collect|collect().foreach(println)|g" >> $localpath/eval/src/main/scala/Query.scala
