@@ -99,7 +99,7 @@ object Main {
                 c
           },(field(0)+" "+reg.replaceFirstIn(field(2),"")))}};
 
-      T.saveAsHadoopFile(args(1),classOf[String],classOf[String],classOf[RDDMultipleTextOutputFormat])
+      T.saveAsHadoopFile(hdfs_path,classOf[String],classOf[String],classOf[RDDMultipleTextOutputFormat])
     }
 
     if(!noStat) {

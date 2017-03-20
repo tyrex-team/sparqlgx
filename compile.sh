@@ -39,8 +39,6 @@ cd $(dirname $0) # Execution from correct location.
 echo "====== SPARQLGX compilation chain ======"
 echo "---- Generation of build.sbt ----"
 bash bin/generate-build.sh "SPARQLGX Load" > src/load-src/build.sbt
-echo "build.sbt in src/load-src/"
-bash bin/generate-build.sh "SPARQLGX Statistic Module" > src/stat-src/build.sbt
 echo "build.sbt in src/stat-src/"
 echo "---- Load Source Compilation ----"
 cd src/load-src/
