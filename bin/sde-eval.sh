@@ -60,7 +60,7 @@ cd - > /dev/null
 spark-submit --driver-memory $SPARK_DRIVER_MEM \
     --executor-memory $SPARK_EXECUT_MEM \
     --class=Query \
-    $localpath/target/scala*/sparqlgx-direct-evaluation_*.jar "$hdfsdbpath" "$saveFile" ;
+    $localpath/target/scala*/sparqlgx-direct-evaluation_*.jar "$tripleFile" "$saveFile" ;
 
 # Step 4 [optional]: Cleaning.
 if [[ $clean == "1" ]]; then rm -rf $localpath ; fi
