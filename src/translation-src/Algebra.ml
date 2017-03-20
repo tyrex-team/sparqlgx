@@ -39,12 +39,12 @@ object Query {
      Logger.getLogger(\"akka\").setLevel(Level.OFF);
      val conf = new SparkConf().setAppName(\"SPARQLGX Evaluation   \");
      val sc = new SparkContext(conf);
-     if(args.length <= 1) {
+     if(args.length == 0) {
        throw new Exception(\"We need the path of the queried data!\")
      }
      def readpred (s:String) = 
-        if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(args(1)+\"/\"+s))) {
-           sc.textFile(args(1)+\"/\"+s).map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}
+        if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(args(0)+\"/\"+s))) {
+           sc.textFile(args(0)+\"/\"+s).map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}
         }
         else {
            sc.emptyRDD[(String,String)]
@@ -52,7 +52,7 @@ object Query {
 
         def readwhole () = { 
           val reg = new Regex(\"\\\\s+.\\\\s*$\") ;
-          sc.textFile(args(1)).map{
+          sc.textFile(args(0)).map{
                line => 
                    val field:Array[String]=line.split(\"\\\\s+\",3); 
                    if(field.length!=3) { 
@@ -66,11 +66,11 @@ object Query {
 "  in
 
   let footer = "
-    if(args.length <= 2 || args(2) == \"\" || args(2) == \"-\") {
+    if(args.length == 1 || args(1) == \"\" || args(1) == \"-\") {
        Qfinal.collect().foreach(println)
     }
     else {
-       Qfinal.saveAsTextFile(args(2))
+       Qfinal.saveAsTextFile(args(1))
     }
   }
 }
