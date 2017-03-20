@@ -42,7 +42,7 @@ dbName=$1
 queryFile=$2
 localpath=$(sed "s|~|$HOME|g" <<< "$SPARQLGX_LOCAL/$dbName")
 hdfsdbpath="$SPARQLGX_HDFS/$dbName/"
-if [[ $statBool == "1" ]] && [[ ! -f $localpath/stat.txt ]];
+if [[ $statBool == "1" ]] && [[ -f $localpath/stat.txt ]];
 then stat="--stat $localpath/stat.txt";
 else stat="";
 fi
