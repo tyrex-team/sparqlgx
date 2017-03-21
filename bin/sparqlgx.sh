@@ -57,7 +57,7 @@ case "$1" in
 	;;
     direct-query )
 	shift
-	bash ${PATH_CMD}/sde-eval.sh $@
+	bash ${PATH_CMD}/sgx-eval.sh --sde $@
 	;;
     *)
 	help_msg

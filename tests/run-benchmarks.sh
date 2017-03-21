@@ -107,7 +107,7 @@ do
                     t1=$(date +%s);
                     if test "${EXPCMD[$exp]}" = "direct-query" ;
                     then
-                        endcmd="$queryfile ${DATASET[$b]}"
+                        endcmd="${DATASET[$b]} $queryfile"
                     else
                         endcmd="${BENCHNAME[$b]} $queryfile"
                     fi ;

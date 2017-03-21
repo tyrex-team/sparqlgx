@@ -8,8 +8,12 @@ clean=0
 statBool=0
 saveFile=""
 noOptim=""
+sde=""
 while true; do
     case "$1" in
+        --sde )
+            sde="--onefile"
+        ;;
 	--clean )
 	    clean=1
 	    shift
@@ -41,10 +45,18 @@ fi
 dbName=$1
 queryFile=$2
 localpath=$(sed "s|~|$HOME|g" <<< "$SPARQLGX_LOCAL/$dbName")
-hdfsdbpath="$SPARQLGX_HDFS/$dbName/"
-if [[ $statBool == "1" ]] && [[ -f $localpath/stat.txt ]];
+if [[ -z $sde ]] ;
+then
+    hdfsdbpath="$SPARQLGX_HDFS/$dbName/"
+else
+    hdfsdbpath=$dbName ;
+fi;
+
+if [[ $statBool == "1" ]] && [[ -f $localpath/stat.txt ]] ;
 then stat="--stat $localpath/stat.txt";
-else stat="";
+else
+    [[ $statBool == "1" ]] && (echo "File $localpath/stat.txt not found! Stats deactivated!") ;
+    stat="";
 fi
 
 ########################################################
@@ -58,15 +70,20 @@ fi
 # Step 1: Translation.
 mkdir -p $localpath/eval/src/main/scala/ ;
 bash ${PATH_CMD}/generate-build.sh "SPARQLGX Evaluation" > $localpath/eval/build.sbt
-${PATH_CMD}/sparqlgx-translator $queryFile $noOptim $stat > $localpath/eval/src/main/scala/Query.scala
+${PATH_CMD}/sparqlgx-translator $queryFile $sde $noOptim $stat > $localpath/eval/src/main/scala/Query.scala
 
 # Step 2: Compilation.
-cd $localpath/eval/
-rm -f target/scala*/sparqlgx-evaluation_*.jar
+cd $localpath/eval/ ;
+rm -f target/scala*/sparqlgx-evaluation_*.jar ;
+sync ;
 if ! sbt package ;
 then
     echo "Compilation failed!" ;
-    exit 1 ;
+    >&2 echo "Compilation failed!" ;
+    if ! sbt package ;
+    then
+        exit 1 ;
+    fi ;
 fi ;
 cd - > /dev/null
 
