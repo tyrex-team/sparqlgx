@@ -45,16 +45,15 @@ then
 fi
 dbName=$1
 queryFile=$2
+localpath=$(sed "s|~|$HOME|g" <<< "$SPARQLGX_LOCAL/")
 if [[ -z $sde ]] ;
 then
-    localpath=$(sed "s|~|$HOME|g" <<< "$SPARQLGX_LOCAL/$dbName")
     hdfsdbpath="$SPARQLGX_HDFS/$dbName/"
 else
     hdfsdbpath=$dbName ;
-    localpath=$(sed "s|~|$HOME|g" <<< "$SPARQLGX_LOCAL/sde")
 fi;
 
-if [[ $statBool == "1" ]] && [[ -f $localpath/stat.txt ]] ;
+if [[ $statBool == "1" ]] && [[ -f $localpath/$dbName/stat.txt ]] ;
 then stat="--stat $localpath/stat.txt";
 else
     [[ $statBool == "1" ]] && (echo "File $localpath/stat.txt not found! Stats deactivated!") ;
