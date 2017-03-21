@@ -27,20 +27,20 @@ let vertical = ref true
 let optim = ref 1
 let debug = ref false
 
+let rec parse_arg = function
+  | [] -> ()
+  | "--onefile"::q -> vertical:=false ; parse_arg q
+  | "--debug"::q -> debug:=true ; parse_arg q
+  | "--no-optim"::q -> optim := 0 ; parse_arg q
+  | "--stat"::s::q -> Reorder.load s ; optim:=2 ; parse_arg q
+  | f::q ->
+     if !file = ""
+     then file := f
+     else failwith ("Unrecognized arg "^f)
+          
 let _ =
   
-  if (Array.length Sys.argv) <= 1
-  then
-    failwith "Not enough args!" ;
-  file := Sys.argv.(1) ;
-  for i = 2 to Array.length Sys.argv -1 do
-    if Sys.argv.(i) = "--onefile" then vertical:=false ;
-    if Sys.argv.(i) = "--debug" then debug:=true ;
-    if Sys.argv.(i) = "--no-optim" then optim:=0 ;
-    if Sys.argv.(i) = "--stat"
-    then if Array.length Sys.argv > i+1
-         then begin Reorder.load Sys.argv.(i+1) ; optim:=2 ; end ;
-  done ;
+  parse_arg (List.tl (Array.to_list Sys.argv)) ;
   try
     let c = open_in (!file) in
     let lb = Lexing.from_channel c in

@@ -63,7 +63,6 @@ let rec print_query distinguished modifiers optim stmt =
        print_string x;
        print_string (if q != [] then  ")," else ")") ;
        print_list_order q
-    | _::q -> print_list_order q
   in
 
   let rec print_modifiers stmt = function
