@@ -89,7 +89,7 @@ do
     t2=$(date +%s);
     echo "Finished loading" >>${logs}.err
     echo "Finished loading" >>${logs}.out
-    echo "> ${BENCHNAME[$b]} dataset loaded in $((t2-t1))s and its statistics generated in $((t3-t2))s."
+    echo "> ${BENCHNAME[$b]} dataset loaded in $((t2-t1))s."
     echo "----------------------------------------------- EVAL ----------------------------------------------------"
     echo -e "| \t|\t     Direct Evaluation\t|\t\t    Standard Evaluation\t\t\t|"
     echo -e "| Query\t|  No Optim\t|  Standard\t|  No Optim\t|  Standard\t| With Stats\t|"
