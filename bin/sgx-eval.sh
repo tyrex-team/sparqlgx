@@ -13,6 +13,7 @@ while true; do
     case "$1" in
         --sde )
             sde="--onefile"
+            shift
         ;;
 	--clean )
 	    clean=1
