@@ -36,7 +36,8 @@ let rec parse_arg = function
   | f::q ->
      if !file = ""
      then file := f
-     else failwith ("Unrecognized arg "^f)
+     else failwith ("Unrecognized arg "^f) ;
+     parse_arg q
           
 let _ =
   
