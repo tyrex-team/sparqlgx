@@ -54,6 +54,7 @@ object Main {
     var hdfs_path : String = "" ;
     var noLoad = false ;
     var noStat = false ;
+    var fullStat = false ;
     var tripleFile = "" ;
     var curArg = 0 ;
     while(curArg < args.length) {
@@ -72,6 +73,8 @@ object Main {
           curArg+=1 ;
         case "--no-stat" =>
           noStat=true;
+        case "--full-stat" =>
+          fullStat=true;
         case s =>
           if(tripleFile != "")
             throw new Exception("Invalid command line (two triple files given)!");
@@ -123,6 +126,29 @@ object Main {
         val list_el=stat(i)._2._1;
         val last = list_el.last._2;
         list_el foreach { case (n,iri) => val v = if(iri==last) "*" else iri ;  println (v+" "+n.toString) } ;
+        //println();
+      }
+    }
+
+    if(fullStat) {
+      val stat = input.flatMap{
+        line =>
+        val field:Array[String]=line.split("\\s+",3);
+        if(field.length!=3) {
+          throw new RuntimeException("Invalid line: "+line);
+        }
+        else {
+          List(((0,field(1),field(0)),1),((1,field(1),reg.replaceFirstIn(field(2),"")),1))
+        }
+      }.reduceByKey(_+_).map { t => ((t._1._2+" "+t._1._1.toString),(t._2,t._1._3)) // Compute word count
+                             }.aggregateByKey( (Nil:List[(Int,String)],0) ) ( // Compute the numberMax most present per key (and key is s or p or o)
+        { case ((acc,size),el) => combine(acc,size,el,numberMax) },
+        { case ((a1,s1),(a2,s2)) => (merge(a1,a2,numberMax),((s1+s2) min numberMax)) }
+      ).foreach {
+        case (predcol,(statlist,size)) => 
+        println(predcal+" "+size.toString);
+        val last = statlist.last._2;
+        statlist foreach { case (n,iri) => val v = if(iri==last) "*" else iri ;  println (v+" "+n.toString) } ;
         //println();
       }
     }
