@@ -36,10 +36,6 @@ object Main {
       }
   }
 
-
-  def combine(acc:List[(Int,String)],size:Int,total:Int,el:(Int,String),numberMax:Int) : (List[(Int,String)],Int) = {
-  }
-
   def main(args: Array[String]) {
     // Cut of spark logs.
     Logger.getLogger("org").setLevel(Level.OFF);
@@ -77,7 +73,7 @@ object Main {
         case s =>
           if(tripleFile != "")
             throw new Exception("Invalid command line (two triple files given)!");
-          tripleFile = args(curArg)
+          tripleFile = s
         }
         curArg+=1 ;
     }
@@ -116,7 +112,7 @@ object Main {
         }
       }.reduceByKey(_+_).map { t => (t._1._1,(t._2,t._1._2)) // Compute word count
                              }.aggregateByKey( (Nil:List[(Int,String)],0) ) ( // Compute the numberMax most present per key (and key is s or p or o)
-        { case ((acc,size),el) =>  (merge(el::Nil,acc,numberMax),(size+1) min numberMax,el._1) },
+        { case ((acc,size),el) =>  (merge(el::Nil,acc,numberMax),(size+1) min numberMax) },
         { case ((a1,s1),(a2,s2)) => (merge(a1,a2,numberMax),((s1+s2) min numberMax)) }
       ).collect.sortWith{case (a,b) => a._1<b._1 }
 
@@ -139,12 +135,12 @@ object Main {
         else {
           List(((0,field(1),field(0)),1),((1,field(1),reg.replaceFirstIn(field(2),"")),1))
         }
-      }.reduceByKey(_+_).map { t => ((t._1._2+" "+t._1._1.toString),(t._2,t._1._3)) // Compute word count
+      }.reduceByKey(_+_).map { t => ((t._1._2+"_"+t._1._1.toString),(t._2,t._1._3)) // Compute word count
                              }.aggregateByKey( (Nil:List[(Int,String)],0,0) ) ( // Compute the numberMax most present per key (and key is s or p or o)
         { case ((acc,size,total),el) => (merge(el::Nil,acc,numberMax),(size+1) min numberMax,total+el._1) },
         { case ((a1,s1,t1),(a2,s2,t2)) => (merge(a1,a2,numberMax),((s1+s2) min numberMax),t1+t2) }
-      ).foreach {
-        case (predcol,(statlist,size),total) => 
+      ).collect.foreach {
+        case (predcol,(statlist,size,total)) => 
         println(predcol+" "+size.toString+" "+total);
         val last = statlist.last._2;
         statlist foreach { case (n,iri) => val v = if(iri==last) "*" else iri ;  println (v+" "+n.toString) } ;
