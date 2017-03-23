@@ -55,6 +55,32 @@ test-suite where two popular RDF/SPARQL benchmarks can be run:
 two datasets only contain a few hundred of thousand RDF triples, but
 determinist generators are available on benchmarks' webpages.
 
+### Use the provided Dockerfile
+
+We provide a Dockerfile to compile and test SPARQLGX in a Docker
+container.
+
+It can be built then run with the following command lines:
+
+    docker build -t sparqlgx .
+    docker run -it sparqlgx
+
+The image contains an installation of Hadoop and Spark, according
+to the versions specified in ``conf/``.
+They are respectively stored in ``/opt/hadoop`` and ``/opt/spark``.
+
+SPARQLGX is installed in ``/opt/sparqlgx``, which is the home
+directory of the user with same name.
+All the required tools are installed, so that SPARQLGX can be
+rebuilt using ``bash compile.sh`` as described in the next section.
+
+By default, ``spark-submit`` will run the computations locally
+(``local[*]``). This can be changed by mounting a configuration
+file as ``/opt/spark/conf/spark-defaults.conf``.
+
+The configuration of SPARQLGX can be changed by mounting a file
+as ``/opt/sparqlgx/conf/sparqlgx.conf``.
+
 ### Get the sources, compile and configure.
 
 Firstly, clone this repository. Secondly, check that all the needed
