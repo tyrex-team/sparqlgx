@@ -119,7 +119,7 @@ object Main {
       println(stat(0)._2._2.toString+" "+stat(1)._2._2.toString+" "+stat(2)._2._2.toString);
       for(i <- 0 to 2) {
         val list_el=stat(i)._2._1;
-        val last = list_el.last._2;
+        val last = if(stat(i)._2._2 < numberMax) {"*"} else {list_el.last._2};
         list_el foreach { case (n,iri) => val v = if(iri==last) "*" else iri ;  println (v+" "+n.toString) } ;
         //println();
       }
@@ -141,10 +141,16 @@ object Main {
         { case ((a1,s1,n1,t1),(a2,s2,n2,t2)) => (merge(a1,a2,numberMax),((s1+s2) min numberMax),n1+n2,t1+t2) }
       ).collect.foreach {
         case ((pred,col),(statlist,size,nbDif,total)) => 
-        println(pred+" "+col+" "+size.toString+" "+(nbDif-size-1).toString+" "+total);
-        val last = statlist.last._2;
-        statlist foreach { case (n,iri) => val v = if(iri==last) "*" else iri ;  println (v+" "+n.toString) } ;
-        //println();
+          if(size<numberMax) {
+            println(pred+" "+col+" "+(size+1).toString+" "+0+" "+total);
+            statlist foreach { case (n,iri) =>println (iri+" "+n.toString) } ;
+            println("* 0");
+          }
+          else {
+            println(pred+" "+col+" "+size.toString+" "+(nbDif-size+1).toString+" "+total);
+            val last = statlist.last._2;
+            statlist foreach { case (n,iri) => val v = if(iri==last) "*" else iri ;  println (v+" "+n.toString) } ;
+          }
       }
     }
   }
