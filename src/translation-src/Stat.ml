@@ -5,7 +5,9 @@ type 'a summary = ('a,int) Hashtbl.t * int * int * int
     
 type 'a stat =  ('a  * ('a summary)) list
 
-let combine (stat1:'a stat) (stat2:'a stat) =
+let assert_equal a b = (if a<>b then (print_int a ; print_string " " ; print_int b ;failwith ("Assert failed"^__LOC__)) ; a)
+              
+let combine (tot1,stat1: int*'a stat) (tot2,stat2: int*'a stat) =
 
  
   let cols1 = List.map fst stat1 in
@@ -20,16 +22,19 @@ let combine (stat1:'a stat) (stat2:'a stat) =
     with Not_found -> nbPerDef
   in
 
-  (* Compute how much an element of s1 can be multiplied by compatible
-     elements from s2 Return a (a,b) indicating that there are b times
-     where an element can be multiplied a times *)
-  let compute_mul s1 s2 =
+  (* mult (compute_mul s1 s2) n Compute how much n "entries" in a
+     table describe by s1 can appear in s1 |><| s2 
+
+    compute_mul s1 s2 return a list of (a,b) indicating that there are
+     b times where an element can be multiplied a times *)
+  let compute_mul (t1,s1) (t2,s2) =
 
     
     let compute_mul_col s1 s2 =
       let (tbl1,nbDef1,nbPerDef1,totalDef1) = s1 in
       let (tbl2,nbDef2,nbPerDef2,totalDef2) = s2 in
-      let (mul: (int*int) list) = (nbPerDef2,totalDef2)::Hashtbl.fold (fun v n ac -> (n,count s1 v)::ac) tbl2 [] in
+      let t1_special = t1 in (* we should minus common with t2*)
+      let (mul: (int*int) list) = Hashtbl.fold (fun v n ac -> (n,count s1 v)::ac) tbl2 [(nbPerDef2,t1_special)] in
       let rec foo = function
         | [] -> []
         | (a,b)::(c,d)::q when a=c -> foo ((a,b+d)::q)
@@ -60,15 +65,13 @@ let combine (stat1:'a stat) (stat2:'a stat) =
       foo s2
     in
     match common_cols with
-    | [c] ->
-       (compute_mul_col (List.assoc c s1) (List.assoc c s2))
     | common_cols ->
-       List.fold_left (fun ac c -> combine_mul ac (compute_mul_col (List.assoc c s1) (List.assoc c s2)))  [size2,size2]  common_cols 
+       List.fold_left (fun ac c -> combine_mul ac (compute_mul_col (List.assoc c s1) (List.assoc c s2)))  [t2,t1]  common_cols 
   in
 
-  let mul_12 = compute_mul stat1 stat2 in
+  let mul_12 = compute_mul (tot1,stat1) (tot2,stat2) in
   print_string "mul_12 " ; List.iter (fun (a,b) -> print_string "(" ; print_int a ; print_string "," ; print_int b ; print_string ") " ) mul_12; print_newline();
-  let mul_21 = compute_mul stat2 stat1 in
+  let mul_21 = compute_mul (tot2,stat2) (tot1,stat1) in
 print_string "mul_21 " ; List.iter (fun (a,b) -> print_string "(" ; print_int a ; print_string "," ; print_int b ; print_string ") " ) mul_21; print_newline();
   let mult mul n =
     let rec foo = function 
@@ -102,9 +105,10 @@ print_string "mul_21 " ; List.iter (fun (a,b) -> print_string "(" ; print_int a 
             min (mult mul_21 n2) (n2*nbPerDef1)
           in
           if n_res > 0 then Hashtbl.add res v n_res) tbl2 ;
-    let nbDefRes = min nbDef1 nbDef2 in
+    let nbDefRes = min (mult mul_12 nbDef1) (mult mul_21 nbDef2) in
+    let totalDefRes = min (mult mul_12 totalDef1) (mult mul_21 totalDef2) in
 
-    (res,nbDefRes,nbPerDef1*nbPerDef2,min totalDef1 totalDef2)
+    (res,nbDefRes,nbPerDef1*nbPerDef2,totalDefRes)
   in
 
   let common_stat = List.map (fun c -> c,combine_common_col (List.assoc c stat1) (List.assoc c stat2)) common_cols in
@@ -121,9 +125,10 @@ print_string "mul_21 " ; List.iter (fun (a,b) -> print_string "(" ; print_int a 
            c,(res,mult mul nbDef,mult mul nbPerDef,mult mul totalDef)
          ) cols1_specific
   in
-
-  (combine_specific stat1 stat2 cols1 cols2 mul_21)@(combine_specific stat2 stat1 cols2 cols1 mul_12)@ 
-    common_stat
+  print_int tot1 ; print_string " " ; print_int tot2 ; print_string "\n";
+  print_int (mult mul_12 tot1) ; print_string " " ; print_int (mult mul_21 tot2) ; print_string "\n";
+  (min (mult mul_12 tot1) (mult mul_21 tot2)),
+  ((combine_specific stat1 stat2 cols1 cols2 mul_12)@(combine_specific stat2 stat1 cols2 cols1 mul_21)@common_stat)
 
 let fullstat filename =
   let res = Hashtbl.create 53 in
@@ -137,7 +142,7 @@ let fullstat filename =
          for i = 1 to nb do
            Scanf.bscanf chan "%s %d\n" (fun i j -> if i = "*" then nbPerDef:=j else (Hashtbl.add hshtbl i j ; totDef := !totDef - j)) ;
          done ;
-         hshtbl,nbDef,!nbPerDef,!totDef
+         tot,(hshtbl,nbDef,!nbPerDef,!totDef)
        in
        let rec bar () =
          try
@@ -151,26 +156,27 @@ let fullstat filename =
 
 let get_tp_stat stat = function
   | (_,Variable(_),_) -> failwith ("Unsupported variable predicate @"^__LOC__)
-  | (Exact(s),Exact(p),Exact(o)) -> []
+  | (Exact(s),Exact(p),Exact(o)) -> 1,[]
   | (Variable(s),Exact(p),Variable(o)) ->
-     [(s,Hashtbl.find stat (p,0)) ;
-      (o,Hashtbl.find stat (p,1)) ]
+     let t0,p0 = Hashtbl.find stat (p,0) in
+     let t1,p1 = Hashtbl.find stat (p,1) in
+     (assert_equal t0 t1),[(s,p0) ; (o,p1) ]
   | (Exact(s),Exact(p),Variable(o)) ->
-     let (t,nbDef,nbPerDef,totDef) = Hashtbl.find stat (p,0 ) in
+     let _,(t,_,nbPerDef,_) = Hashtbl.find stat (p,0 ) in
      let nb =
        try
          Hashtbl.find t s
        with Not_found -> nbPerDef
      in
-     [o,(Hashtbl.create 3,nb,1,nb)]
+     nb,[o,(Hashtbl.create 3,nb,1,nb)]
   | (Variable(s),Exact(p),Exact(o)) ->
-     let (t,nbDef,nbPerDef,totDef) = Hashtbl.find stat (p,1) in
+     let _,(t,_,nbPerDef,_) = Hashtbl.find stat (p,1) in
      let nb =
        try
          Hashtbl.find t o
        with Not_found -> nbPerDef
      in
-     [s,(Hashtbl.create 3,nb,1,nb)]
+     nb,[s,(Hashtbl.create 3,nb,1,nb)]
     
                       
 let s2 = fullstat "stat50"
@@ -181,8 +187,10 @@ let _ = get_tp_stat s2 (Variable("?Y"),Exact ("<http://www.w3.org/1999/02/22-rdf
 
 let a = get_tp_stat s2 (Variable("?Y"),Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#worksFor>") ,Variable "?X")
 let b = get_tp_stat s2 (Variable("?X"),Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#researchInterest>") ,Variable "?Z")
+let _ = listFromStat a
+let _ = listFromStat b
 
-let c= combine a b 
+let c = combine a b 
 
 let statFromList = 
   List.map (fun (c,(col,a,b,d)) ->
@@ -190,9 +198,8 @@ let statFromList =
       List.iter (fun (k,v) -> Hashtbl.add t k v) col ;
       c,(t,a,b,d))
   
-let listFromStat =
-  List.map (fun (c,(tbl,a,b,d))->
-      c,(Hashtbl.fold (fun a b c -> (a,b)::c) tbl [],a,b,d))
+let listFromStat (t,l)=
+  t,List.map (fun (c,(tbl,a,b,d))->  c,(Hashtbl.fold (fun a b c -> (a,b)::c) tbl [],a,b,d)) l
 
 let t1 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#GraduateStudent>"))
 let t2 = get_tp_stat s2 (Variable("?Y"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#University>"))
@@ -203,15 +210,36 @@ let t5 = get_tp_stat s2 (Variable("?Z"),Exact "<http://www.lehigh.edu/~zhp2/2004
 let t6 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#undergraduateDegreeFrom>",Variable("?Y"))
 
 let t14 = (combine t1 t4) 
-let t14_3 = combine (combine t1 t4) t3
+let t14_3 = combine t14 t3
        
 let t52 = combine t2 t5
 let t52__14_3 = combine t52 t14_3 
 let t_all = combine t52__14_3 t6
+let _ = listFromStat t1
+let _ = listFromStat t4
+let _ = listFromStat t3
+let _ = listFromStat t14
 let _ = listFromStat t2
 let _ = listFromStat t5
-let _ = listFromStat t52
+let _ = listFromStat t6
 let _ = listFromStat t52__14_3
+
+let t52__14_3_y =
+  match t52__14_3 with
+    _,l -> match List.assoc "?Y" l with t,_,_,_ -> t
+
+let t6_y =
+  match t6 with
+    _,l -> match List.assoc "?Y" l with t,_,_,_ -> t
+
+let tall_y =
+  match t6 with
+    _,l -> match List.assoc "?Y" l with t,_,_,_ -> t
+
+let _ =
+  Hashtbl.iter (fun k v -> if Hashtbl.mem t6_y k then (print_string (k^" "); print_int v ; print_string " " ; print_int (Hashtbl.find t6_y k) ; print_string "\n")) t52__14_3_y
+
+
 let _ = listFromStat t_all
 let y = match List.assoc "?Y" t52 with (t,_,_,_) -> Hashtbl.fold (fun v n ac -> n+ac) t 0
                      (* let tel = [ *)
