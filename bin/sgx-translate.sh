@@ -13,7 +13,7 @@ while true; do
 	    shift
 	    ;;
 	--no-optim )
-	    noOptim="-no-optim"
+	    noOptim="--no-optim"
 	    shift
 	    ;;
 	*)
@@ -37,6 +37,6 @@ then stat="-stat $localpath/stat.txt";
 else stat="";
 fi
 
-${PATH_CMD}/sparqlgx-translator $queryFile $noOptim $stat "-debug" | sed "s|\"DATAHDFSPATH\"|\"$hdfsdbpath\"|" | sed "s|collect|collect().foreach(println)|g"
+${PATH_CMD}/sparqlgx-translator $queryFile $noOptim $stat "--debug" | sed "s|\"DATAHDFSPATH\"|\"$hdfsdbpath\"|" | sed "s|collect|collect().foreach(println)|g"
 
 exit 0
