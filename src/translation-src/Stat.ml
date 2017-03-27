@@ -1,5 +1,5 @@
-open Scanf ;;
-open Sparql ;;
+open Scanf 
+open Sparql 
 
 type 'a summary = ('a,int) Hashtbl.t * int * int * int 
     
@@ -83,7 +83,10 @@ print_string "mul_21 " ; List.iter (fun (a,b) -> print_string "(" ; print_int a 
     in
     foo (n,mul)
   in
-    
+
+  let new_max = min (mult mul_12 tot1) (mult mul_21 tot2) in
+  let resadd t a v = Hashtbl.add t a (min v new_max) in
+  
   let rec combine_common_col s1 s2  =
     let (tbl1,nbDef1,nbPerDef1,totalDef1) = s1 in
     let (tbl2,nbDef2,nbPerDef2,totalDef2) = s2 in
@@ -98,13 +101,13 @@ print_string "mul_21 " ; List.iter (fun (a,b) -> print_string "(" ; print_int a 
           with
             Not_found -> min (n1*nbPerDef2) (mult mul_12 n1)
         in
-        if n_res > 0 then Hashtbl.add res v n_res) tbl1 ;
+        if n_res > 0 then resadd res v n_res) tbl1 ;
     Hashtbl.iter (fun v n2 ->
 	if not (Hashtbl.mem res v) then
           let n_res =
             min (mult mul_21 n2) (n2*nbPerDef1)
           in
-          if n_res > 0 then Hashtbl.add res v n_res) tbl2 ;
+          if n_res > 0 then resadd res v n_res) tbl2 ;
     let nbDefRes = min (mult mul_12 nbDef1) (mult mul_21 nbDef2) in
     let totalDefRes = min (mult mul_12 totalDef1) (mult mul_21 totalDef2) in
 
@@ -112,7 +115,7 @@ print_string "mul_21 " ; List.iter (fun (a,b) -> print_string "(" ; print_int a 
   in
 
   let common_stat = List.map (fun c -> c,combine_common_col (List.assoc c stat1) (List.assoc c stat2)) common_cols in
-
+ 
 
   let combine_specific (s1:'a stat) (s2:'a stat) (c1:'a list) (c2:'a list) mul =
     match (List.filter (fun x -> not (List.mem x c2)) c1) with
@@ -121,13 +124,14 @@ print_string "mul_21 " ; List.iter (fun (a,b) -> print_string "(" ; print_int a 
        List.map (fun c ->
            let tbl,nbDef,nbPerDef,totalDef = List.assoc c s1 in
            let res = Hashtbl.create 17 in
-           Hashtbl.iter (fun k v -> Hashtbl.add res k (mult mul v)) tbl ;
+           Hashtbl.iter (fun k v -> resadd res k (mult mul v)) tbl ;
            c,(res,mult mul nbDef,mult mul nbPerDef,mult mul totalDef)
          ) cols1_specific
   in
   print_int tot1 ; print_string " " ; print_int tot2 ; print_string "\n";
   print_int (mult mul_12 tot1) ; print_string " " ; print_int (mult mul_21 tot2) ; print_string "\n";
-  (min (mult mul_12 tot1) (mult mul_21 tot2)),
+
+  new_max,
   ((combine_specific stat1 stat2 cols1 cols2 mul_12)@(combine_specific stat2 stat1 cols2 cols1 mul_21)@common_stat)
 
 let fullstat filename =
@@ -181,17 +185,6 @@ let get_tp_stat stat = function
                       
 let s2 = fullstat "stat50"
 
-let _ = Hashtbl.find s2 ("<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",1)
-
-let _ = get_tp_stat s2 (Variable("?Y"),Exact ("<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>") ,Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#University>")
-
-let a = get_tp_stat s2 (Variable("?Y"),Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#worksFor>") ,Variable "?X")
-let b = get_tp_stat s2 (Variable("?X"),Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#researchInterest>") ,Variable "?Z")
-let _ = listFromStat a
-let _ = listFromStat b
-
-let c = combine a b 
-
 let statFromList = 
   List.map (fun (c,(col,a,b,d)) ->
       let t = Hashtbl.create 17 in
@@ -223,6 +216,7 @@ let _ = listFromStat t2
 let _ = listFromStat t5
 let _ = listFromStat t6
 let _ = listFromStat t52__14_3
+let _ = listFromStat t_all
 
 let t52__14_3_y =
   match t52__14_3 with
