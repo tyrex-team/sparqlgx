@@ -30,6 +30,11 @@ case "$1" in
         statfile="${localdbpath}/stat.txt" ;
         mkdir -p $localdbpath
         ;;
+    loadfull )
+        opt="--fullstat" ;
+        statfile="${localdbpath}/statfull.txt" ;
+        mkdir -p $localdbpath
+        ;;
 esac
 
 spark-submit --driver-memory $SPARK_DRIVER_MEM \
