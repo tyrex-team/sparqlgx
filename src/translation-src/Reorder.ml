@@ -105,10 +105,20 @@ let load_full_stat s =
   stat_file := Some (Stat.fullstat s) 
   
 let full_stat trad_tp l =
+
+  let get_var (a,b,c) =
+    let rec foo = function
+      | [] -> []
+      | Exact _ :: q -> foo q
+      | Variable v :: q -> v::foo q
+    in
+    foo [a;b;c]
+  in
+  
   match !stat_file with
   | None -> failwith "Full stat not loaded!"
   | Some s ->
-     let tp = List.map (fun x ->trad_tp x,Stat.get_tp_stat s x) l in
-     let cost, stat, plan = get_optimal_plan_with_stat tp in
+     let tp = List.map (fun x ->trad_tp x,Stat.get_tp_stat s x, get_var x) l in
+     let cost, stat, plan,keys = get_optimal_plan_with_stat tp in
      plan
       
