@@ -114,6 +114,7 @@ let translate distinguished modifiers vertical optim stmt =
     | 0 -> Reorder.no_optim translate_tp (List.rev l)
     | 1 -> Reorder.no_cartesian translate_tp l
     | 2 -> Reorder.reorder  translate_tp l
+    | 3 -> Reorder.full_stat translate_tp l
     | _ -> Reorder.no_cartesian  translate_tp l
   in
 

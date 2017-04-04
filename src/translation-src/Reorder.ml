@@ -1,7 +1,8 @@
-open Sparql ;;
-open Scanf ;;
-open Algebra ;;
-  
+ open Sparql
+open Scanf
+open Algebra
+open Plan   
+
 let stats = Hashtbl.create 17
 
 (* let () = Hashtbl.add stats ("s","*") 1 ; Hashtbl.add stats ("p","*") 1 ; Hashtbl.add stats ("o","*") 1 *)
@@ -97,3 +98,17 @@ let reorder trad_tp l =
   
 
 ;;
+
+let stat_file = ref None
+              
+let load_full_stat s =
+  stat_file := Some (Stat.fullstat s) 
+  
+let full_stat trad_tp l =
+  match !stat_file with
+  | None -> failwith "Full stat not loaded!"
+  | Some s ->
+     let tp = List.map (fun x ->trad_tp x,Stat.get_tp_stat s x) l in
+     let cost, stat, plan = get_optimal_plan_with_stat tp in
+     plan
+      

@@ -5,11 +5,13 @@ type 'a summary = ('a,int) Hashtbl.t * int * int * int
     
 type 'a stat =  ('a  * ('a summary)) list
 
+type 'a combstat =  int*'a stat
+
 let assert_equal a b = (if a<>b then (print_int a ; print_string " " ; print_int b ;failwith ("Assert failed"^__LOC__)) ; a)
               
-let combine (tot1,stat1: int*'a stat) (tot2,stat2: int*'a stat) =
+let combine (tot1,stat1: 'a combstat) (tot2,stat2: 'a combstat) =
 
- 
+  
   let cols1 = List.map fst stat1 in
   let cols2 = List.map fst stat2 in
   
@@ -70,9 +72,16 @@ let combine (tot1,stat1: int*'a stat) (tot2,stat2: int*'a stat) =
   in
 
   let mul_12 = compute_mul (tot1,stat1) (tot2,stat2) in
-  print_string "mul_12 " ; List.iter (fun (a,b) -> print_string "(" ; print_int a ; print_string "," ; print_int b ; print_string ") " ) mul_12; print_newline();
+  print_string "mul_12 " ;
+  List.iter (fun (a,b) -> print_string "(" ; print_int a ; print_string "," ; print_int b ; print_string ") " ) mul_12;
+  print_newline();
+
+  
   let mul_21 = compute_mul (tot2,stat2) (tot1,stat1) in
-print_string "mul_21 " ; List.iter (fun (a,b) -> print_string "(" ; print_int a ; print_string "," ; print_int b ; print_string ") " ) mul_21; print_newline();
+  print_string "mul_21 " ;
+  List.iter (fun (a,b) -> print_string "(" ; print_int a ; print_string "," ; print_int b ; print_string ") " ) mul_21;
+  print_newline();
+  
   let mult mul n =
     let rec foo = function 
       | _,[] -> 0
@@ -92,7 +101,7 @@ print_string "mul_21 " ; List.iter (fun (a,b) -> print_string "(" ; print_int a 
     let (tbl2,nbDef2,nbPerDef2,totalDef2) = s2 in
     let res = Hashtbl.create 17 in
 
-        
+    
     Hashtbl.iter (fun v n1 ->
         let n_res = 
           try
@@ -115,7 +124,7 @@ print_string "mul_21 " ; List.iter (fun (a,b) -> print_string "(" ; print_int a 
   in
 
   let common_stat = List.map (fun c -> c,combine_common_col (List.assoc c stat1) (List.assoc c stat2)) common_cols in
- 
+  
 
   let combine_specific (s1:'a stat) (s2:'a stat) (c1:'a list) (c2:'a list) mul =
     match (List.filter (fun x -> not (List.mem x c2)) c1) with
@@ -183,59 +192,60 @@ let get_tp_stat stat = function
      nb,[s,(Hashtbl.create 3,nb,1,nb)]
     
                       
-let s2 = fullstat "stat50"
-
-let statFromList = 
-  List.map (fun (c,(col,a,b,d)) ->
-      let t = Hashtbl.create 17 in
-      List.iter (fun (k,v) -> Hashtbl.add t k v) col ;
-      c,(t,a,b,d))
+(* let statFromList =  *)
+(*   List.map (fun (c,(col,a,b,d)) -> *)
+(*       let t = Hashtbl.create 17 in *)
+(*       List.iter (fun (k,v) -> Hashtbl.add t k v) col ; *)
+(*       c,(t,a,b,d)) *)
   
 let listFromStat (t,l)=
   t,List.map (fun (c,(tbl,a,b,d))->  c,(Hashtbl.fold (fun a b c -> (a,b)::c) tbl [],a,b,d)) l
 
-let t1 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#GraduateStudent>"))
-let t2 = get_tp_stat s2 (Variable("?Y"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#University>"))
-let t3 = get_tp_stat s2 (Variable("?Z"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Department>"))
-let t4 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#memberOf>",Variable("?Z"))
-let _ = listFromStat t2
-let t5 = get_tp_stat s2 (Variable("?Z"),Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#subOrganizationOf>",Variable("?Y"))
-let t6 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#undergraduateDegreeFrom>",Variable("?Y"))
+(* let s2 = fullstat "stat50" *)
 
-let t14 = (combine t1 t4) 
-let t14_3 = combine t14 t3
+(* let t1 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#GraduateStudent>")) *)
+(* let t2 = get_tp_stat s2 (Variable("?Y"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#University>")) *)
+(* let t3 = get_tp_stat s2 (Variable("?Z"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Department>")) *)
+(* let t4 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#memberOf>",Variable("?Z")) *)
+(* let t5 = get_tp_stat s2 (Variable("?Z"),Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#subOrganizationOf>",Variable("?Y")) *)
+(* let t6 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#undergraduateDegreeFrom>",Variable("?Y")) *)
+
+(* let _ = listFromStat t2 *)
+
+(* let t14 = (combine t1 t4)  *)
+(* let t14_3 = combine t14 t3 *)
        
-let t52 = combine t2 t5
-let t52__14_3 = combine t52 t14_3 
-let t_all = combine t52__14_3 t6
-let _ = listFromStat t1
-let _ = listFromStat t4
-let _ = listFromStat t3
-let _ = listFromStat t14
-let _ = listFromStat t2
-let _ = listFromStat t5
-let _ = listFromStat t6
-let _ = listFromStat t52__14_3
-let _ = listFromStat t_all
+(* let t52 = combine t2 t5 *)
+(* let t52__14_3 = combine t52 t14_3  *)
+(* let t_all = combine t52__14_3 t6 *)
+(* let _ = listFromStat t1 *)
+(* let _ = listFromStat t4 *)
+(* let _ = listFromStat t3 *)
+(* let _ = listFromStat t14 *)
+(* let _ = listFromStat t2 *)
+(* let _ = listFromStat t5 *)
+(* let _ = listFromStat t6 *)
+(* let _ = listFromStat t52__14_3 *)
+(* let _ = listFromStat t_all *)
 
-let t52__14_3_y =
-  match t52__14_3 with
-    _,l -> match List.assoc "?Y" l with t,_,_,_ -> t
+(* let t52__14_3_y = *)
+(*   match t52__14_3 with *)
+(*     _,l -> match List.assoc "?Y" l with t,_,_,_ -> t *)
 
-let t6_y =
-  match t6 with
-    _,l -> match List.assoc "?Y" l with t,_,_,_ -> t
+(* let t6_y = *)
+(*   match t6 with *)
+(*     _,l -> match List.assoc "?Y" l with t,_,_,_ -> t *)
 
-let tall_y =
-  match t6 with
-    _,l -> match List.assoc "?Y" l with t,_,_,_ -> t
+(* let tall_y = *)
+(*   match t6 with *)
+(*     _,l -> match List.assoc "?Y" l with t,_,_,_ -> t *)
 
-let _ =
-  Hashtbl.iter (fun k v -> if Hashtbl.mem t6_y k then (print_string (k^" "); print_int v ; print_string " " ; print_int (Hashtbl.find t6_y k) ; print_string "\n")) t52__14_3_y
+(* let _ = *)
+(*   Hashtbl.iter (fun k v -> if Hashtbl.mem t6_y k then (print_string (k^" "); print_int v ; print_string " " ; print_int (Hashtbl.find t6_y k) ; print_string "\n")) t52__14_3_y *)
 
 
-let _ = listFromStat t_all
-let y = match List.assoc "?Y" t52 with (t,_,_,_) -> Hashtbl.fold (fun v n ac -> n+ac) t 0
+(* let _ = listFromStat t_all *)
+(* let y = match List.assoc "?Y" t52 with (t,_,_,_) -> Hashtbl.fold (fun v n ac -> n+ac) t 0 *)
                      (* let tel = [ *)
 (*     "nom",(["alice",1;"bob",5;"charles",1],1,1,1) ; *)
 (*     "tel",(["1",3],5,1,5) *)
