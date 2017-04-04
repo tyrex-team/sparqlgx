@@ -5,7 +5,7 @@ PATH_CMD=$(dirname $0) ;
 source ${PATH_CMD}/../conf/sparqlgx.conf
 
 clean=0
-statBool=0
+stat=0
 saveFile=""
 noOptim=""
 sde=""
@@ -20,7 +20,11 @@ while true; do
 	    shift
 	    ;;
 	--stat )
-	    statBool=1
+	    stat=1
+	    shift
+	    ;;
+	--fullstat )
+	    stat=2
 	    shift
 	    ;;
 	--no-optim )
@@ -53,12 +57,16 @@ else
     hdfsdbpath=$dbName ;
 fi;
 
-if [[ $statBool == "1" ]] && [[ -f $localpath/$dbName/stat.txt ]] ;
+if [[ $stat == "1" ]] && [[ -f $localpath/$dbName/stat.txt ]] ;
 then stat="--stat $localpath/stat.txt";
 else
-    [[ $statBool == "1" ]] && (echo "File $localpath/stat.txt not found! Stats deactivated!") ;
-    stat="";
-fi
+    if [[ $stat == "2" ]] && [[ -f $localpath/$dbName/statfull.txt ]] ;
+    then stat="--fullstat $localpath/statfull.txt";
+    else
+        [[ $stat != "0" ]] && (echo "File stat in $localpath not found! Stats deactivated!") ;
+        stat="";
+    fi ;
+fi ;
 
 ########################################################
 # Job is done in three main steps:
