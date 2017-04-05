@@ -111,7 +111,7 @@ do
                     else
                         endcmd="${BENCHNAME[$b]} $queryfile"
                     fi ;
-                    bash ${PATH_SGX}/sparqlgx.sh ${EXPCMD[$exp]} ${EXPOPT[$exp]} -o $token/results/$query.${EXPNAME[$exp]}.txt $endcmd ;
+                    bash ${PATH_SGX}/sparqlgx.sh ${EXPCMD[$exp]} ${EXPOPT[$exp]} -o $token/results/$query.${EXPNAME[$exp]}.$(date "+%s").txt $endcmd ;
                     t2=$(date +%s);
                     tim=$((t2-t1)) ;
                     echo -n -e "\t$tim\t|" 1>&3;

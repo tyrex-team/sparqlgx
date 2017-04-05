@@ -61,7 +61,7 @@ if [[ $stat == "1" ]] && [[ -f $localpath/$dbName/stat.txt ]] ;
 then stat="--stat $localpath/stat.txt";
 else
     if [[ $stat == "2" ]] && [[ -f $localpath/$dbName/statfull.txt ]] ;
-    then stat="--fullstat $localpath/statfull.txt";
+    then stat="--fullstat $localpath/$dbName/statfull.txt";
     else
         [[ $stat != "0" ]] && (echo "File stat in $localpath not found! Stats deactivated!") ;
         stat="";

@@ -31,7 +31,7 @@ case "$1" in
         mkdir -p $localdbpath
         ;;
     loadfull )
-        opt="--fullstat" ;
+        opt="--full-stat" ;
         statfile="${localdbpath}/statfull.txt" ;
         mkdir -p $localdbpath
         ;;
