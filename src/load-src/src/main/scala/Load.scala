@@ -28,8 +28,9 @@ object Main {
     if (n==0) { Nil }
     else
       (xs, ys) match {
-        case(Nil, ys) => ys
-        case(xs, Nil) => xs
+        case(Nil, Nil) => Nil
+        case(Nil, y::ys) => y::merge(Nil,ys,n-1)
+        case(x::xs, Nil) => x::merge(xs,Nil,n-1)
         case(x :: xs1, y :: ys1) =>
           if (x._1 > y._1) x::merge(xs1, ys,n-1)
           else y :: merge(xs, ys1,n-1)
