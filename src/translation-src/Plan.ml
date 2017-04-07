@@ -37,39 +37,77 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
        dyn_col.(hash) <- res ; res
     | v -> v
   in
+
+  let cost_shuffle = 4 in
   
-  let rec get_best = function
+  let rec get_best_no_keys   = function
     | [] -> failwith ("Empty list to optimized @ "^__LOC__)
     | [id,a] ->
-       fst a, a, List.assoc id trad, []
+       [fst a, a, List.assoc id trad, []]
     | a::l ->
        let hash = List.fold_left (fun x y -> x+(fst y)) 0 (a::l) in
        begin 
          match dyn.(hash) with
          | None ->
-            let res = test_all_split [a] [] l in
+            let res = test_all_split [] [a] [] l in
             dyn.(hash) <- Some res ; res
          | Some v -> v
        end
-  and test_all_split a b = function
+
+  and get_best (k:string list) (t:(int*'a combstat) list) =
+    let rec foo = function
+      | [] -> failwith ("Empty plan @ "^__LOC__)
+      | [cost,stat,plan,key] ->
+         if key = k || k = []
+         then (cost,stat,plan)
+         else (cost+cost_shuffle*(fst stat),stat,plan)
+      | a::q -> min (foo [a]) (foo q)
+    in
+    foo (get_best_no_keys t)
+
+    
+  and propose agg key cost stat plan =
+    (* propose add (cost,stat,plan,key) to agg where we remove
+      candidate plans that are useless i.e. plans with a cost greater
+      than reshuffling another plan) *)
+    let rec foo l = match l with
+      | [] -> [cost,stat,plan,key]
+      | (c2,s2,p2,k2)::q ->
+         if key = k2
+         then
+           if cost > c2
+           then l
+           else (cost,stat,plan,key)::q
+         else
+           if (c2+cost_shuffle*fst s2<cost) 
+           then l
+           else
+             if cost+cost_shuffle*fst stat<c2
+             then foo q
+             else (c2,s2,p2,k2)::foo q
+    in
+    foo agg
+           
+  and test_all_split agg a b= function
     | [] -> if b <> []
             then
-              let cb,sb,pb,kb = get_best b
-              and ca,sa,pa,ka = get_best a
-              and key_join = inter (get_col a) (get_col b)
+              let key_join = inter (get_col a) (get_col b) in
+              let cb,sb,pb = get_best key_join b 
+              and ca,sa,pa = get_best key_join a 
               in
               let s_res = combine sa sb in
-              let c_res = cb+ca+fst s_res+(if kb<>key_join then 10*fst sb else 0)+(if ka<>key_join then 10*fst sa else 0) in
+              let c_res = cb+ca+fst s_res in
               let p_res = if fst sa > fst sb then Join(pa,pb) else Join(pb,pa) in
-              c_res,s_res,p_res, key_join
+              propose agg key_join c_res s_res p_res 
             else
-              inf,(inf,[]),Readfile3,[]
+              agg
     | x::t ->
-       min (test_all_split (x::a) b t) (test_all_split a (x::b) t)
+       let agg1 = test_all_split agg (x::a) b t in
+       test_all_split agg1 a (x::b) t
       
   in
 
-  get_best tpcost
+  get_best [] tpcost
 
 (* let t1 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#GraduateStudent>")) *)
 (* let t2 = get_tp_stat s2 (Variable("?Y"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#University>")) *)

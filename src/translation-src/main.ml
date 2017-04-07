@@ -33,7 +33,7 @@ let rec parse_arg = function
   | "--debug"::q -> debug:=true ; parse_arg q
   | "--no-optim"::q -> optim := 0 ; parse_arg q
   | "--stat"::s::q -> Reorder.load s ; optim:=2 ; parse_arg q
-  | "--fullstat"::s::q -> Reorder.load_full_stat s ; optim:=2 ; parse_arg q
+  | "--fullstat"::s::q -> Reorder.load_full_stat s ; optim:=3 ; parse_arg q
   | f::q ->
      if !file = ""
      then file := f

@@ -119,6 +119,6 @@ let full_stat trad_tp l =
   | None -> failwith "Full stat not loaded!"
   | Some s ->
      let tp = List.map (fun x ->trad_tp x,Stat.get_tp_stat s x, get_var x) l in
-     let cost, stat, plan,keys = get_optimal_plan_with_stat tp in
+     let cost, stat, plan = get_optimal_plan_with_stat tp in
      plan
       

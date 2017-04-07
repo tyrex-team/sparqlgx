@@ -8,7 +8,9 @@ type 'a stat =  ('a  * ('a summary)) list
 type 'a combstat =  int*'a stat
 
 let assert_equal a b = (if a<>b then (print_int a ; print_string " " ; print_int b ;failwith ("Assert failed"^__LOC__)) ; a)
-              
+
+let debug x = () 
+                     
 let combine (tot1,stat1: 'a combstat) (tot2,stat2: 'a combstat) =
 
   
@@ -72,15 +74,17 @@ let combine (tot1,stat1: 'a combstat) (tot2,stat2: 'a combstat) =
   in
 
   let mul_12 = compute_mul (tot1,stat1) (tot2,stat2) in
-  print_string "mul_12 " ;
-  List.iter (fun (a,b) -> print_string "(" ; print_int a ; print_string "," ; print_int b ; print_string ") " ) mul_12;
-  print_newline();
-
-  
   let mul_21 = compute_mul (tot2,stat2) (tot1,stat1) in
-  print_string "mul_21 " ;
-  List.iter (fun (a,b) -> print_string "(" ; print_int a ; print_string "," ; print_int b ; print_string ") " ) mul_21;
-  print_newline();
+
+  debug (fun () ->
+      print_string "mul_12 " ;
+      List.iter (fun (a,b) -> print_string "(" ; print_int a ; print_string "," ; print_int b ; print_string ") " ) mul_12;
+      print_newline();
+      print_string "mul_21 " ;
+      List.iter (fun (a,b) -> print_string "(" ; print_int a ; print_string "," ; print_int b ; print_string ") " ) mul_21;
+      print_newline();
+    ) ;
+   
   
   let mult mul n =
     let rec foo = function 
@@ -137,8 +141,10 @@ let combine (tot1,stat1: 'a combstat) (tot2,stat2: 'a combstat) =
            c,(res,mult mul nbDef,mult mul nbPerDef,mult mul totalDef)
          ) cols1_specific
   in
-  print_int tot1 ; print_string " " ; print_int tot2 ; print_string "\n";
-  print_int (mult mul_12 tot1) ; print_string " " ; print_int (mult mul_21 tot2) ; print_string "\n";
+  debug (fun () ->
+      print_int tot1 ; print_string " " ; print_int tot2 ; print_string "\n";
+      print_int (mult mul_12 tot1) ; print_string " " ; print_int (mult mul_21 tot2) ; print_string "\n";
+    ) ;
 
   new_max,
   ((combine_specific stat1 stat2 cols1 cols2 mul_12)@(combine_specific stat2 stat1 cols2 cols1 mul_21)@common_stat)
