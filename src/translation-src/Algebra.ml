@@ -270,7 +270,7 @@ object Query {
                  let add_mmap_a = code_a^".collect().foreach { case ("^join [] cols_a^") => mmap_"^code_a^".addBinding( ("^join [] cols_join^"),("^join [] cols_a_spec^"))}\n" in
                  let broadcast_a = "val broadcast_"^code_a^"=sc.broadcast(mmap_"^code_a^")\n" in
                  mmap_a^add_mmap_a^broadcast_a^
-                   "val "^res^"="^code_b^".flatMapValues("^join [] cols_b^" => broadcast_"^code_a^".value.apply("^join [] cols_join^").map{ case ("^join [] cols_a_bis^") => ("^join [] cols_union^") })", keys_b,cols_union
+                   "val "^res^"="^code_b^".flatMap{ case ("^join keys_b cols_b^") => broadcast_"^code_a^".value.apply("^join [] cols_join^").map{ case ("^join [] cols_a_bis^") => ("^join [] cols_union^") }}", keys_b,cols_union
                
           | Rename(o,n,c) ->
              let code_c,keys_c,cols_c = foo c in
