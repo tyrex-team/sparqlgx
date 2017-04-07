@@ -267,10 +267,10 @@ object Query {
                  
                else
                  let mmap_a = "val mmap_"^code_a^" = new collection.mutable.HashMap["^typeof cols_join^", collection.mutable.Set["^typeof cols_a_spec^"]]() with collection.mutable.MultiMap[String, Int]\n" in
-                 let add_mmap_a = code_a^".collect().foreach { "^join [] cols_a^" => mmap_"^code_a^".addBinding("^join [] cols_join^","^join [] cols_a_spec^")}\n" in
+                 let add_mmap_a = code_a^".collect().foreach { case ("^join [] cols_a^") => mmap_"^code_a^".addBinding( ("^join [] cols_join^"),("^join [] cols_a_spec^"))}\n" in
                  let broadcast_a = "val broadcast_"^code_a^"=sc.broadcast(mmap_"^code_a^")\n" in
                  mmap_a^add_mmap_a^broadcast_a^
-                   "val "^res^"="^code_b^".flatMapValues("^join [] cols_b^" => broadcast_"^code_a^".value.apply("^join [] cols_join^").map{"^join [] cols_a_bis^"=>"^join [] cols_union^" })", keys_b,cols_union
+                   "val "^res^"="^code_b^".flatMapValues("^join [] cols_b^" => broadcast_"^code_a^".value.apply("^join [] cols_join^").map{ case ("^join [] cols_a_bis^") => ("^join [] cols_union^") })", keys_b,cols_union
                
           | Rename(o,n,c) ->
              let code_c,keys_c,cols_c = foo c in
