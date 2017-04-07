@@ -153,7 +153,7 @@ let fullstat filename =
          let nbPerDef = ref 0 in
          let totDef = ref tot in
          for i = 1 to nb do
-           Scanf.bscanf chan "%s %d\n" (fun i j -> if i = "*" then nbPerDef:=j else (Hashtbl.add hshtbl i j ; totDef := !totDef - j)) ;
+           Scanf.bscanf chan "%d %[^\n]\n" (fun j i -> if i = "*" then nbPerDef:=j else (Hashtbl.add hshtbl i j ; totDef := !totDef - j)) ;
          done ;
          tot,(hshtbl,nbDef,!nbPerDef,!totDef)
        in

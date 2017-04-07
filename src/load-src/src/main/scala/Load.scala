@@ -144,13 +144,13 @@ object Main {
         case ((pred,col),(statlist,size,nbDif,total)) => 
           if(size<numberMax) {
             println(pred+" "+col+" "+(size+1).toString+" "+0+" "+total);
-            statlist foreach { case (n,iri) =>println (iri+" "+n.toString) } ;
-            println("* 0");
+            statlist foreach { case (n,iri) =>println (n.toString+" "+iri) } ;
+            println("0 *");
           }
           else {
             println(pred+" "+col+" "+size.toString+" "+(nbDif-size+1).toString+" "+total);
             val last = statlist.last._2;
-            statlist foreach { case (n,iri) => val v = if(iri==last) "*" else iri ;  println (v+" "+n.toString) } ;
+            statlist foreach { case (n,iri) => val v = if(iri==last) "*" else iri ;  println (n.toString+" "+v) } ;
           }
       }
     }
