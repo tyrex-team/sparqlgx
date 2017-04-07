@@ -292,7 +292,7 @@ object Query {
              let code_a,keys_a,cols_a = foo a in
              "val "^res^" ="^code_a^mapkeys cols_a keys_a []^".distinct() ",[],cols_a
           | Empty ->
-             "val "^res^" = sc.emptyRDD()",[],[]
+             "val "^res^" = sc.emptyRDD[Int]",[],[]
           | Order(l,a) ->
              let code_a,keys_a,cols_a = foo a in
              let cols_sort = List.filter (fun x -> List.mem_assoc x l) cols_a in
