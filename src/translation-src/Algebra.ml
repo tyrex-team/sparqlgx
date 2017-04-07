@@ -179,6 +179,7 @@ object Query {
     | Order(_,c)
       | Filter(_,_,c) -> cols c
                        
+    | Keep(k,Empty) -> []
     | Keep(k,c) -> k
                  
     | Union(a,b) 
@@ -188,6 +189,7 @@ object Query {
        let c_a = cols a in
        c_a @ (List.filter (fun x -> not (List.mem x c_a)) (cols b))
        
+    | Rename(o,n,Empty) -> []
     | Rename(o,n,c) -> List.map (fun x -> if x=o then n else x) (cols c)
     | Empty -> []
   in
@@ -212,7 +214,7 @@ object Query {
                                                                                                                   
           | Keep (keepcols,a) ->
              let code,keys,cols = foo a in
-             if cols <> keepcols
+             if cols <> keepcols && cols != []
              then
                "val "^res^"="^code^".map{case ("^(join keys cols)^") => ("^(join [] keepcols)^")}",[],keepcols
              else
