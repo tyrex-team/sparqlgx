@@ -48,6 +48,7 @@ let rec print_query distinguished modifiers optim stmt =
       | Keep(_,l) ->
          let tp = get_tp l in
          "\n"^ps^(List.assoc "s" tp)^" "^(List.assoc "p" tp)^" "^(List.assoc "o" tp)^" ."
+      | Rename(c,v,t) -> foo ps (Keep([],(Rename (c,v,t))))
       | Distinct a | Order (_,a) -> foo ps a
                                   
       | _ -> failwith ("Unrecognized pattern @ "^__LOC__)
