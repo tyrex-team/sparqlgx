@@ -189,6 +189,7 @@ object Query {
        c_a @ (List.filter (fun x -> not (List.mem x c_a)) (cols b))
        
     | Rename(o,n,c) -> List.map (fun x -> if x=o then n else x) (cols c)
+    | Empty -> []
   in
        
   let rec foo l =
