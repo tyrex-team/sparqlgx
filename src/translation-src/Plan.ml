@@ -107,15 +107,18 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
               let c_res = cb+ca+fst s_res in
               let p_res = if fst sa > fst sb then Join(pa,pb) else Join(pb,pa)
               in
-              let try_broad_agg =
-                if min (fst sa) (fst sb) < broadcast_threshold
-                then
-                  if fst sa < fst sb
-                  then test_broadcast agg s_res a b
-                  else  test_broadcast agg s_res b a
-                else agg
-              in
-              propose try_broad_agg key_join c_res s_res p_res 
+              if fst s_res = 0
+              then [0,s_res,Empty,[]]
+              else
+                let try_broad_agg =
+                  if min (fst sa) (fst sb) < broadcast_threshold
+                  then
+                    if fst sa < fst sb
+                    then test_broadcast agg s_res a b
+                    else  test_broadcast agg s_res b a
+                  else agg
+                in
+                propose try_broad_agg key_join c_res s_res p_res 
             else
               agg
     | x::t ->

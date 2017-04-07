@@ -12,6 +12,7 @@ type algebra =
   | Rename of string * string * algebra
   | Distinct of algebra
   | Order of (string*bool) list*algebra
+  | Empty
            
 let rec print_algebra term = 
   
@@ -287,6 +288,8 @@ object Query {
           | Distinct(a) ->
              let code_a,keys_a,cols_a = foo a in
              "val "^res^" ="^code_a^mapkeys cols_a keys_a []^".distinct() ",[],cols_a
+          | Empty ->
+             "val"^res^" = sc.emptyRDD()",[],[]
           | Order(l,a) ->
              let code_a,keys_a,cols_a = foo a in
              let cols_sort = List.filter (fun x -> List.mem_assoc x l) cols_a in
@@ -311,6 +314,7 @@ object Query {
                   add " { 0 } }" ;
                   "val "^res^" ="^code_a^mapkeys cols_a keys_a cols_sort^".sortByKey(true).values ",[],cols_a
                 end
+             
         in
         add code ;
         Hashtbl.add trad_one normalized (res,keys) ; res,keys,cols

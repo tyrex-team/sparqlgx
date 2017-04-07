@@ -10,5 +10,5 @@ type algebra =
   | Rename of string * string * algebra
   | Distinct of algebra
   | Order of (string*bool)  list*algebra
-                                  
+  | Empty                                  
 val print_algebra : algebra -> unit
