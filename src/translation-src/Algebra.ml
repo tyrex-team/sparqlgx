@@ -248,7 +248,7 @@ object Query {
                 ^".join("^code_b^mapkeys cols_b keys_b cols_join^")"
                 ^".mapValues{case( ("^(join [] cols_a)^"),("^(join [] cols_b_bis)^"))=>("^(join [] cols_union)^")}",(List.map (fun s -> List.assoc s cols_int) cols_join),cols_union
 
-          | JoinWithBroadcast(a,b) ->
+          | JoinWithBroadcast(b,a) ->
              let code_a,keys_a,cols_a = foo a
              and code_b,keys_b,cols_b = foo b in
              let cols_join = List.filter (fun x -> List.mem x cols_b) cols_a in
@@ -263,11 +263,11 @@ object Query {
                then
                  let broadcast_a = "val broadcast_"^code_a^"=sc.broadcast("^code_a^".collect().toSet)\n" in
                  broadcast_a^
-                   "val "^res^"="^code_b^".filter{"^join [] cols_b^" => broadcast_"^code_a^".value("^join [] cols_join^")}", keys_b,cols_union
+                   "val "^res^"="^code_b^".filter{ case ("^join keys_b cols_b^") => broadcast_"^code_a^".value("^join [] cols_join^")}", keys_b,cols_union
                  
                else
                  let mmap_a = "val mmap_"^code_a^" = new collection.mutable.HashMap["^typeof cols_join^", collection.mutable.Set["^typeof cols_a_spec^"]]() with collection.mutable.MultiMap[String, Int]\n" in
-                 let add_mmap_a = code_a^".collect().foreach { case ("^join [] cols_a^") => mmap_"^code_a^".addBinding( ("^join [] cols_join^"),("^join [] cols_a_spec^"))}\n" in
+                 let add_mmap_a = code_a^".collect().foreach { case ("^join keys_a cols_a^") => mmap_"^code_a^".addBinding( ("^join [] cols_join^"),("^join [] cols_a_spec^"))}\n" in
                  let broadcast_a = "val broadcast_"^code_a^"=sc.broadcast(mmap_"^code_a^")\n" in
                  mmap_a^add_mmap_a^broadcast_a^
                    "val "^res^"="^code_b^".flatMap{ case ("^join keys_b cols_b^") => broadcast_"^code_a^".value.apply("^join [] cols_join^").map{ case ("^join [] cols_a_bis^") => ("^join [] cols_union^") }}", keys_b,cols_union
