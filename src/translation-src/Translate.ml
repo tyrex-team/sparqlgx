@@ -43,6 +43,8 @@ let rec print_query distinguished modifiers optim stmt =
          "\n"^ps^"{"^foo s a^"}\n"^ps^"UNION"^ps^"\n"^ps^"{"^foo s b^"}"
       | Join (a,b) ->
          "\n"^ps^"{"^foo s a^foo s b^"\n"^ps^"}"
+      | JoinWithBroadcast (a,b) ->
+         "\n"^ps^"{"^foo s a^foo s b^"\n"^ps^"}"
       | LeftJoin(a,b) ->
          "\n"^ps^"{"^foo s a^"\n"^ps^"} OPTIONAL {"^foo s b^"\n"^ps^"}"
       | Keep(_,l) ->

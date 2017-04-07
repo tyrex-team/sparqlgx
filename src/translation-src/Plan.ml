@@ -1,6 +1,8 @@
 open Stat
 open Algebra
 let inf = max_int
+let cost_shuffle = 4
+let broadcast_threshold = 1000
           
 let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) =
 
@@ -38,7 +40,6 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     | v -> v
   in
 
-  let cost_shuffle = 4 in
   
   let rec get_best_no_keys   = function
     | [] -> failwith ("Empty list to optimized @ "^__LOC__)
@@ -97,7 +98,17 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
               in
               let s_res = combine sa sb in
               let c_res = cb+ca+fst s_res in
-              let p_res = if fst sa > fst sb then Join(pa,pb) else Join(pb,pa) in
+              let p_res =
+                if fst sa > fst sb
+                then
+                  if fst sa < broadcast_threshold 
+                  then JoinWithBroadcast(pb,pa)
+                  else Join(pa,pb)
+                else
+                  if fst sb < broadcast_threshold 
+                  then JoinWithBroadcast(pa,pb)
+                  else Join(pb,pa)
+              in
               propose agg key_join c_res s_res p_res 
             else
               agg

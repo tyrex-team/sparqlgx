@@ -6,6 +6,7 @@ type algebra =
   | Join of algebra * algebra
   | Union of algebra * algebra
   | LeftJoin of algebra * algebra
+  | JoinWithBroadcast of algebra * algebra
   | Rename of string * string * algebra
   | Distinct of algebra
   | Order of (string*bool)  list*algebra
