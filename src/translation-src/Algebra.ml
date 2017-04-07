@@ -108,7 +108,7 @@ object Query {
        let rec foo = function
          | [] -> failwith __LOC__
          | [a] -> "String)"
-         | a::q -> "String,"
+         | a::q -> "String,"^foo q
        in
        "("^foo l
   in
