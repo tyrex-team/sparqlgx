@@ -62,7 +62,7 @@ let combine (tot1,stat1: 'a combstat) (tot2,stat2: 'a combstat) =
       in
       
       let rec foo = function
-        | [] -> failwith "empty"
+        | [] -> 0
         | [a,b] -> get_size b
         | (a,b)::q -> min (get_size b) (foo q)
       in
@@ -173,30 +173,32 @@ let fullstat filename =
   with | Sys_error s -> failwith ("Stat file problem, "^s)
   
 
-let get_tp_stat stat = function
-  | (_,Variable(_),_) -> failwith ("Unsupported variable predicate @"^__LOC__)
-  | (Exact(s),Exact(p),Exact(o)) -> 1,[]
-  | (Variable(s),Exact(p),Variable(o)) ->
-     let t0,p0 = Hashtbl.find stat (p,0) in
-     let t1,p1 = Hashtbl.find stat (p,1) in
-     (assert_equal t0 t1),[(s,p0) ; (o,p1) ]
-  | (Exact(s),Exact(p),Variable(o)) ->
-     let _,(t,_,nbPerDef,_) = Hashtbl.find stat (p,0 ) in
-     let nb =
-       try
-         Hashtbl.find t s
-       with Not_found -> nbPerDef
-     in
-     nb,[o,(Hashtbl.create 3,nb,1,nb)]
-  | (Variable(s),Exact(p),Exact(o)) ->
-     let _,(t,_,nbPerDef,_) = Hashtbl.find stat (p,1) in
-     let nb =
-       try
-         Hashtbl.find t o
-       with Not_found -> nbPerDef
-     in
-     nb,[s,(Hashtbl.create 3,nb,1,nb)]
-    
+let get_tp_stat stat tp =
+  try
+    match tp with
+    | (_,Variable(_),_) -> failwith ("Unsupported variable predicate @"^__LOC__)
+    | (Exact(s),Exact(p),Exact(o)) -> 1,[]
+    | (Variable(s),Exact(p),Variable(o)) ->
+       let t0,p0 = Hashtbl.find stat (p,0) in
+       let t1,p1 = Hashtbl.find stat (p,1) in
+       (assert_equal t0 t1),[(s,p0) ; (o,p1) ]
+    | (Exact(s),Exact(p),Variable(o)) ->
+       let _,(t,_,nbPerDef,_) = Hashtbl.find stat (p,0 ) in
+       let nb =
+         try
+           Hashtbl.find t s
+         with Not_found -> nbPerDef
+       in
+       nb,[o,(Hashtbl.create 3,nb,1,nb)]
+    | (Variable(s),Exact(p),Exact(o)) ->
+       let _,(t,_,nbPerDef,_) = Hashtbl.find stat (p,1) in
+       let nb =
+         try
+           Hashtbl.find t o
+         with Not_found -> nbPerDef
+       in
+       nb,[s,(Hashtbl.create 3,nb,1,nb)]
+  with Not_found -> 0,[]
                       
 (* let statFromList =  *)
 (*   List.map (fun (c,(col,a,b,d)) -> *)
