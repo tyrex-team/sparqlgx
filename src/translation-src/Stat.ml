@@ -209,32 +209,37 @@ let get_tp_stat stat tp =
 let listFromStat (t,l)=
   t,List.map (fun (c,(tbl,a,b,d))->  c,(Hashtbl.fold (fun a b c -> (a,b)::c) tbl [],a,b,d)) l
 
-(* let s2 = fullstat "stat50" *)
+let s2 = fullstat "stat_lubm"
 
-(* let t1 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#GraduateStudent>")) *)
-(* let t2 = get_tp_stat s2 (Variable("?Y"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#University>")) *)
-(* let t3 = get_tp_stat s2 (Variable("?Z"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Department>")) *)
-(* let t4 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#memberOf>",Variable("?Z")) *)
-(* let t5 = get_tp_stat s2 (Variable("?Z"),Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#subOrganizationOf>",Variable("?Y")) *)
-(* let t6 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#undergraduateDegreeFrom>",Variable("?Y")) *)
 
-(* let _ = listFromStat t2 *)
-
-(* let t14 = (combine t1 t4)  *)
-(* let t14_3 = combine t14 t3 *)
        
-(* let t52 = combine t2 t5 *)
-(* let t52__14_3 = combine t52 t14_3  *)
-(* let t_all = combine t52__14_3 t6 *)
-(* let _ = listFromStat t1 *)
-(* let _ = listFromStat t4 *)
-(* let _ = listFromStat t3 *)
-(* let _ = listFromStat t14 *)
-(* let _ = listFromStat t2 *)
-(* let _ = listFromStat t5 *)
-(* let _ = listFromStat t6 *)
-(* let _ = listFromStat t52__14_3 *)
-(* let _ = listFromStat t_all *)
+let t1 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#GraduateStudent>"))
+let t2 = get_tp_stat s2 (Variable("?Y"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#University>"))
+let t3 = get_tp_stat s2 (Variable("?Z"),Exact "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>",Exact ("<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#Department>"))
+let t4 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#memberOf>",Variable("?Z"))
+let t5 = get_tp_stat s2 (Variable("?Z"),Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#subOrganizationOf>",Variable("?Y"))
+let t6 = get_tp_stat s2 (Variable("?X"),Exact "<http://www.lehigh.edu/~zhp2/2004/0401/univ-bench.owl#undergraduateDegreeFrom>",Variable("?Y"))
+
+
+let c,s,p = get_optimal_plan_with_stat (List.map () [t1; t2; t3; t4; t5; t6 ])
+
+let _ = listFromStat t2
+
+let t14 = (combine t1 t4)
+let t14_3 = combine t14 t3
+       
+let t52 = combine t2 t5
+let t52__14_3 = combine t52 t14_3
+let t_all = combine t52__14_3 t6
+let _ = listFromStat t1
+let _ = listFromStat t4
+let _ = listFromStat t3
+let _ = listFromStat t14
+let _ = listFromStat t2
+let _ = listFromStat t5
+let _ = listFromStat t6
+let _ = listFromStat t52__14_3
+let _ = listFromStat t_all
 
 (* let t52__14_3_y = *)
 (*   match t52__14_3 with *)
