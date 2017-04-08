@@ -6,7 +6,7 @@ CMXA=
 CMI=
 GENERATED=Parser.ml Lexer.ml Parser.mli
 #GENERATED=
-FLAGS=-annot
+FLAGS=-annot nums.cmxa -cclib -lnums
 OCAMLC=ocamlc
 OCAMLOPT=ocamlopt
 
