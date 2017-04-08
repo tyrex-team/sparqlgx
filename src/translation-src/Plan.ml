@@ -2,9 +2,10 @@ open Stat
 open Algebra
 let inf = max_int
 let cost_shuffle = 4
-let cost_broadcast = 0
+let cost_broadcast = 4
 let broadcast_threshold = 1000
-          
+let max_int32 = 2147483648*256
+
 let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) =
 
   let size_p2, tpcost, trad, tpcols =
@@ -107,6 +108,8 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
               let c_res = cb+ca+fst s_res in
               let p_res = if fst sa > fst sb then Join(pa,pb) else Join(pb,pa)
               in
+              if fst s_res > max_int32 then failwith "TOO BIG" ;
+              if c_res > max_int32*1000 then failwith "TOO BIG" ;
               if fst s_res = 0
               then [0,s_res,Empty,[]]
               else
