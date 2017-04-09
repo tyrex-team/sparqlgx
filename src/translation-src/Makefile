@@ -1,19 +1,21 @@
 MLI=
 CMX=Sparql.cmx Stat.cmx Parser.cmx Lexer.cmx Algebra.cmx Plan.cmx Reorder.cmx Translate.cmx main.cmx
 #CMO=struct.cmo parser.cmo cost.cmo toScalaUtils.cmo toScalaOneFile.cmo toScalaVertical.cmo
-CMXA=
+#CMXA=Sparql.cmxa Stat.cmxa Parser.cmxa Lexer.cmxa Algebra.cmxa Plan.cmxa Reorder.cmxa Translate.cmxa main.cmxa
+CMO=Sparql.cmo Stat.cmo Parser.cmo Lexer.cmo Algebra.cmo Plan.cmo Reorder.cmo Translate.cmo main.cmo
 #str.cmxa
 CMI=
 GENERATED=Parser.ml Lexer.ml Parser.mli
 #GENERATED=
-FLAGS=-annot nums.cmxa -cclib -lnums
+FLAGS= -annot nums.cmxa -cclib -lnums
+FLAGS_DEBUG= nums.a nums.cma -cclib -lnums
 OCAMLC=ocamlc
 OCAMLOPT=ocamlopt
 
 all: depend sparql2scala
 
 debug: $(MLI) $(CMI) $(CMO)
-	ocamlc -g $(CMXA) $(CMO) 
+	ocamlc $(FLAGS_DEBUG) -g $(CMXA) $(CMO) 
 
 sparql2scala: $(MLI) $(CMI) $(CMX)
 	$(OCAMLOPT) $(FLAGS) -o $@ $(CMXA) $(CMX)
