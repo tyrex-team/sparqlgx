@@ -5,6 +5,7 @@ open Big_int
 let inf = max_int
 let cost_shuffle = big_int_of_int 4
 let cost_broadcast = big_int_of_int  4
+let cost_cartesian = big_int_of_int  1000
 let broadcast_threshold = big_int_of_int 1000
 
 let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) =
@@ -114,7 +115,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
                  let c1,s1,p1 = get_best (get_hash ids) [] ids in
                  let c2,s2,p2 = get_best (get_hash ids_q) [] ids_q in
                  let s_res = (mult_big_int s1 s2) in
-                 [add_big_int (add_big_int c1 c2) s_res,s_res,Join(p1,p2),[]]
+                 [add_big_int (add_big_int c1 c2) (mult_big_int s_res cost_cartesian),s_res,Join(p1,p2),[]]
             in
             dyn_best.(hash) <- Some res ; res
          | Some v -> v
