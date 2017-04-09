@@ -9,21 +9,25 @@ let broadcast_threshold = big_int_of_int 1000
 
 let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) =
 
-  let size_p2, tp_id,tpcost, trad, tpcols =
+  let size, tp_id,tpcost, trad, tpcols =
     let rec foo = function
-      | [] -> 1,[],[],[],[]
+      | [] -> 0,[],[],[],[]
       | (b,a,c)::q ->
          let s,l0,l1,l2,l3 = foo q in
-         s*2,(s::l0),((s,a)::l1),((s,b)::l2),((s,c)::l3)
+         s+1,(s::l0),((s,a)::l1),((s,b)::l2),((s,c)::l3)
     in
     foo tp_list
   in
 
-  let dyn = Array.make size_p2 None in
+  let p2 = Pervasives.(lsl) 1 in
 
-  let dyn_col = Array.make size_p2 [] in 
+  let size_p2 = p2 size in
 
-  let dyn_stat = Array.make size_p2 None in 
+  let rec get_hash = function
+    | [] -> 0
+    | a::q -> p2 a + get_hash q
+  in
+
   
   let union l1 l2 =
     l1@(List.filter (fun x -> not( List.mem x l1)) l2)
@@ -32,43 +36,101 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
   let inter l1 l2 =
     List.filter (fun x -> List.mem x l2) l1
   in
-  
+   
+  let dyn_col = Array.make size_p2 [] in 
   let rec get_col h l =
+    assert (h<size_p2) ;
+    assert (h>=0) ;
     match dyn_col.(h) with
     | [] ->
        let res = match l with
          | [] -> []
-         | (a)::q -> union (List.assoc a tpcols) (get_col (h-a) q)
+         | (a)::q -> union (List.assoc a tpcols) (get_col (h-p2 a) q)
        in
        dyn_col.(h) <- res ; res
     | v -> v
   in
 
+  let dyn_conn = Array.make size_p2 [] in
+  let partition h l =
+    (* 
+       add takes a set (x) of columns, an id of a TP (whose columns
+       are x) and a list of paris of sets of columns and ids of TP.  add
+       x id adds (x,[id]) to this list and merge sets with common columns
+     *)
+    let rec add cols ids = function
+      | [] -> [cols,ids]
+      | (o_cols,o_ids)::q ->
+         if List.exists (fun col -> List.mem col o_cols) cols
+         then add (union cols o_cols) (ids@o_ids) q
+         else (o_cols,o_ids)::(add cols ids q)
+    in
+    let rec foo h l =
+      assert (h<size_p2) ;
+      match dyn_conn.(h) with
+      | [] ->
+         let res = match l with
+           | [] -> []
+           | (a)::q -> add (List.assoc a tpcols) [a] (foo (h-p2 a) q)
+         in
+         dyn_conn.(h) <- res ; res
+      | v -> v
+      
+    in
+    foo h l
+  in
+
+  let is_connected h l =
+    match partition h l with
+    | [] -> failwith __LOC__
+    | [a] -> true
+    | l -> false
+  in
+
+  let is_star l =
+    [] <> (List.map (fun x -> List.assoc x tpcols) l |>
+             List.fold_left inter [])
+  in
   
-  let rec get_best_no_keys hash = function
+  let dyn_best = Array.make size_p2 None in
+  let rec get_best_no_keys hash l = match l with
     | [] -> failwith ("Empty list to optimized @ "^__LOC__)
     | [id] ->
        let size = fst (List.assoc id tpcost) in
        [size, size, List.assoc id trad, []]
-    | a::l ->
-       begin 
-         match dyn.(hash) with
+    | a::q ->
+       begin
+         assert (hash<size_p2) ;
+         match dyn_best.(hash) with
          | None ->
-            let s_res = compute_stat hash (a::l) in
-            let res = test_all_split s_res [] ([a],a) ([],0) l in
-            dyn.(hash) <- Some res ; res
+            let res = match partition hash l with
+              | [] -> failwith __LOC__
+              | [_] ->
+                 (* Single component *)
+                 let s_res = compute_stat hash l in
+                 test_all_split s_res [] ([a],p2 a) ([],0) q                
+              | (cols,ids)::q ->
+                 let ids_q = snd (List.split q) |> List.fold_left (@) [] in
+                 let c1,s1,p1 = get_best (get_hash ids) [] ids in
+                 let c2,s2,p2 = get_best (get_hash ids_q) [] ids_q in
+                 let s_res = (mult_big_int s1 s2) in
+                 [add_big_int (add_big_int c1 c2) s_res,s_res,Join(p1,p2),[]]
+            in
+            dyn_best.(hash) <- Some res ; res
          | Some v -> v
        end
 
+  and dyn_stat = Array.make size_p2 None
   and compute_stat hash l =
-    let rec foo hash l = 
+    let rec foo hash l =
+      assert (hash<size_p2) ;
       match dyn_stat.(hash) with
       | None ->
          let r = 
            match l with 
            | [] -> failwith __LOC__
            | [a] -> List.assoc a tpcost
-           | a::q -> combine (foo (hash-a) q) (foo a [a])        
+           | a::q -> combine (foo (hash-p2 a) q) (foo a [a])        
          in
        dyn_stat.(hash) <- Some r ; r
       | Some v -> v
@@ -146,13 +208,11 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
             else
               agg
     | x::t ->
-       let agg1 = test_all_split s_res agg (x::a,ha+x) (b,hb) t in
-       test_all_split s_res agg1 (a,ha) (x::b,hb+x) t
+       let agg1 = test_all_split s_res agg (x::a,ha+p2 x) (b,hb) t in
+       test_all_split s_res agg1 (a,ha) (x::b,hb+p2 x) t
       
   in
-
   get_best (size_p2-1) [] tp_id
-
 
 
 
