@@ -228,7 +228,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     | [] -> failwith __LOC__
     | a::q ->
        let center_of_star = (List.map (fun x -> tpcols.(x)) q |> List.fold_left inter tpcols.(a)) in
-       [foo (get_hash (a::q)) (a::q)]
+       [foo (get_hash (a::q)) (List.rev (a::q))]
   in
   get_best (size_p2-1) [] tp_id
 
