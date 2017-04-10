@@ -194,7 +194,10 @@ let fullstat filename : (string*int,bi*string summary) Hashtbl.t  =
        bar () ; res
   with | Sys_error s -> failwith ("Stat file problem, "^s)
   
- 
+
+let empty_stat cols =
+  zero_big_int, (List.map (fun c -> c,(Hashtbl.create 3,zero_big_int,zero_big_int,zero_big_int)) cols)
+                      
 let get_tp_stat stat tp : string combstat =
   try
     match tp with

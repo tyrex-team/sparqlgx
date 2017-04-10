@@ -5,20 +5,16 @@ open Big_int
 let inf = max_int
 let cost_shuffle = big_int_of_int 4
 let cost_broadcast = big_int_of_int  4
-let cost_cartesian = big_int_of_int  1000
+let cost_cartesian = big_int_of_int  10000
 let broadcast_threshold = big_int_of_int 1000
 
 let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) =
 
-  let size, tp_id,tpcost, trad, tpcols =
-    let rec foo = function
-      | [] -> 0,[],[],[],[]
-      | (b,a,c)::q ->
-         let s,l0,l1,l2,l3 = foo q in
-         s+1,(s::l0),((s,a)::l1),((s,b)::l2),((s,c)::l3)
-    in
-    foo tp_list
-  in
+  let size = List.length tp_list in
+  let tpcost = Array.init size (fun i -> match List.nth tp_list i with (a,b,c) -> b) in
+  let trad = Array.init size (fun i -> match List.nth tp_list i with (a,b,c) -> a) in
+  let tpcols = Array.init size (fun i -> match List.nth tp_list i with (a,b,c) -> c) in
+  let tp_id = List.mapi (fun i a -> i) tp_list  in
 
   let p2 = Pervasives.(lsl) 1 in
 
@@ -46,7 +42,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     | [] ->
        let res = match l with
          | [] -> []
-         | (a)::q -> union (List.assoc a tpcols) (get_col (h-p2 a) q)
+         | (a)::q -> union (tpcols.(a)) (get_col (h-p2 a) q)
        in
        dyn_col.(h) <- res ; res
     | v -> v
@@ -72,7 +68,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
       | [] ->
          let res = match l with
            | [] -> []
-           | (a)::q -> add (List.assoc a tpcols) [a] (foo (h-p2 a) q)
+           | (a)::q -> add (tpcols.(a)) [a] (foo (h-p2 a) q)
          in
          dyn_conn.(h) <- res ; res
       | v -> v
@@ -89,16 +85,18 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
   in
 
   let is_star l =
-    [] <> (List.map (fun x -> List.assoc x tpcols) l |>
+    [] <> (List.map (fun x -> tpcols.(x)) l |>
              List.fold_left inter [])
   in
+
+  let size_of_stat (s:'a combstat) = match s with (a,_) -> a in
   
   let dyn_best = Array.make size_p2 None in
   let rec get_best_no_keys hash l = match l with
     | [] -> failwith ("Empty list to optimized @ "^__LOC__)
     | [id] ->
-       let size = fst (List.assoc id tpcost) in
-       [size, size, List.assoc id trad, []]
+       let size = fst (tpcost.(id)) in
+       [size, tpcost.(id), trad.(id), []]
     | a::q ->
        begin
          assert (hash<size_p2) ;
@@ -108,35 +106,17 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
               | [] -> failwith __LOC__
               | [_] ->
                  (* Single component *)
-                 let s_res = compute_stat hash l in
-                 test_all_split s_res [] ([a],p2 a) ([],0) q                
+                 test_all_split [] ([a],p2 a) ([],0) q                
               | (cols,ids)::q ->
                  let ids_q = snd (List.split q) |> List.fold_left (@) [] in
                  let c1,s1,p1 = get_best (get_hash ids) [] ids in
                  let c2,s2,p2 = get_best (get_hash ids_q) [] ids_q in
-                 let s_res = (mult_big_int s1 s2) in
-                 [add_big_int (add_big_int c1 c2) (mult_big_int s_res cost_cartesian),s_res,Join(p1,p2),[]]
+                 let s_res = combine s1 s2 in
+                 [add_big_int (add_big_int c1 c2) (mult_big_int (size_of_stat s_res) cost_cartesian),s_res,Join(p1,p2),[]]
             in
             dyn_best.(hash) <- Some res ; res
          | Some v -> v
        end
-
-  and dyn_stat = Array.make size_p2 None
-  and compute_stat hash l =
-    let rec foo hash l =
-      assert (hash<size_p2) ;
-      match dyn_stat.(hash) with
-      | None ->
-         let r = 
-           match l with 
-           | [] -> failwith __LOC__
-           | [a] -> List.assoc a tpcost
-           | a::q -> combine (foo (hash-p2 a) q) (foo a [a])        
-         in
-       dyn_stat.(hash) <- Some r ; r
-      | Some v -> v
-    in
-    fst (foo hash l)
             
   and min_prop (c1,s1,p1) (c2,s2,p2) =
     if lt_big_int c1 c2
@@ -146,71 +126,79 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
   and get_best hash (k:string list) (t:int list)  =
     let rec foo = function
       | [] -> failwith ("Empty plan @ "^__LOC__)
-      | [cost,size,plan,key] ->
+      | [cost,stat,plan,key] ->
          if key = k || k = [] || key = []
-         then (cost,size,plan)
-         else (add_big_int cost (mult_big_int cost_shuffle size),size,plan)
+         then (cost,stat,plan)
+         else (add_big_int cost (mult_big_int cost_shuffle (size_of_stat stat)),stat,plan)
       | a::q -> min_prop (foo [a]) (foo q)
     in
     foo (get_best_no_keys hash t)
-
     
-  and propose agg key cost (size:bi) plan =
+    
+  and propose agg key cost (stat:'a combstat) plan =
     (* propose add (cost,stat,plan,key) to agg where we remove
       candidate plans that are useless i.e. plans with a cost greater
       than reshuffling another plan) *)
     let rec foo l = match l with
-      | [] -> [cost,size,plan,key]
+      | [] -> [cost,stat,plan,key]
       | (c2,s2,p2,k2)::q ->
          if key = k2
          then
            if lt_big_int c2 cost
            then l
-           else (cost,size,plan,key)::q
+           else (cost,stat,plan,key)::q
          else
-           if lt_big_int (add_big_int c2 (mult_big_int cost_shuffle s2)) cost || (key=[]&&lt_big_int c2 cost)
+           if lt_big_int (add_big_int c2 (mult_big_int cost_shuffle (size_of_stat s2))) cost || (key=[]&&lt_big_int c2 cost)
            then l
            else
-             if lt_big_int (add_big_int cost (mult_big_int cost_shuffle size)) c2 || (k2=[]&&lt_big_int cost c2)
+             if lt_big_int (add_big_int cost (mult_big_int cost_shuffle (size_of_stat stat))) c2 || (k2=[]&&lt_big_int cost c2)
              then foo q
              else (c2,s2,p2,k2)::foo q
     in
     foo agg
 
-  and test_broadcast agg size (smallset,hasha) (largeset,hashb) =
+  and test_broadcast agg stat (smallset,hasha) (largeset,hashb) =
     let cb,sb,pb = get_best hashb [] largeset
     and ca,sa,pa = get_best hasha [] smallset in
 
-    let cost_of_broadcast = mult_big_int sa cost_broadcast in
+    let cost_of_broadcast = mult_big_int (size_of_stat sa) cost_broadcast in
     let cost_children = add_big_int ca cb in
     let cost_materialization = add_big_int cost_children cost_of_broadcast  in
-    let cost_tot = add_big_int cost_materialization size in
-    propose agg [] cost_tot size (JoinWithBroadcast(pb,pa))
+    let cost_tot = add_big_int cost_materialization (size_of_stat stat) in
+    propose agg [] cost_tot stat (JoinWithBroadcast(pb,pa))
    
-  and test_all_split s_res agg (a,ha) (b,hb)= function
+  and test_all_split agg (a,ha) (b,hb)= function
     | [] -> if b <> []
             then
               let key_join = inter (get_col ha a) (get_col hb b) in
               let cb,sb,pb = get_best hb key_join b 
               and ca,sa,pa = get_best ha key_join a 
               in
-              let c_res = add_big_int (add_big_int cb ca) s_res in
-              let p_res = if lt_big_int sa sb then Join(pa,pb) else Join(pb,pa)
+              let size_a = (size_of_stat sa) in
+              let size_b = (size_of_stat sb) in
+              
+              let s_res = combine sa sb in
+              let c_res = add_big_int (add_big_int cb ca) (size_of_stat s_res) in
+              let p_res = if lt_big_int size_a size_b then Join(pa,pb) else Join(pb,pa)
               in
-              let try_broad_agg =
-                if lt_big_int (min_big_int sa sb) broadcast_threshold
-                then
-                  if lt_big_int sa sb
+              if sign_big_int (size_of_stat s_res) = 0
+              then
+                [zero_big_int,empty_stat (get_col (ha+hb) (a@b)),Empty,[]]
+              else
+                let try_broad_agg =
+                  if lt_big_int (min_big_int size_a size_b) broadcast_threshold
+                  then
+                    if lt_big_int size_a size_b
                   then test_broadcast agg s_res (a,ha) (b,hb)
-                  else  test_broadcast agg s_res (b,hb) (a,ha)
-                else agg
-              in
-              propose try_broad_agg key_join c_res s_res p_res 
+                    else  test_broadcast agg s_res (b,hb) (a,ha)
+                  else agg
+                in
+                propose try_broad_agg key_join c_res s_res p_res 
             else
               agg
     | x::t ->
-       let agg1 = test_all_split s_res agg (x::a,ha+p2 x) (b,hb) t in
-       test_all_split s_res agg1 (a,ha) (x::b,hb+p2 x) t
+       let agg1 = test_all_split agg (x::a,ha+p2 x) (b,hb) t in
+       test_all_split agg1 (a,ha) (x::b,hb+p2 x) t
       
   in
   get_best (size_p2-1) [] tp_id
