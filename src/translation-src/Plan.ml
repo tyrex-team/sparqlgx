@@ -110,7 +110,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
                  (* Single component *)
                  if is_star l
                  then plan_for_star l
-                 else test_all_connected_split [] ([a],p2 a) ([],0) q                
+                 else fst (test_all_connected_split [] None ([a],p2 a) ([],0) q)
               | (cols,ids)::q ->
                  let ids_q = snd (List.split q) |> List.fold_left (@) [] in
                  let c1,s1,p1 = get_best (get_hash ids) [] ids in
@@ -170,8 +170,8 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     let cost_materialization = add_big_int cost_children cost_of_broadcast  in
     let cost_tot = add_big_int cost_materialization (size_of_stat stat) in
     propose agg [] cost_tot stat (JoinWithBroadcast(pb,pa))
-   
-  and test_all_connected_split agg (a,ha) (b,hb)= function
+    
+  and test_all_connected_split agg s_res (a,ha) (b,hb)= function
     | [] -> if b <> [] && is_connected ha a && is_connected hb b
             then
               let key_join = inter (get_col ha a) (get_col hb b) in
@@ -181,13 +181,13 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
               let size_a = (size_of_stat sa) in
               let size_b = (size_of_stat sb) in
               
-              let s_res = combine sa sb in
+              let s_res = match s_res with | None -> combine sa sb | Some v -> v in
               let c_res = add_big_int (add_big_int cb ca) (size_of_stat s_res) in
               let p_res = if lt_big_int size_a size_b then Join(pa,pb) else Join(pb,pa)
               in
               if sign_big_int (size_of_stat s_res) = 0
               then
-                [zero_big_int,empty_stat (get_col (ha+hb) (a@b)),Empty,[]]
+                [zero_big_int,empty_stat (get_col (ha+hb) (a@b)),Empty,[]],Some s_res
               else
                 let try_broad_agg =
                   if lt_big_int (min_big_int size_a size_b) broadcast_threshold
@@ -197,23 +197,38 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
                     else  test_broadcast agg s_res (b,hb) (a,ha)
                   else agg
                 in
-                propose try_broad_agg key_join c_res s_res p_res 
+                propose try_broad_agg key_join c_res s_res p_res,Some s_res
             else
-              agg
+              agg,s_res
     | x::t ->
-       let agg1 = test_all_connected_split agg (x::a,ha+p2 x) (b,hb) t in
-       test_all_connected_split  agg1  (a,ha) (x::b,hb+p2 x) t
+       let agg1,s_res = test_all_connected_split agg  s_res (x::a,ha+p2 x) (b,hb) t in
+       test_all_connected_split agg1 s_res  (a,ha) (x::b,hb+p2 x) t
 
-  and plan_for_star l = 
-    match 
+  and dyn_star = Array.make size_p2 None 
+  and plan_for_star l =
+    let rec foo h = function
+      | [] -> 
+         zero_big_int,empty_stat [],Empty,[]
+      | [a] ->                    
+         size_of_stat tpcost.(a),tpcost.(a),trad.(a),tpcols.(a)
+      | id::q ->
+         match dyn_star.(h) with
+         | Some v -> v
+         | None ->
+            let (cost,stat,plan,cols) = foo (h-p2 id) q in
+            let cost_res = add_big_int cost (add_big_int (size_of_stat stat) (size_of_stat tpcost.(id))) in
+            let stat_res = combine stat tpcost.(id) in
+            let plan_res = Join(plan,trad.(id)) in
+            let cols_res = inter cols tpcols.(id) in
+            dyn_star.(h) <- Some (cost_res,stat_res,plan_res,cols_res) ; cost_res,stat_res,plan_res,cols_res
+    in
+    match  
       List.sort (fun x y -> compare_big_int (size_of_stat tpcost.(x)) (size_of_stat tpcost.(y))) l 
     with
-    | [] -> 
-       [zero_big_int,empty_stat [],Empty,[]]
+    | [] -> failwith __LOC__
     | a::q ->
-       let center_of_star = (List.map (fun x -> tpcols.(x)) l |> List.fold_left inter []) in
-       let (cost,stat,plan) = List.fold_left (fun (cost,stat,plan) id -> (add_big_int cost (add_big_int (size_of_stat stat) (size_of_stat tpcost.(id))),combine stat tpcost.(id), Join(plan,trad.(id)))) (size_of_stat tpcost.(a),tpcost.(a),trad.(a)) q in
-       [cost,stat,plan,center_of_star]
+       let center_of_star = (List.map (fun x -> tpcols.(x)) q |> List.fold_left inter tpcols.(a)) in
+       [foo (get_hash (a::q)) (a::q)]
   in
   get_best (size_p2-1) [] tp_id
 
