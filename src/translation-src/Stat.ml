@@ -13,6 +13,34 @@ let bioi = big_int_of_int
 let assert_equal a b = (if a<>b then (print_int a ; print_string " " ; print_int b ;failwith ("Assert failed"^__LOC__)) ; a)
 let assert_equal_bi a b = (if not (eq_big_int a b) then (print_int (int_of_big_int a) ; print_string " " ; print_int (int_of_big_int b) ;failwith ("Assert failed"^__LOC__)) ; a)
 
+type tree_mul =
+  | Node_mul of bi*tree_mul*tree_mul
+  | Leaf_mul of bi*bi*bi
+                        
+
+
+let build_tree_mul mul =
+  let rec foo nbBefore totBefore mul = match mul with
+    | [] -> failwith __LOC__
+    | [a,b] -> Leaf_mul(a,b,sub_big_int totBefore (mult_big_int nbBefore a)), add_big_int totBefore (mult_big_int a b), add_big_int nbBefore b
+    | l ->
+       let rec split beg  = function
+         | 0,l -> List.rev beg,l
+         | n,a::q ->split (a::beg) (n-1,q)
+       in
+       let l1, l2 = split [] (List.length l/2,l) in
+       let t1,totBefore1,nbBefore1 = foo nbBefore totBefore l1 in
+       let t2,totBefore2,nbBefore2 = foo nbBefore1 totBefore1 l2 in
+       Node_mul(nbBefore1,t1,t2),totBefore2,nbBefore2
+  in
+  match mul with
+  | [] -> Leaf_mul(zero_big_int,zero_big_int,zero_big_int)
+  | mul -> 
+     let t1,tot,nbBefore = foo zero_big_int zero_big_int mul in
+     Node_mul(nbBefore,t1,Leaf_mul(zero_big_int,zero_big_int,tot))
+       
+  
+
 let debug x = () 
          
 let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
@@ -29,11 +57,22 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
     with Not_found -> nbPerDef
   in
 
+  
   (* mult (compute_mul s1 s2) n Compute how much n "entries" in a
      table describe by s1 can appear in s1 |><| s2 
 
     compute_mul s1 s2 return a list of (a,b) indicating that there are
      b times where an element can be multiplied a times *)
+
+
+    let rec simplify_mul = function
+      | [] -> []
+      | (a,b)::q when sign_big_int a = 0 -> []
+      | (a,b)::q when sign_big_int b = 0 -> simplify_mul q
+      | (a,b)::(c,d)::q when eq_big_int a c -> simplify_mul ((a,add_big_int b d)::q)
+      | a::q -> a::simplify_mul q
+    in
+      
   let compute_mul (t1,s1) (t2,s2) =
 
     
@@ -42,14 +81,8 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
       let (tbl2,nbDef2,nbPerDef2,totalDef2) = s2 in
       let t1_special = t1 in (* we should minus common with t2*)
       let mul = Hashtbl.fold (fun v n ac -> (n,count s1 v)::ac) tbl2 [(nbPerDef2,t1_special)] in
-      let rec foo = function
-        | [] -> []
-        | (a,b)::q when sign_big_int a = 0 -> []
-        | (a,b)::(c,d)::q when eq_big_int a c -> foo ((a,add_big_int b d)::q)
-        | a::q -> a::foo q
-      in
       List.sort (fun (a,x) (b,y) -> compare_big_int b a) mul |>
-        foo 
+        simplify_mul 
     in
 
     let  rec combine_mul m1 m2 = match (m1,m2) with
@@ -77,9 +110,11 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
        List.fold_left (fun ac c -> combine_mul ac (compute_mul_col (List.assoc c s1) (List.assoc c s2)))  [t2,t1]  common_cols 
   in
 
-  let mul_12 = compute_mul (tot1,stat1) (tot2,stat2),(ref zero_big_int,ref zero_big_int) in
-  let mul_21 = compute_mul (tot2,stat2) (tot1,stat1),(ref zero_big_int,ref zero_big_int) in
 
+  
+
+  let mul_12 = compute_mul (tot1,stat1) (tot2,stat2) |> simplify_mul |> build_tree_mul in
+  let mul_21 = compute_mul (tot2,stat2) (tot1,stat1) |> simplify_mul |> build_tree_mul in  
   (* debug (fun () -> *)
   (*     print_string "mul_12 " ; *)
   (*     List.iter (fun (a,b) -> print_string "(" ; print_int a ; print_string "," ; print_int b ; print_string ") " ) mul_12; *)
@@ -89,24 +124,22 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
   (*     print_newline(); *)
   (*   ) ; *)
   
-  
-  let mult (mul,(lc,lv)) n =
-    let rec foo = function 
-      | _,[] -> zero_big_int
+  let turns = ref 0 in
+  let mult mul n =
+    let rec foo cur = function 
+      | _,[] -> cur
       | n,((a,b)::q) ->
          if lt_big_int b n
-         then add_big_int (mult_big_int b a) (foo (sub_big_int n b,q))
-         else mult_big_int a n
+         then (incr turns ; foo (add_big_int (mult_big_int b a) cur) (sub_big_int n b,q))
+         else  add_big_int cur (mult_big_int a n)
     in
-    if not (eq_big_int (!lc) n)
-    then
-      begin
-        lc:=n ;
-        lv:=foo (n,mul) ;
-      end ;
-    !lv
+    foo zero_big_int (n,mul)
   in
-
+  let rec mult mul n = match mul with
+    | Leaf_mul(a,b,base) -> add_big_int base (mult_big_int a n)
+    | Node_mul(v,m1,m2) -> if lt_big_int v n then mult m2 n else mult m1 n
+  in
+  
   let new_max = min_big_int (mult mul_12 tot1) (mult mul_21 tot2) in
   let resadd t a v = Hashtbl.add t a (min_big_int v new_max) in
   
@@ -155,10 +188,13 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
   (*     print_int tot1 ; print_string " " ; print_int tot2 ; print_string "\n"; *)
   (*     print_int (mult mul_12 tot1) ; print_string " " ; print_int (mult mul_21 tot2) ; print_string "\n"; *)
   (*   ) ; *)
+  let r = 
+    new_max,
+    ((combine_specific stat1 stat2 cols1 cols2 mul_12)@(combine_specific stat2 stat1 cols2 cols1 mul_21)@common_stat)
+  in
   
-  new_max,
-  ((combine_specific stat1 stat2 cols1 cols2 mul_12)@(combine_specific stat2 stat1 cols2 cols1 mul_21)@common_stat)
-
+  (* print_int (List.length (mul_12)) ; print_string " " ; print_int (List.length (mul_21) ) ; print_string " "; print_int (!turns) ; print_newline(); *)
+  r
 
   
 let fullstat filename : (string*int,bi*string summary) Hashtbl.t  =
