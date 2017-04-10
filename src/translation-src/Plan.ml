@@ -84,9 +84,11 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     | l -> false
   in
 
-  let is_star l =
-    [] <> (List.map (fun x -> tpcols.(x)) l |>
-             List.fold_left inter [])
+  let is_star = function
+    | [] -> false
+    | a::q ->
+       [] <> (List.map (fun x -> tpcols.(x)) q |>
+             List.fold_left inter tpcols.(a))
   in
 
   let size_of_stat (s:'a combstat) = match s with (a,_) -> a in
@@ -106,7 +108,9 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
               | [] -> failwith __LOC__
               | [_] ->
                  (* Single component *)
-                 test_all_split [] ([a],p2 a) ([],0) q                
+                 if is_star l
+                 then plan_for_star l
+                 else test_all_connected_split [] ([a],p2 a) ([],0) q                
               | (cols,ids)::q ->
                  let ids_q = snd (List.split q) |> List.fold_left (@) [] in
                  let c1,s1,p1 = get_best (get_hash ids) [] ids in
@@ -167,8 +171,8 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     let cost_tot = add_big_int cost_materialization (size_of_stat stat) in
     propose agg [] cost_tot stat (JoinWithBroadcast(pb,pa))
    
-  and test_all_split agg (a,ha) (b,hb)= function
-    | [] -> if b <> []
+  and test_all_connected_split agg (a,ha) (b,hb)= function
+    | [] -> if b <> [] && is_connected ha a && is_connected hb b
             then
               let key_join = inter (get_col ha a) (get_col hb b) in
               let cb,sb,pb = get_best hb key_join b 
@@ -197,9 +201,19 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
             else
               agg
     | x::t ->
-       let agg1 = test_all_split agg (x::a,ha+p2 x) (b,hb) t in
-       test_all_split agg1 (a,ha) (x::b,hb+p2 x) t
-      
+       let agg1 = test_all_connected_split agg (x::a,ha+p2 x) (b,hb) t in
+       test_all_connected_split  agg1  (a,ha) (x::b,hb+p2 x) t
+
+  and plan_for_star l = 
+    match 
+      List.sort (fun x y -> compare_big_int (size_of_stat tpcost.(x)) (size_of_stat tpcost.(y))) l 
+    with
+    | [] -> 
+       [zero_big_int,empty_stat [],Empty,[]]
+    | a::q ->
+       let center_of_star = (List.map (fun x -> tpcols.(x)) l |> List.fold_left inter []) in
+       let (cost,stat,plan) = List.fold_left (fun (cost,stat,plan) id -> (add_big_int cost (add_big_int (size_of_stat stat) (size_of_stat tpcost.(id))),combine stat tpcost.(id), Join(plan,trad.(id)))) (size_of_stat tpcost.(a),tpcost.(a),trad.(a)) q in
+       [cost,stat,plan,center_of_star]
   in
   get_best (size_p2-1) [] tp_id
 
