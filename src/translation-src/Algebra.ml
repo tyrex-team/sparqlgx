@@ -296,7 +296,8 @@ object Query {
                  
           | Broadcast(i,a,b) ->
              let code_a,keys_a,cols_a = foo a in
-             let broadcast_a = "val broadcast_"^(string_of_int i)^"=sc.broadcast("^code_a^".collect().toSet)\n" in
+             let isValues = match keys_a with | [] -> "" | _ -> ".values" in
+             let broadcast_a = "val broadcast_"^(string_of_int i)^"=sc.broadcast("^code_a^isValues^".collect().toSet)\n" in
              add broadcast_a ;
              let code_b,keys_b,cols_b = foo b in
              "val "^res^"="^code_b,keys_b,cols_b 
