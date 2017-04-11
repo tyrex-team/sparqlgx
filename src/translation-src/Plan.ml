@@ -237,17 +237,20 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     | [] -> get_best (get_hash tps) [] tps
     | a::q ->
        let col = match tpcols.(a) with [x] -> x | _ -> failwith __LOC__ in
-       for i = 0 to size-1 do
-         if i<> a && List.mem col tpcols.(i)
-         then
-           begin
-             (* print_string col ; print_string " -> " ; print_int i ; print_string " -> "; List.iter (fun x -> print_string (x^" ")) tpcols.(i) ; print_newline() ; *)
-             trad.(i) <- FilterWithBroadcast(trad.(i),cur,[col]) ;
-             tpcost.(i) <- combine tpcost.(i) tpcost.(a) 
-           end
-       done  ;
-       let c,s,p = filter_broadcast(cur+1) q tps in
-       c,s,Broadcast(cur,trad.(a),p)
+       let changed = 
+         q@tps |>          
+           List.filter (fun x -> List.mem col tpcols.(x)) |>
+           List.fold_left ( fun ac i ->
+                            trad.(i) <- FilterWithBroadcast(trad.(i),cur,[col]) ;
+                            tpcost.(i) <- combine tpcost.(i) tpcost.(a) ;
+                            true 
+                          ) false
+       in
+       if changed then
+         let c,s,p = filter_broadcast(cur+1) q tps in
+         c,s,Broadcast(cur,trad.(a),p)
+       else
+         filter_broadcast cur q (a::tps)
                  
   in
   filter_broadcast 0 small_tps (List.filter (fun x -> not (List.mem x small_tps)) tp_id)
