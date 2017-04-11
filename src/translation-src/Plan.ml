@@ -246,7 +246,9 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
              tpcost.(i) <- combine tpcost.(i) tpcost.(a) 
            end
        done  ;
-       filter_broadcast(cur+1) q tps
+       let c,s,p = filter_broadcast(cur+1) q tps in
+       c,s,Broadcast(cur,trad.(a),p)
+                 
   in
   filter_broadcast 0 small_tps (List.filter (fun x -> not (List.mem x small_tps)) tp_id)
 

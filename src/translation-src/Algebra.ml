@@ -297,7 +297,8 @@ object Query {
              let code_a,keys_a,cols_a = foo a in
              let broadcast_a = "val broadcast_"^(string_of_int i)^"=sc.broadcast("^code_a^".collect().toSet)\n" in
              add broadcast_a ;
-             foo b 
+             let code_b,keys_b,cols_b = foo b in
+             "val "^res^"="^code_b,keys_b,cols_b 
           | Rename(o,n,c) ->
              let code_c,keys_c,cols_c = foo c in
              "val "^res^"="^code_c,keys_c,(List.map (fun x -> if x=o then n else x) cols_c)
