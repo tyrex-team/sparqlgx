@@ -6,7 +6,7 @@ let inf = max_int
 let cost_shuffle = big_int_of_int 4
 let cost_broadcast = big_int_of_int  4
 let cost_cartesian = big_int_of_int  10000
-let broadcast_threshold = big_int_of_int 1000
+let broadcast_threshold = big_int_of_int 30000
 
 let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) =
 
@@ -230,7 +230,25 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
        let center_of_star = (List.map (fun x -> tpcols.(x)) q |> List.fold_left inter tpcols.(a)) in
        [foo (get_hash (a::q)) (List.rev (a::q))]
   in
-  get_best (size_p2-1) [] tp_id
+
+  let small_tps = tp_id |> List.filter (fun x -> 1=List.length tpcols.(x) && lt_big_int (fst tpcost.(x)) broadcast_threshold) in
+  
+  let rec filter_broadcast cur small_tps tps = match small_tps with
+    | [] -> get_best (get_hash tps) [] tps
+    | a::q ->
+       let col = match tpcols.(a) with [x] -> x | _ -> failwith __LOC__ in
+       for i = 0 to size-1 do
+         if i<> a && List.mem col tpcols.(i)
+         then
+           begin
+             (* print_string col ; print_string " -> " ; print_int i ; print_string " -> "; List.iter (fun x -> print_string (x^" ")) tpcols.(i) ; print_newline() ; *)
+             trad.(i) <- FilterWithBroadcast(trad.(i),cur,[col]) ;
+             tpcost.(i) <- combine tpcost.(i) tpcost.(a) 
+           end
+       done  ;
+       filter_broadcast(cur+1) q tps
+  in
+  filter_broadcast 0 small_tps (List.filter (fun x -> not (List.mem x small_tps)) tp_id)
 
 
 

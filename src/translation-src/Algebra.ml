@@ -9,6 +9,8 @@ type algebra =
   | Union of algebra * algebra
   | LeftJoin of algebra * algebra
   | JoinWithBroadcast of algebra * algebra
+  | Broadcast of int*algebra*algebra
+  | FilterWithBroadcast of algebra * int * string list
   | Rename of string * string * algebra
   | Distinct of algebra
   | Order of (string*bool) list*algebra
@@ -102,6 +104,10 @@ object Query {
     List.filter (fun x -> not (List.mem x l2)) l1
   in
 
+  let inter l1 l2 =
+    List.filter (fun x -> List.mem x l2) l1
+  in
+  
   let typeof = function
     | [] -> failwith __LOC__
     | [a] -> "String"
@@ -181,13 +187,14 @@ object Query {
                        
     | Keep(k,Empty) -> []
     | Keep(k,c) -> k
-                 
+    | FilterWithBroadcast(a,_,_) -> cols a
+    | Broadcast(_,a,b) -> cols b
     | Union(a,b) 
       | LeftJoin(a,b)
       | Join(a,b)
       | JoinWithBroadcast(a,b) ->
        let c_a = cols a in
-       c_a @ (List.filter (fun x -> not (List.mem x c_a)) (cols b))
+       c_a @ minus (cols b) c_a
        
     | Rename(o,n,Empty) -> []
     | Rename(o,n,c) -> List.map (fun x -> if x=o then n else x) (cols c)
@@ -223,8 +230,8 @@ object Query {
           | LeftJoin(a,b) ->
              let code_a,keys_a,cols_a = foo a
              and code_b,keys_b,cols_b = foo b in
-             let cols_join = List.filter (fun x -> List.mem x cols_b) cols_a in
-             let cols_of_b = List.filter (fun x -> not (List.mem x cols_join)) cols_b in
+             let cols_join =  inter cols_b cols_a in
+             let cols_of_b = minus cols_b cols_join in
              let cols_union_some = cols_a@(cols_of_b) in
              let cols_union_none = cols_a@(List.map (fun x -> "\"\"") cols_of_b) in
              let cols_b_bis = renamedup cols_b cols_a in
@@ -240,8 +247,8 @@ object Query {
           | Join(a,b) ->
              let code_a,keys_a,cols_a = foo a
              and code_b,keys_b,cols_b = foo b in
-             let cols_join = List.filter (fun x -> List.mem x cols_b) cols_a in
-             let cols_union = cols_a@(List.filter (fun x -> not (List.mem x cols_join)) cols_b) in
+             let cols_join =  inter cols_a cols_b in
+             let cols_union = cols_a@(minus cols_b cols_join) in
              let cols_b_bis = renamedup cols_b cols_a in
              if cols_join = []
               then
@@ -255,8 +262,8 @@ object Query {
           | JoinWithBroadcast(b,a) ->
              let code_a,keys_a,cols_a = foo a
              and code_b,keys_b,cols_b = foo b in
-             let cols_join = List.filter (fun x -> List.mem x cols_b) cols_a in
-             let cols_union = cols_b@(List.filter (fun x -> not (List.mem x cols_join)) cols_a) in
+             let cols_join = inter cols_a cols_b in
+             let cols_union = cols_b@minus cols_a cols_join in
              let cols_a_bis = renamedup cols_a cols_b in
              let cols_a_spec  = minus cols_a cols_join in
              if cols_join = []
@@ -275,7 +282,22 @@ object Query {
                  let broadcast_a = "val broadcast_"^code_a^"=sc.broadcast(mmap_"^code_a^")\n" in
                  mmap_a^add_mmap_a^broadcast_a^
                    "val "^res^"="^code_b^".flatMap{ case ("^join keys_b cols_b^") => broadcast_"^code_a^".value.apply("^join [] cols_join^").map{ case ("^join [] cols_a_bis^") => ("^join [] cols_union^") }}", keys_b,cols_union
-               
+          | FilterWithBroadcast(a,i,cols) ->
+             let code_a,keys_a,cols_a = foo a in
+             let cols_join = inter cols_a cols in
+             (* print_int i ; print_newline (); *)
+             (* print_string "cols_a : "; List.iter (fun x -> print_string (x^" ")) cols_a ; print_string "\n"; *)
+             (* print_string "cols : "; List.iter (fun x -> print_string (x^" "))  cols ; print_newline(); *)
+             assert (cols_join <> []) ;
+             assert (cols_join = cols);
+             let broadcast_i = "broadcast_"^string_of_int i in
+              "val "^res^"="^code_a^".filter{ case ("^join keys_a cols_a^") =>"^broadcast_i^".value("^join [] cols_join^")}", keys_a,cols_a
+                 
+          | Broadcast(i,a,b) ->
+             let code_a,keys_a,cols_a = foo a in
+             let broadcast_a = "val broadcast_"^(string_of_int i)^"=sc.broadcast("^code_a^".collect().toSet)\n" in
+             add broadcast_a ;
+             foo b 
           | Rename(o,n,c) ->
              let code_c,keys_c,cols_c = foo c in
              "val "^res^"="^code_c,keys_c,(List.map (fun x -> if x=o then n else x) cols_c)
@@ -283,7 +305,7 @@ object Query {
           | Union (a,b) ->
              let code_a,keys_a,cols_a = foo a
              and code_b,keys_b,cols_b = foo b in
-             let cols_union = cols_a@(List.filter (fun x -> not (List.mem x cols_a)) cols_b) in
+             let cols_union = cols_a@minus cols_b cols_a in
              let new_cols_a = List.map (fun x -> if List.mem x cols_a then x else "\"\"") cols_union in
              let new_cols_b = List.map (fun x -> if List.mem x cols_b then x else "\"\"") cols_union in
              "val "^res^"= ("^code_a^mapkeys cols_a keys_a []^".map{case ("^(join [] cols_a)^")=>("^(join [] new_cols_a)^")}).union("^code_b^mapkeys cols_a keys_a []^".map{case("^(join [] cols_b)^") => ("^(join [] new_cols_b)^")})",[],cols_union
