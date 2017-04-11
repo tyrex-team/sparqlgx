@@ -237,20 +237,30 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     | [] -> get_best (get_hash tps) [] tps
     | a::q ->
        let col = match tpcols.(a) with [x] -> x | _ -> failwith __LOC__ in
+       let rec foo with_col without_col = function
+         | [] -> with_col,without_col
+         | x::t -> if tpcols.(x)=tpcols.(a)
+                   then foo (x::with_col) without_col t
+                   else foo with_col (x::without_col) t
+       in
+       let col_filter,others = foo [] [] q in
+       let combined_col_stat = List.fold_left (fun ac x -> combine tpcost.(x) ac) tpcost.(a) col_filter in
+       let combined_term = List.fold_left (fun ac x -> Join(trad.(x),ac)) trad.(a) col_filter in
+       
        let changed = 
-         q@tps |>          
+         tps |>          
            List.filter (fun x -> List.mem col tpcols.(x)) |>
            List.fold_left ( fun ac i ->
                             trad.(i) <- FilterWithBroadcast(trad.(i),cur,[col]) ;
-                            tpcost.(i) <- combine tpcost.(i) tpcost.(a) ;
+                            tpcost.(i) <- combine tpcost.(i) combined_col_stat ;
                             true 
                           ) false
        in
        if changed then
-         let c,s,p = filter_broadcast(cur+1) q tps in
-         c,s,Broadcast(cur,trad.(a),p)
+         let c,s,p = filter_broadcast(cur+1) others tps in
+         c,s,Broadcast(cur,combined_term,p)
        else
-         filter_broadcast cur q (a::tps)
+         filter_broadcast cur others (col_filter@tps)
                  
   in
   filter_broadcast 0 small_tps (List.filter (fun x -> not (List.mem x small_tps)) tp_id)
