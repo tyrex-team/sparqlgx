@@ -27,6 +27,7 @@ let build_tree_mul mul =
        let rec split beg  = function
          | 0,l -> List.rev beg,l
          | n,a::q ->split (a::beg) (n-1,q)
+         | _ -> failwith __LOC__
        in
        let l1, l2 = split [] (List.length l/2,l) in
        let t1,totBefore1,nbBefore1 = foo nbBefore totBefore l1 in
@@ -77,7 +78,6 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
 
     
     let compute_mul_col s1 s2 =
-      let (tbl1,nbDef1,nbPerDef1,totalDef1) = s1 in
       let (tbl2,nbDef2,nbPerDef2,totalDef2) = s2 in
       let t1_special = t1 in (* we should minus common with t2*)
       let mul = Hashtbl.fold (fun v n ac -> (n,count s1 v)::ac) tbl2 [(nbPerDef2,t1_special)] in
@@ -93,18 +93,6 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
          else (min_big_int a c,d)::combine_mul ((a,sub_big_int b d)::q) t       
     in
 
-    let size2:bi =
-      let get_size (tbl,nbDef,nbPerDef,totalDef) =
-        Hashtbl.fold (fun v n ac->add_big_int n ac) tbl totalDef
-      in
-      
-      let rec foo = function
-        | [] -> zero_big_int
-        | [a,b] -> get_size b
-        | (a,b)::q -> min_big_int (get_size b) (foo q)
-      in
-      foo s2
-    in
     match common_cols with
     | common_cols ->
        List.fold_left (fun ac c -> combine_mul ac (compute_mul_col (List.assoc c s1) (List.assoc c s2)))  [t2,t1]  common_cols 
@@ -124,17 +112,17 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
   (*     print_newline(); *)
   (*   ) ; *)
   
-  let turns = ref 0 in
-  let mult mul n =
-    let rec foo cur = function 
-      | _,[] -> cur
-      | n,((a,b)::q) ->
-         if lt_big_int b n
-         then (incr turns ; foo (add_big_int (mult_big_int b a) cur) (sub_big_int n b,q))
-         else  add_big_int cur (mult_big_int a n)
-    in
-    foo zero_big_int (n,mul)
-  in
+  (* let turns = ref 0 in *)
+  (* let mult mul n = *)
+  (*   let rec foo cur = function  *)
+  (*     | _,[] -> cur *)
+  (*     | n,((a,b)::q) -> *)
+  (*        if lt_big_int b n *)
+  (*        then (incr turns ; foo (add_big_int (mult_big_int b a) cur) (sub_big_int n b,q)) *)
+  (*        else  add_big_int cur (mult_big_int a n) *)
+  (*   in *)
+  (*   foo zero_big_int (n,mul) *)
+  (* in *)
   let rec mult mul n = match mul with
     | Leaf_mul(a,b,base) -> add_big_int base (mult_big_int a n)
     | Node_mul(v,m1,m2) -> if lt_big_int v n then mult m2 n else mult m1 n

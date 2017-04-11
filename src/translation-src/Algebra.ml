@@ -187,7 +187,7 @@ object Query {
       | Join(a,b)
       | JoinWithBroadcast(a,b) ->
        let c_a = cols a in
-       c_a @ minus (cols b) c_a
+       union c_a (cols b) 
        
     | Rename(o,n,Empty) -> []
     | Rename(o,n,c) -> List.map (fun x -> if x=o then n else x) (cols c)
@@ -241,7 +241,7 @@ object Query {
              let code_a,keys_a,cols_a = foo a
              and code_b,keys_b,cols_b = foo b in
              let cols_join =  inter cols_a cols_b in
-             let cols_union = cols_a@(minus cols_b cols_join) in
+             let cols_union = union cols_a cols_b in
              let cols_b_bis = renamedup cols_b cols_a in
              if cols_join = []
               then
@@ -256,7 +256,7 @@ object Query {
              let code_a,keys_a,cols_a = foo a
              and code_b,keys_b,cols_b = foo b in
              let cols_join = inter cols_a cols_b in
-             let cols_union = cols_b@minus cols_a cols_join in
+             let cols_union = union cols_b cols_a in
              let cols_a_bis = renamedup cols_a cols_b in
              let cols_a_spec  = minus cols_a cols_join in
              if cols_join = []
@@ -301,7 +301,7 @@ object Query {
           | Union (a,b) ->
              let code_a,keys_a,cols_a = foo a
              and code_b,keys_b,cols_b = foo b in
-             let cols_union = cols_a@minus cols_b cols_a in
+             let cols_union = union cols_a cols_b in
              let new_cols_a = List.map (fun x -> if List.mem x cols_a then x else "\"\"") cols_union in
              let new_cols_b = List.map (fun x -> if List.mem x cols_b then x else "\"\"") cols_union in
              "val "^res^"= ("^code_a^mapkeys cols_a keys_a []^".map{case ("^(join [] cols_a)^")=>("^(join [] new_cols_a)^")}).union("^code_b^mapkeys cols_a keys_a []^".map{case("^(join [] cols_b)^") => ("^(join [] new_cols_b)^")})",[],cols_union
