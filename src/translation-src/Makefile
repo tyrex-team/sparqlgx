@@ -1,8 +1,8 @@
 MLI=
-CMX=Sparql.cmx Stat.cmx Parser.cmx Lexer.cmx Algebra.cmx Plan.cmx Reorder.cmx Translate.cmx main.cmx
+CMX=Utils.cmx Sparql.cmx Stat.cmx Parser.cmx Lexer.cmx Algebra.cmx Plan.cmx Reorder.cmx Translate.cmx main.cmx
 #CMO=struct.cmo parser.cmo cost.cmo toScalaUtils.cmo toScalaOneFile.cmo toScalaVertical.cmo
-CMXA=Sparql.cmxa Stat.cmxa Parser.cmxa Lexer.cmxa Algebra.cmxa Plan.cmxa Reorder.cmxa Translate.cmxa main.cmxa
-CMO=Sparql.cmo Stat.cmo Parser.cmo Lexer.cmo Algebra.cmo Plan.cmo Reorder.cmo Translate.cmo main.cmo
+CMXA=Utils.cmxa Sparql.cmxa Stat.cmxa Parser.cmxa Lexer.cmxa Algebra.cmxa Plan.cmxa Reorder.cmxa Translate.cmxa main.cmxa
+CMO=Utils.cmo Sparql.cmo Stat.cmo Parser.cmo Lexer.cmo Algebra.cmo Plan.cmo Reorder.cmo Translate.cmo main.cmo
 #str.cmxa
 CMI=
 GENERATED=Parser.ml Lexer.ml Parser.mli

@@ -1,6 +1,7 @@
 open Stat
 open Algebra
 open Big_int
+open Utils
 
 let inf = max_int
 let cost_shuffle = big_int_of_int 4
@@ -25,15 +26,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     | a::q -> p2 a + get_hash q
   in
 
-  
-  let union l1 l2 =
-    l1@(List.filter (fun x -> not( List.mem x l1)) l2)
-  in
-
-  let inter l1 l2 =
-    List.filter (fun x -> List.mem x l2) l1
-  in
-   
+     
   let dyn_col = Array.make size_p2 [] in 
   let rec get_col h l =
     assert (h<size_p2) ;

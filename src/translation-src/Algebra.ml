@@ -1,4 +1,5 @@
 open Sparql ;;
+open Utils
 
 type algebra =
   | Readfile3 
@@ -98,14 +99,6 @@ object Query {
     match (keys) with
     | [] -> foo cols
     | k  -> "(keys,("^foo cols^"))"
-  in
-
-  let minus l1 l2 =
-    List.filter (fun x -> not (List.mem x l2)) l1
-  in
-
-  let inter l1 l2 =
-    List.filter (fun x -> List.mem x l2) l1
   in
   
   let typeof = function
