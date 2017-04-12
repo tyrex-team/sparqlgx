@@ -225,6 +225,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
   in
 
   let small_tps = tp_id |> List.filter (fun x -> 1=List.length tpcols.(x) && lt_big_int (fst tpcost.(x)) broadcast_threshold) in
+  let large_tps = minus tp_id small_tps in
   
   let rec filter_broadcast cur small_tps tps = match small_tps with
     | [] -> get_best (get_hash tps) [] tps
@@ -256,7 +257,11 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
          filter_broadcast cur others (col_filter@tps)
                  
   in
-  filter_broadcast 0 small_tps (List.filter (fun x -> not (List.mem x small_tps)) tp_id)
+  if large_tps <> []
+  then
+    filter_broadcast 0 small_tps large_tps
+  else
+    get_best (get_hash tp_id) [] tp_id
 
 
 
