@@ -274,7 +274,7 @@ object Query {
                  let isValues = if keys_b <> [] then "Values" else "" in
                  let broadcast_a = "val broadcast_"^code_a^"=sc.broadcast(mmap_"^code_a^")\n" in
                  mmap_a^add_mmap_a^broadcast_a^
-                   "val "^res^"="^code_b^".flatMap"^isValues^"{ case ("^join [] cols_b^") => broadcast_"^code_a^".value.getOrElse( ("^join [] cols_join^"),Set()).map{ case ("^join [] cols_a_spec^") => ("^join [] cols_union^") }}", keys_b,cols_union
+                   "val "^res^"="^code_b^".flatMap"^isValues^"{ case ("^join [] cols_b^") => broadcast_"^code_a^".value.getOrElse( ("^join [] cols_join^"),"^set_a^"()).map{ case ("^join [] cols_a_spec^") => ("^join [] cols_union^") }}", keys_b,cols_union
           | FilterWithBroadcast(a,i,cols) ->
              let code_a,keys_a,cols_a = foo a in
              let cols_join = ListSet.inter cols_a cols in
