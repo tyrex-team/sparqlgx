@@ -102,7 +102,7 @@ let reorder trad_tp l =
 let stat_file = ref None
               
 let load_full_stat s =
-  stat_file := Some (Stat.fullstat s) 
+  stat_file := Some (Stat_combine.fullstat s) 
   
 let full_stat trad_tp l =
 
@@ -118,7 +118,7 @@ let full_stat trad_tp l =
   match !stat_file with
   | None -> failwith "Full stat not loaded!"
   | Some s ->
-     let tp : (algebra*string Stat.combstat*string list) list = List.map (fun x ->trad_tp x,Stat.get_tp_stat s x, get_var x) l in
+     let tp  = List.map (fun x ->trad_tp x,Stat_combine.get_tp_stat s x, get_var x) l in
      let cost, stat, plan = get_optimal_plan_with_stat tp in
      plan
       

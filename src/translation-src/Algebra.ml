@@ -1,5 +1,4 @@
 open Sparql ;;
-open Utils
 
 type algebra =
   | Readfile3 
@@ -187,7 +186,7 @@ object Query {
       | Join(a,b)
       | JoinWithBroadcast(a,b) ->
        let c_a = cols a in
-       union c_a (cols b) 
+       ListSet.union c_a (cols b) 
        
     | Rename(o,n,Empty) -> []
     | Rename(o,n,c) -> List.map (fun x -> if x=o then n else x) (cols c)
@@ -223,8 +222,8 @@ object Query {
           | LeftJoin(a,b) ->
              let code_a,keys_a,cols_a = foo a
              and code_b,keys_b,cols_b = foo b in
-             let cols_join =  inter cols_b cols_a in
-             let cols_of_b = minus cols_b cols_join in
+             let cols_join =  ListSet.inter cols_b cols_a in
+             let cols_of_b = ListSet.minus cols_b cols_join in
              let cols_union_some = cols_a@(cols_of_b) in
              let cols_union_none = cols_a@(List.map (fun x -> "\"\"") cols_of_b) in
              let cols_b_bis = renamedup cols_b cols_a in
@@ -240,8 +239,8 @@ object Query {
           | Join(a,b) ->
              let code_a,keys_a,cols_a = foo a
              and code_b,keys_b,cols_b = foo b in
-             let cols_join =  inter cols_a cols_b in
-             let cols_union = union cols_a cols_b in
+             let cols_join =  ListSet.inter cols_a cols_b in
+             let cols_union = ListSet.union cols_a cols_b in
              let cols_b_bis = renamedup cols_b cols_a in
              if cols_join = []
               then
@@ -255,10 +254,9 @@ object Query {
           | JoinWithBroadcast(b,a) ->
              let code_a,keys_a,cols_a = foo a
              and code_b,keys_b,cols_b = foo b in
-             let cols_join = inter cols_a cols_b in
-             let cols_union = union cols_b cols_a in
-             let cols_a_bis = renamedup cols_a cols_b in
-             let cols_a_spec  = minus cols_a cols_join in
+             let cols_join = ListSet.inter cols_a cols_b in
+             let cols_union = ListSet.union cols_b cols_a in
+             let cols_a_spec  = ListSet.minus cols_a cols_join in
              if cols_join = []
               then
                "val "^res^"="^code_a^mapkeys cols_a keys_a []^".cartesian("^code_b^mapkeys cols_b keys_b []^").map{case (("^join [] cols_a^"),("^join [] cols_b^")) => ("^join [] cols_union^")}",[],cols_union
@@ -278,7 +276,7 @@ object Query {
                    "val "^res^"="^code_b^".flatMap"^isValues^"{ case ("^join [] cols_b^") => broadcast_"^code_a^".value.apply("^join [] cols_join^").map{ case ("^join [] cols_a_spec^") => ("^join [] cols_union^") }}", keys_b,cols_union
           | FilterWithBroadcast(a,i,cols) ->
              let code_a,keys_a,cols_a = foo a in
-             let cols_join = inter cols_a cols in
+             let cols_join = ListSet.inter cols_a cols in
              (* print_int i ; print_newline (); *)
              (* print_string "cols_a : "; List.iter (fun x -> print_string (x^" ")) cols_a ; print_string "\n"; *)
              (* print_string "cols : "; List.iter (fun x -> print_string (x^" "))  cols ; print_newline(); *)
@@ -301,7 +299,7 @@ object Query {
           | Union (a,b) ->
              let code_a,keys_a,cols_a = foo a
              and code_b,keys_b,cols_b = foo b in
-             let cols_union = union cols_a cols_b in
+             let cols_union = ListSet.union cols_a cols_b in
              let new_cols_a = List.map (fun x -> if List.mem x cols_a then x else "\"\"") cols_union in
              let new_cols_b = List.map (fun x -> if List.mem x cols_b then x else "\"\"") cols_union in
              "val "^res^"= ("^code_a^mapkeys cols_a keys_a []^".map{case ("^(join [] cols_a)^")=>("^(join [] new_cols_a)^")}).union("^code_b^mapkeys cols_a keys_a []^".map{case("^(join [] cols_b)^") => ("^(join [] new_cols_b)^")})",[],cols_union

@@ -1,4 +1,3 @@
-open Scanf 
 open Sparql 
 
 open Big_int
@@ -13,35 +12,6 @@ let bioi = big_int_of_int
 let assert_equal a b = (if a<>b then (print_int a ; print_string " " ; print_int b ;failwith ("Assert failed"^__LOC__)) ; a)
 let assert_equal_bi a b = (if not (eq_big_int a b) then (print_int (int_of_big_int a) ; print_string " " ; print_int (int_of_big_int b) ;failwith ("Assert failed"^__LOC__)) ; a)
 
-type tree_mul =
-  | Node_mul of bi*tree_mul*tree_mul
-  | Leaf_mul of bi*bi*bi
-                        
-
-
-let build_tree_mul mul =
-  let rec foo nbBefore totBefore mul = match mul with
-    | [] -> failwith __LOC__
-    | [a,b] -> Leaf_mul(a,b,sub_big_int totBefore (mult_big_int nbBefore a)), add_big_int totBefore (mult_big_int a b), add_big_int nbBefore b
-    | l ->
-       let rec split beg  = function
-         | 0,l -> List.rev beg,l
-         | n,a::q ->split (a::beg) (n-1,q)
-         | _ -> failwith __LOC__
-       in
-       let l1, l2 = split [] (List.length l/2,l) in
-       let t1,totBefore1,nbBefore1 = foo nbBefore totBefore l1 in
-       let t2,totBefore2,nbBefore2 = foo nbBefore1 totBefore1 l2 in
-       Node_mul(nbBefore1,t1,t2),totBefore2,nbBefore2
-  in
-  match mul with
-  | [] -> Leaf_mul(zero_big_int,zero_big_int,zero_big_int)
-  | mul -> 
-     let t1,tot,nbBefore = foo zero_big_int zero_big_int mul in
-     Node_mul(nbBefore,t1,Leaf_mul(zero_big_int,zero_big_int,tot))
-       
-  
-
 let debug x = () 
          
 let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
@@ -49,14 +19,8 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
   let cols1 = List.map fst stat1 in
   let cols2 = List.map fst stat2 in
   
-  let common_cols = List.filter (fun x -> List.mem x cols2) cols1 in
+  let common_cols = ListSet.inter cols1 cols2 in
 
-
-  let count (tbl,nbDef,nbPerDef,totalDef) (v:'a) =
-    try
-      Hashtbl.find tbl v
-    with Not_found -> nbPerDef
-  in
 
   
   (* mult (compute_mul s1 s2) n Compute how much n "entries" in a
@@ -66,43 +30,11 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
      b times where an element can be multiplied a times *)
 
 
-    let rec simplify_mul = function
-      | [] -> []
-      | (a,b)::q when sign_big_int a = 0 -> []
-      | (a,b)::q when sign_big_int b = 0 -> simplify_mul q
-      | (a,b)::(c,d)::q when eq_big_int a c -> simplify_mul ((a,add_big_int b d)::q)
-      | a::q -> a::simplify_mul q
-    in
-      
-  let compute_mul (t1,s1) (t2,s2) =
-
-    
-    let compute_mul_col s1 s2 =
-      let (tbl2,nbDef2,nbPerDef2,totalDef2) = s2 in
-      let t1_special = t1 in (* we should minus common with t2*)
-      let mul = Hashtbl.fold (fun v n ac -> (n,count s1 v)::ac) tbl2 [(nbPerDef2,t1_special)] in
-      List.sort (fun (a,x) (b,y) -> compare_big_int b a) mul |>
-        simplify_mul 
-    in
-
-    let  rec combine_mul m1 m2 = match (m1,m2) with
-      | [],_ | _,[] -> []
-      | (a,b)::q, (c,d)::t ->
-         if lt_big_int b d
-         then (min_big_int a c,b)::combine_mul q ((c,sub_big_int d b)::t)
-         else (min_big_int a c,d)::combine_mul ((a,sub_big_int b d)::q) t       
-    in
-
-    match common_cols with
-    | common_cols ->
-       List.fold_left (fun ac c -> combine_mul ac (compute_mul_col (List.assoc c s1) (List.assoc c s2)))  [t2,t1]  common_cols 
-  in
-
 
   
 
-  let mul_12 = compute_mul (tot1,stat1) (tot2,stat2) |> simplify_mul |> build_tree_mul in
-  let mul_21 = compute_mul (tot2,stat2) (tot1,stat1) |> simplify_mul |> build_tree_mul in  
+  let mul_12 = Stat_mult.compute_mul (tot1,stat1) (tot2,stat2) in
+  let mul_21 = Stat_mult.compute_mul (tot2,stat2) (tot1,stat1) in  
   (* debug (fun () -> *)
   (*     print_string "mul_12 " ; *)
   (*     List.iter (fun (a,b) -> print_string "(" ; print_int a ; print_string "," ; print_int b ; print_string ") " ) mul_12; *)
@@ -123,12 +55,8 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
   (*   in *)
   (*   foo zero_big_int (n,mul) *)
   (* in *)
-  let rec mult mul n = match mul with
-    | Leaf_mul(a,b,base) -> add_big_int base (mult_big_int a n)
-    | Node_mul(v,m1,m2) -> if lt_big_int v n then mult m2 n else mult m1 n
-  in
   
-  let new_max = min_big_int (mult mul_12 tot1) (mult mul_21 tot2) in
+  let new_max = min_big_int (Stat_mult.mult mul_12 tot1) (Stat_mult.mult mul_21 tot2) in
   let resadd t a v = Hashtbl.add t a (min_big_int v new_max) in
   
   let rec combine_common_col s1 s2  =
@@ -141,19 +69,19 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
         let n_res = 
           try
             let n2 = Hashtbl.find tbl2 v in
-            min_big_int (min_big_int (mult mul_12 n1) (mult mul_21 n2)) (mult_big_int n1 n2)
+            min_big_int (min_big_int (Stat_mult.mult mul_12 n1) (Stat_mult.mult mul_21 n2)) (mult_big_int n1 n2)
           with
-            Not_found -> min_big_int (mult_big_int n1 nbPerDef2) (mult mul_12 n1)
+            Not_found -> min_big_int (mult_big_int n1 nbPerDef2) (Stat_mult.mult mul_12 n1)
         in
         if sign_big_int n_res = 1 then resadd res v n_res) tbl1 ;
     Hashtbl.iter (fun v n2 ->
 	if not (Hashtbl.mem res v) then
           let n_res =
-            min_big_int (mult mul_21 n2) (mult_big_int n2 nbPerDef1)
+            min_big_int (Stat_mult.mult mul_21 n2) (mult_big_int n2 nbPerDef1)
           in
           if sign_big_int n_res = 1 then resadd res v n_res) tbl2 ;
-    let nbDefRes = min_big_int (mult mul_12 nbDef1) (mult mul_21 nbDef2) in
-    let totalDefRes = min_big_int (mult mul_12 totalDef1) (mult mul_21 totalDef2) in
+    let nbDefRes = min_big_int (Stat_mult.mult mul_12 nbDef1) (Stat_mult.mult mul_21 nbDef2) in
+    let totalDefRes = min_big_int (Stat_mult.mult mul_12 totalDef1) (Stat_mult.mult mul_21 totalDef2) in
 
     (res,min_big_int nbDefRes new_max,min_big_int new_max (mult_big_int nbPerDef1 nbPerDef2),min_big_int new_max totalDefRes)
   in
@@ -168,8 +96,8 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
        List.map (fun c ->
            let tbl,nbDef,nbPerDef,totalDef = List.assoc c s1 in
            let res = Hashtbl.create 17 in
-           Hashtbl.iter (fun k v -> resadd res k (mult mul v)) tbl ;
-           c,(res,min_big_int new_max (mult mul nbDef),min_big_int new_max (mult mul nbPerDef),min_big_int new_max (mult mul totalDef))
+           Hashtbl.iter (fun k v -> resadd res k (Stat_mult.mult mul v)) tbl ;
+           c,(res,min_big_int new_max (Stat_mult.mult mul nbDef),min_big_int new_max (Stat_mult.mult mul nbPerDef),min_big_int new_max (Stat_mult.mult mul totalDef))
          ) cols1_specific
   in
   (* debug (fun () -> *)
@@ -188,7 +116,7 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
 let fullstat filename : (string*int,bi*string summary) Hashtbl.t  =
   let res = Hashtbl.create 53 in
   try
-       let chan = Scanning.from_file filename in
+       let chan = Scanf.Scanning.from_file filename in
        
        let foo (nb:int) (nbDef:bi) (tot:bi) =
          let hshtbl = Hashtbl.create 17 in
@@ -213,7 +141,7 @@ let fullstat filename : (string*int,bi*string summary) Hashtbl.t  =
          try
            Scanf.bscanf chan "%s %d %d %d %d\n" (fun pred col nb nbDef total -> Hashtbl.add res (pred,col) (foo nb (bioi nbDef) (bioi total))) ;
            bar ()
-         with | End_of_file -> (Scanning.close_in chan)
+         with | End_of_file -> (Scanf.Scanning.close_in chan)
        in
        bar () ; res
   with | Sys_error s -> failwith ("Stat file problem, "^s)

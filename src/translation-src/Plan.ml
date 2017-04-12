@@ -1,7 +1,6 @@
-open Stat
+open Stat_combine
 open Algebra
 open Big_int
-open Utils
 
 let inf = max_int
 let cost_shuffle = big_int_of_int 4
@@ -35,7 +34,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     | [] ->
        let res = match l with
          | [] -> []
-         | (a)::q -> union (tpcols.(a)) (get_col (h-p2 a) q)
+         | (a)::q -> ListSet.union (tpcols.(a)) (get_col (h-p2 a) q)
        in
        dyn_col.(h) <- res ; res
     | v -> v
@@ -52,7 +51,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
       | [] -> [cols,ids]
       | (o_cols,o_ids)::q ->
          if List.exists (fun col -> List.mem col o_cols) cols
-         then add (union cols o_cols) (ids@o_ids) q
+         then add (ListSet.union cols o_cols) (ids@o_ids) q
          else (o_cols,o_ids)::(add cols ids q)
     in
     let rec foo h l =
@@ -81,7 +80,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     | [] -> false
     | a::q ->
        [] <> (List.map (fun x -> tpcols.(x)) q |>
-             List.fold_left inter tpcols.(a))
+             List.fold_left ListSet.inter tpcols.(a))
   in
 
   let size_of_stat (s:'a combstat) = match s with (a,_) -> a in
@@ -167,7 +166,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
   and test_all_connected_split agg s_res (a,ha) (b,hb)= function
     | [] -> if b <> [] && is_connected ha a && is_connected hb b
             then
-              let key_join = inter (get_col ha a) (get_col hb b) in
+              let key_join = ListSet.inter (get_col ha a) (get_col hb b) in
               let cb,sb,pb = get_best hb key_join b 
               and ca,sa,pa = get_best ha key_join a 
               in
@@ -212,7 +211,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
             let cost_res = add_big_int cost (add_big_int (size_of_stat stat) (size_of_stat tpcost.(id))) in
             let stat_res = combine stat tpcost.(id) in
             let plan_res = Join(plan,trad.(id)) in
-            let cols_res = inter cols tpcols.(id) in
+            let cols_res = ListSet.inter cols tpcols.(id) in
             dyn_star.(h) <- Some (cost_res,stat_res,plan_res,cols_res) ; cost_res,stat_res,plan_res,cols_res
     in
     match  
@@ -225,7 +224,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
   in
 
   let small_tps = tp_id |> List.filter (fun x -> 1=List.length tpcols.(x) && lt_big_int (fst tpcost.(x)) broadcast_threshold) in
-  let large_tps = minus tp_id small_tps in
+  let large_tps = ListSet.minus tp_id small_tps in
   
   let rec filter_broadcast cur small_tps tps = match small_tps with
     | [] -> get_best (get_hash tps) [] tps

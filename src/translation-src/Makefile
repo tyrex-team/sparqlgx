@@ -1,8 +1,8 @@
 MLI=
-CMX=Utils.cmx Sparql.cmx Stat.cmx Parser.cmx Lexer.cmx Algebra.cmx Plan.cmx Reorder.cmx Translate.cmx main.cmx
-#CMO=struct.cmo parser.cmo cost.cmo toScalaUtils.cmo toScalaOneFile.cmo toScalaVertical.cmo
-CMXA=Utils.cmxa Sparql.cmxa Stat.cmxa Parser.cmxa Lexer.cmxa Algebra.cmxa Plan.cmxa Reorder.cmxa Translate.cmxa main.cmxa
-CMO=Utils.cmo Sparql.cmo Stat.cmo Parser.cmo Lexer.cmo Algebra.cmo Plan.cmo Reorder.cmo Translate.cmo main.cmo
+CMX=ListSet.cmx Sparql.cmx Stat_mult.cmx Stat_combine.cmx Parser.cmx Lexer.cmx Algebra.cmx Plan.cmx Reorder.cmx Translate.cmx main.cmx
+#CMO=struct.cmo parser.cmo cost.cmo toScalaListSet.cmo toScalaOneFile.cmo toScalaVertical.cmo
+CMXA=ListSet.cmxa Sparql.cmxa Stat_mult.cmxa Stat_combine.cmxa Parser.cmxa Lexer.cmxa Algebra.cmxa Plan.cmxa Reorder.cmxa Translate.cmxa main.cmxa
+CMO=ListSet.cmo Sparql.cmo Stat_mult.cmo Stat_combine.cmo Parser.cmo Lexer.cmo Algebra.cmo Plan.cmo Reorder.cmo Translate.cmo main.cmo
 #str.cmxa
 CMI=
 GENERATED=Parser.ml Lexer.ml Parser.mli
@@ -40,7 +40,6 @@ sparql2scala: $(MLI) $(CMI) $(CMX)
 
 .mly.mli: $(GENERATED)
 	menhir -v $<
-
 
 clean:
 	rm -f *.cm[iox] *.o *.annot *~ sparql2scala $(GENERATED)
