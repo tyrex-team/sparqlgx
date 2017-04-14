@@ -40,8 +40,13 @@ case "$1" in
     load )
 	bash ${PATH_CMD}/sgx-load.sh $@
 	;;
-    loadfull )
-	bash ${PATH_CMD}/sgx-load.sh $@
+    loadfullstat )
+        shift
+	bash ${PATH_CMD}/sgx-load.sh fullstat $@
+	;;
+    loadall )
+        shift
+	bash ${PATH_CMD}/sgx-load.sh all $@
 	;;
     stat )
 	bash ${PATH_CMD}/sgx-load.sh $@

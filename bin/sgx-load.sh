@@ -14,30 +14,37 @@ dbName=$2
 tripleFile=$3
 
 localdbpath=$(sed "s|~|$HOME|g" <<< "$SPARQLGX_LOCAL/$dbName")
+mkdir -p $localdbpath ;
 hdfsdbpath="$SPARQLGX_HDFS/$dbName/"
 case "$1" in
     light-load )
-        statfile="/dev/null"
-        opt="--no-stat"
+        stat=""
+        fullstat=""
+        load="--load $hdfsdbpath"
         ;;
     load )
-        statfile="${localdbpath}/stat.txt" ;
-        mkdir -p $localdbpath ;
-        opt=""
+        stat="--stat ${localdbpath}/stat.txt"
+        fullstat=""
+        load="--load $hdfsdbpath"
         ;;
     stat )
-        opt="--no-load" ;
-        statfile="${localdbpath}/stat.txt" ;
-        mkdir -p $localdbpath
+        stat="--stat ${localdbpath}/stat.txt"
+        fullstat=""
+        load=""
         ;;
-    loadfull )
-        opt="--full-stat" ;
-        statfile="${localdbpath}/statfull.txt" ;
-        mkdir -p $localdbpath
+    all )
+        stat="--stat ${localdbpath}/stat.txt"
+        fullstat="--full-stat ${localdbpath}/statfull.txt"
+        load="--load $hdfsdbpath"
+        ;;
+    fullstat )
+        stat=""
+        fullstat="--full-stat ${localdbpath}/statfull.txt"
+        load=""
         ;;
 esac
 
 spark-submit --driver-memory $SPARK_DRIVER_MEM \
     --executor-memory $SPARK_EXECUT_MEM \
     --class=Main \
-    ${PATH_CMD}/sparqlgx-load.jar $tripleFile --hdfs-path $hdfsdbpath --stat-size $SPARQLGX_STAT_SIZE $opt  > $statfile
+    ${PATH_CMD}/sparqlgx-load.jar $tripleFile --stat-size $SPARQLGX_STAT_SIZE $load $stat $fullstat 
