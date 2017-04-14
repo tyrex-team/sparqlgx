@@ -26,6 +26,8 @@ object Main {
 
   var stat_size = 500 ;
 
+  var debug = false ;
+
   def merge(xs: List[(Int,String)], ys: List[(Int,String)],n:Int): List[(Int,String)] = {
     if (n==0) { Nil }
     else
@@ -50,7 +52,7 @@ object Main {
               '_'
             else 
               c
-        },(s+" "+o,""))};
+        },(s+" "+o))};
     T.saveAsHadoopFile(path,classOf[String],classOf[String],classOf[RDDMultipleTextOutputFormat])
   }
 
@@ -70,6 +72,7 @@ object Main {
       val last = if(stat(i)._2._2 < stat_size) {"*"} else {list_el.last._2};
       list_el foreach { case (n,iri) => val v = if(iri==last) "*" else iri ;  output.write (v+" "+n.toString+"\n") } ;
     }
+    output.close()
   }
 
   def fullstat(input:RDD[(String,String,String)], path:String) {
@@ -92,7 +95,67 @@ object Main {
           statlist foreach { case (n,iri) => val v = if(iri==last) "*" else iri ;  output.write(n.toString+" "+v+"\n") } ;
         }
     }
+    output.close()
   }
+
+  def prefixReplace( a : Array[String], s:String) : String = {
+    for( id <- 0 to a.length-1 ) {
+      if(s.startsWith(a(id))) {
+        //insert a : as in normal prefixes ?
+        return id.toString+s.substring(a(id).length());
+      }
+    }
+    return s;
+  }
+  
+  def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
+    val target = (2*input.count()) / stat_size ;
+    val output = new BufferedWriter(new FileWriter(path)) ;
+    val wc = input.flatMap{ case (s,p,o) => List((s,1),(o,1)) }.filter{ s.charAt(0) != "\""} ;
+    val hist = wc.map{ case(value,number) => (value.length,number) }.reduceByKey(_+_).collectAsMap() ;
+    var curSize = -1 ;
+    hist.foreach{ case (k,v) => if(k>curSize) { curSize=k;} } ; 
+    var seen = 0 ;
+    while(curSize>10 && seen < target) {
+      if(hist contains curSize) {
+        seen+=hist(curSize) ;
+      }
+      curSize = curSize - 1 ;
+    }
+
+    var prefixes = wc ;
+    while(curSize>=10) {
+      val curS = curSize ;
+      prefixes = prefixes
+        .map { case (pred,nb) =>  if(nb<target && curS<pred.length) { (pred.substring(0,curS),nb)} else {  (pred,nb) } }
+        .reduceByKey(_+_) ;
+      curSize = curSize - 4 ;
+    }
+
+    val prefixS = prefixes
+      .filter{ case (pred,nb) => (nb>=target) }
+      .map {case (pred,nb) => pred }
+      .collect()
+      .sortWith( (p1,p2) => p1.length > p2.length );
+    
+    for( id <- 0 to prefixS.length-1 ) {
+      output.write(id.toString(36)+" "+prefixS(id)+"\n") 
+    }
+    output.close()
+   
+    val bc_prefix=sc.broadcast(prefixS) ;
+    val res = input
+      .map { 
+      case (s,p,o) => 
+        (prefixReplace(bc_prefix.value,s),
+         prefixReplace(bc_prefix.value,p),
+         prefixReplace(bc_prefix.value,o))
+    } ;
+    input.unpersist() ;
+    res.persist()
+  }
+
+
 
   def main(args: Array[String]) {
     // Cut of spark logs.
@@ -135,6 +198,8 @@ object Main {
             throw new Exception("No file to store prefixes given!");
           prefix_path=Some(args(curArg+1)) ;
           curArg+=1 ;
+        case "--debug" =>
+          debug = true ;
         case s =>
           if(tripleFile != "")
             throw new Exception("Invalid command line (two triple files given : "+s+" and "+tripleFile+")!");
@@ -143,6 +208,7 @@ object Main {
         curArg+=1 ;
     }
     
+    if(debug) { println("Starting"); }
     val input : RDD[(String,String,String)]= sc.textFile(tripleFile).map{ 
       line =>           
       val field:Array[String]=line.split("\\s+",3); 
@@ -152,19 +218,28 @@ object Main {
       (field(0),field(1),reg.replaceFirstIn(field(2),""))
     }.persist() ;
 
+   val prefixed_input = (prefix_path match {
+     case None => input
+     case Some(path) => prefix(input,path,sc)
+   })
+    if(debug) { println("Prefix done"); }
 
     load_path match {
       case None => ()
-      case Some(path) => load(input,path)
+      case Some(path) => load(prefixed_input,path)
     }
+    if(debug) { println("Load done"); }
 
     stat_path match {
       case None => ()
-      case Some(path) => stat(input,path)
+      case Some(path) => stat(prefixed_input,path)
     }
+    if(debug) { println("Stat done"); }
 
     fullstat_path match {
       case None => ()
-      case Some(path) => fullstat(input,path)
-    }}
+      case Some(path) => fullstat(prefixed_input,path)
+    }
+    if(debug) { println("Full stat done"); }
+  }                
 }

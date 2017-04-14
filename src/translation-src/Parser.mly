@@ -69,9 +69,9 @@ ident_or_var:
 | s = VAR
    { Variable(s) }
 | pref = IDENT COLON v = IDENT
-   { Exact(replace_prefix pref v) }
+   { Exact(Prefix.prefixize (replace_prefix pref v)) }
 | LEFTPROG s = ident RIGHTPROG
-   { Exact("<"^(s)^">") }
+   { Exact(Prefix.prefixize ("<"^(s)^">")) }
 ;  
 
 toplevel:
