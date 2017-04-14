@@ -111,7 +111,7 @@ object Main {
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
     val target = (2*input.count()) / stat_size ;
     val output = new BufferedWriter(new FileWriter(path)) ;
-    val wc = input.flatMap{ case (s,p,o) => List((s,1),(o,1)) }.filter{ case s => s.charAt(0) != "\""} ;
+    val wc = input.flatMap{ case (s,p,o) => List((s,1),(o,1)) }.filter{ case (s,n) => s.charAt(0) != "\""} ;
     val hist = wc.map{ case(value,number) => (value.length,number) }.reduceByKey(_+_).collectAsMap() ;
     var curSize = -1 ;
     hist.foreach{ case (k,v) => if(k>curSize) { curSize=k;} } ; 
