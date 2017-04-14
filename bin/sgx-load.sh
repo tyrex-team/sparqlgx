@@ -47,4 +47,4 @@ esac
 spark-submit --driver-memory $SPARK_DRIVER_MEM \
     --executor-memory $SPARK_EXECUT_MEM \
     --class=Main \
-    ${PATH_CMD}/sparqlgx-load.jar $tripleFile --stat-size $SPARQLGX_STAT_SIZE $load $stat $fullstat 
+    ${PATH_CMD}/sparqlgx-load.jar $tripleFile --prefix ${localdbpath}/prefix.txt --stat-size $SPARQLGX_STAT_SIZE $load $stat $fullstat 
