@@ -79,7 +79,7 @@ fi ;
 # Step 1: Translation.
 mkdir -p $localpath/eval/src/main/scala/ ;
 bash ${PATH_CMD}/generate-build.sh "SPARQLGX Evaluation" > $localpath/eval/build.sbt
-${PATH_CMD}/sparqlgx-translator $queryFile  --prefix ${localdbpath}/prefix.txt $sde $noOptim $stat > $localpath/eval/src/main/scala/Query.scala
+${PATH_CMD}/sparqlgx-translator $queryFile  --prefix ${localpath}/${dbName}/prefix.txt $sde $noOptim $stat > $localpath/eval/src/main/scala/Query.scala
 
 # Step 2: Compilation.
 cd $localpath/eval/ ;
