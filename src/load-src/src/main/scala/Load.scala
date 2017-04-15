@@ -102,7 +102,7 @@ object Main {
     for( id <- 0 to a.length-1 ) {
       if(s.startsWith(a(id))) {
         //insert a : as in normal prefixes ?
-        return id.toString+s.substring(a(id).length());
+        return BigInt(id).toString(36)+s.substring(a(id).length());
       }
     }
     return s;
