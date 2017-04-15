@@ -13,7 +13,7 @@ let prefixize s =
   let rec foo = function
     | (a,b)::q ->
        if String.length b <= String.length s && b=String.sub s 0 (String.length b)
-       then a^String.sub s (String.length b) (String.length s)
+       then a^String.sub s (String.length b) (String.length s-String.length b)
        else foo q
     | [] -> s
 

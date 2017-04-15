@@ -35,7 +35,7 @@ let rec parse_arg = function
   | "--stat"::s::q -> Reorder.load s ; optim:=2 ; parse_arg q
   | "--fullstat"::s::q
     | "--full-stat"::s::q-> Reorder.load_full_stat s ; optim:=3 ; parse_arg q
-  | "--prefix"::s::q -> Prefix.load s
+  | "--prefix"::s::q -> Prefix.load s ; parse_arg q
   | f::q ->
      if !file = ""
      then file := f
