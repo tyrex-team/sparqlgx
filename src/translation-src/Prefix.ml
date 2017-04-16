@@ -16,7 +16,6 @@ let prefixize s =
        then a^":"^String.sub s (String.length b) (String.length s-String.length b-1)
        else foo q
     | [] -> s
-
   in
   if s.[0] = '<' && s.[String.length s-1] = '>'
   then foo (!prefixes)
