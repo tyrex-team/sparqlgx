@@ -175,5 +175,5 @@ let get_tp_stat stat tp : string combstat =
          with Not_found -> nbPerDef
        in
        nb,[s,(Hashtbl.create 3,nb,unit_big_int,nb)]
-  with Not_found -> zero_big_int,[]
+  with Not_found -> ((match tp with | _,Exact p, _ ->failwith ("Unkown "^p)); zero_big_int,[])
                       
