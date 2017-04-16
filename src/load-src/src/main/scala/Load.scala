@@ -99,10 +99,13 @@ object Main {
   }
 
   def prefixReplace( a : Array[String], s:String) : String = {
+    if(s(0) != '<' || s(s.length()-1) != '>')
+      return s ;
+    val search = s.substring(1,s.length()-2)
     for( id <- 0 to a.length-1 ) {
-      if(s.startsWith(a(id))) {
+      if(search.startsWith(a(id))) {
         //insert a : as in normal prefixes ?
-        return BigInt(id).toString(36)+":"+s.substring(a(id).length(),s.length()-a(id).length()-1);
+        return BigInt(id).toString(36)+":"+search.substring(a(id).length(),search.length()-a(id).length());
       }
     }
     return s;
@@ -111,7 +114,7 @@ object Main {
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
     val target = (2*input.count()) / stat_size ;
     val output = new BufferedWriter(new FileWriter(path)) ;
-    val wc = input.flatMap{ case (s,p,o) => List((s,1),(o,1)) }.filter{ case (s,n) => s.charAt(0) == '<' } ;
+    val wc = input.flatMap{ case (s,p,o) => List((s.substring(1,s.length()-2),1),(o.substring(1,o.length()-2),1)) }.filter{ case (s,n) => s.charAt(0) == '<' } ;
     val hist = wc.map{ case(value,number) => (value.length,number) }.reduceByKey(_+_).collectAsMap() ;
     var curSize = -1 ;
     hist.foreach{ case (k,v) => if(k>curSize) { curSize=k;} } ; 

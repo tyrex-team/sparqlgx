@@ -10,13 +10,15 @@ let load filename =
   with | End_of_file -> (Scanf.Scanning.close_in chan)
 
 let prefixize s =
-  let rec foo = function
-    | (a,b)::q ->
-       if String.length b < String.length s && b=String.sub s 0 (String.length b)
-       then a^":"^String.sub s (String.length b) (String.length s-String.length b-1)
-       else foo q
-    | [] -> s
-  in
   if s.[0] = '<' && s.[String.length s-1] = '>'
-  then foo (!prefixes)
+  then
+    let search = String.sub s 1 (String.length s-2) in
+    let rec foo = function
+      | (a,b)::q ->
+         if String.length b <= String.length search && b=String.sub search 0 (String.length b)
+         then a^":"^String.sub search (String.length b) (String.length search-String.length b)
+         else foo q
+      | [] -> s
+    in
+    foo (!prefixes)
   else s
