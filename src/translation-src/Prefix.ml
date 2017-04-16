@@ -7,7 +7,7 @@ let load filename =
     do
       Scanf.bscanf chan "%s %[^\n]\n" (fun a b -> prefixes := (a,b)::!prefixes)
     done 
-  with | End_of_file -> (Scanf.Scanning.close_in chan)
+  with | End_of_file -> (Scanf.Scanning.close_in chan ; prefixes := List.rev (!prefixes))
 
 let prefixize s =
   if s.[0] = '<' && s.[String.length s-1] = '>'
