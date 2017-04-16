@@ -223,7 +223,7 @@ object Main {
         throw new RuntimeException("Invalid line: "+line);
       }
       (field(0),field(1),reg.replaceFirstIn(field(2),""))
-    }.persist() ;
+    }.distinct().persist() ;
 
    val prefixed_input = (prefix_path match {
      case None => input
