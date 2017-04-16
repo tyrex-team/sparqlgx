@@ -76,15 +76,16 @@ object Main {
   }
 
   def fullstat(input:RDD[(String,String,String)], path:String) {
-    val output = new BufferedWriter(new FileWriter(path))
+    val output = new BufferedWriter(new FileWriter(path)) ;
+    val stat_size_cst = stat_size ;
     val stat = input.flatMap{ case (s,p,o) => List(((0,p,s),1),((1,p,o),1))}
       .reduceByKey(_+_).map { t => ((t._1._2,t._1._1),(t._2,t._1._3))} // Compute word count
       .aggregateByKey( (Nil:List[(Int,String)],0,0,0) ) ( //
-      { case ((acc,size,nbDif,total),el) => (merge(el::Nil,acc,stat_size),(size+1) min stat_size,nbDif+1,total+el._1) },
-      { case ((a1,s1,n1,t1),(a2,s2,n2,t2)) => (merge(a1,a2,stat_size),((s1+s2) min stat_size),n1+n2,t1+t2) }
+      { case ((acc,size,nbDif,total),el) => (merge(el::Nil,acc,stat_size_cst),(size+1) min stat_size_cst,nbDif+1,total+el._1) },
+      { case ((a1,s1,n1,t1),(a2,s2,n2,t2)) => (merge(a1,a2,stat_size_cst),((s1+s2) min stat_size_cst),n1+n2,t1+t2) }
     ).collect.foreach {
       case ((pred,col),(statlist,size,nbDif,total)) => 
-        if(size<stat_size) {
+        if(size<stat_size_cst) {
           output.write(pred+" "+col+" "+(size+1).toString+" "+0+" "+total+"\n");
           statlist foreach { case (n,iri) => output.write(n.toString+" "+iri+"\n") } ;
           output.write("0 *\n");
