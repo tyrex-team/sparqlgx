@@ -158,8 +158,8 @@ object Main {
         (prefixReplace(bc_prefix.value,s),
          prefixReplace(bc_prefix.value,p),
          prefixReplace(bc_prefix.value,o))
-    }.coalesce( 10L + (nbLines / 4000000L)).persist() ; 
-    //4 × 10^6 lines per partition should be less than ~256 Mo  per partition before the predicate partitionning
+    }.coalesce( (10L + (nbLines / 1000000L)).asInstanceOf[Int] ).persist() ; 
+    // 10^6 lines per partition should be less than ~64 Mo  per partition before the predicate partitionning
     input.unpersist() ;
     res
   }
