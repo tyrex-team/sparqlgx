@@ -171,12 +171,13 @@ object Main {
     val reg = new Regex("\\s+.\\s*$") ;
     val conf = new SparkConf().setAppName("Simple Application");
     val sc = new SparkContext(conf);
-
+    
     var load_path : Option[String] = None ;
     var stat_path : Option[String] = None ;
     var fullstat_path : Option[String] = None ;
     var prefix_path : Option[String] = None ;
     var tripleFile = "" ;
+    var uniq = true ;
     var curArg = 0 ;
     while(curArg < args.length) {
       args(curArg) match {
@@ -205,6 +206,9 @@ object Main {
             throw new Exception("No file to store prefixes given!");
           prefix_path=Some(args(curArg+1)) ;
           curArg+=1 ;
+        case "--no-clean" =>
+          uniq = false ;
+          curArg+=1 ;
         case "--debug" =>
           debug = true ;
         case s =>
@@ -216,14 +220,16 @@ object Main {
     }
     
     if(debug) { println("Starting"); }
-    val input : RDD[(String,String,String)]= sc.textFile(tripleFile).map{ 
+    val dirty_input : RDD[(String,String,String)]= sc.textFile(tripleFile).map{ 
       line =>           
       val field:Array[String]=line.split("\\s+",3); 
       if(field.length!=3) {
         throw new RuntimeException("Invalid line: "+line);
       }
       (field(0),field(1),reg.replaceFirstIn(field(2),""))
-    }.distinct().persist() ;
+    } ;
+
+  val input = if(uniq) {dirty_input.distinct().persist() } else {dirty_input.persist()};
 
    val prefixed_input = (prefix_path match {
      case None => input
