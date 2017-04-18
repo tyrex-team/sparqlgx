@@ -113,7 +113,8 @@ object Main {
   }
   
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
-    val target = (2*input.count()) / stat_size ;
+    val nbLines = input.count() ;
+    val target = (2*nbLines) / stat_size ;
     val output = new BufferedWriter(new FileWriter(path)) ;
     val wc = input
       .flatMap{ case (s,p,o) => List(s,o) }
@@ -157,9 +158,10 @@ object Main {
         (prefixReplace(bc_prefix.value,s),
          prefixReplace(bc_prefix.value,p),
          prefixReplace(bc_prefix.value,o))
-    } ;
+    }.coalesce(max(10,nbLines / 4000000)).persist() ; 
+    //4 × 10^6 lines per partition should be less than ~256 Mo  per partition before the predicate partitionning
     input.unpersist() ;
-    res.persist()
+    res
   }
 
 
