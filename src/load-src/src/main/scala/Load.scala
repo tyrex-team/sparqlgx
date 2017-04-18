@@ -208,7 +208,6 @@ object Main {
           curArg+=1 ;
         case "--no-clean" =>
           uniq = false ;
-          curArg+=1 ;
         case "--debug" =>
           debug = true ;
         case s =>
