@@ -13,6 +13,8 @@ import scala.Tuple2;
 import scala.util.matching.Regex
 import java.io._
 
+
+
 class RDDMultipleTextOutputFormat extends MultipleTextOutputFormat[Any, Any] {
     override def generateActualKey(key: Any, value: Any): Any = 
           NullWritable.get()
@@ -114,6 +116,7 @@ object Main {
   
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
     val nbLines = input.count() ;
+    
     val target = (2*nbLines) / stat_size ;
     val output = new BufferedWriter(new FileWriter(path)) ;
     val wc = input
@@ -152,16 +155,46 @@ object Main {
     output.close()
    
     val bc_prefix=sc.broadcast(prefixS) ;
+    val nbExecutors = 48 ;
+    val sizePartitionMax = 1000000 ; 
+    def nbPartitions(n: Long) : Int = {
+      if(nbExecutors*sizePartitionMax*2 > n ) {
+        nbExecutors*2
+      }
+      else {
+       (n/sizePartitionMax).asInstanceOf[Int]
+      }
+    }
+    val nbPartitionsTotal : Int = nbPartitions(nbLines);
+
+    val partitionInterval = input
+      .map{ case (s,p,o) => (p,1) }
+      .reduceByKey(_+_)
+      .map{ case (p,n) => (prefixReplace(bc_prefix.value,p),nbPartitions(n)) }
+      .collect
+      .foldLeft( (0,Map[String,(Int,Int)]()) ) { 
+        case ((allocated,map),(p,n)) => 
+          ((allocated+n),(map+(prefixReplace(bc_prefix.value,p)->(allocated,n))))
+      }._2 ; 
     val res = input
       .map { 
       case (s,p,o) => 
         (prefixReplace(bc_prefix.value,s),
          prefixReplace(bc_prefix.value,p),
          prefixReplace(bc_prefix.value,o))
-    }.coalesce( (10L + (nbLines / 1000000L)).asInstanceOf[Int] ).persist() ; 
+    }
+      .map { case s => (s,null) }  
+      .partitionBy(new Partitioner {
+      def numPartitions: Int = nbPartitionsTotal
+      def getPartition(key: Any): Int = {
+        val keys = key.asInstanceOf[(String,String,String)] ;
+        val h = keys.hashCode() ;
+        var interval = partitionInterval(keys._2) ;
+        return (interval._1+Math.abs(h%interval._2))%nbPartitionsTotal ;
+      }
+      }).reduceByKey( (x,y) => x).map(_._1) ; 
     // 10^6 lines per partition should be less than ~64 Mo  per partition before the predicate partitionning
-    input.unpersist() ;
-    res
+    res.persist()
   }
 
 
@@ -230,7 +263,8 @@ object Main {
       (field(0),field(1),reg.replaceFirstIn(field(2),""))
     } ;
 
-  val input = if(uniq) {dirty_input.distinct().persist() } else {dirty_input.persist()};
+  val input = dirty_input ;
+//if(uniq) {dirty_input.distinct().persist() } else {dirty_input.persist()};
 
    val prefixed_input = (prefix_path match {
      case None => input
