@@ -212,7 +212,10 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
             let stat_res = combine stat tpcost.(id) in
             let plan_res = Join(plan,trad.(id)) in
             let cols_res = ListSet.inter cols tpcols.(id) in
-            dyn_star.(h) <- Some (cost_res,stat_res,plan_res,cols_res) ; cost_res,stat_res,plan_res,cols_res
+            dyn_star.(h) <- Some (cost_res,stat_res,plan_res,cols_res) ;
+            if sign_big_int (size_of_stat stat_res) = 0
+            then zero_big_int, stat_res, Empty, []
+            else cost_res,stat_res,plan_res,cols_res
     in
     match  
       List.sort (fun x y -> compare_big_int (size_of_stat tpcost.(x)) (size_of_stat tpcost.(y))) l 
