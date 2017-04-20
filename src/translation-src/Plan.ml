@@ -251,7 +251,9 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
        in
        if changed then
          let c,s,p = filter_broadcast(cur+1) others tps in
-         c,s,Broadcast(cur,combined_term,p)
+         match p with
+         | Empty -> zero_big_int,empty_stat (get_col (get_hash (a::tps)) (a::tps)),Empty
+         | p -> c,s,Broadcast(cur,combined_term,p)
        else
          filter_broadcast cur others (col_filter@tps)
                  
