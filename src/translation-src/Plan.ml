@@ -4,9 +4,9 @@ open Big_int
 
 let inf = max_int
 let cost_shuffle = big_int_of_int 4
-let cost_broadcast = big_int_of_int  4
+let cost_broadcast = big_int_of_int 60
 let cost_cartesian = big_int_of_int  10000
-let broadcast_threshold = big_int_of_int 30000
+let broadcast_threshold = big_int_of_int 300000
 
 let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) =
 
@@ -240,6 +240,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
                    else foo with_col (x::without_col) t
        in
        let col_filter,others = foo [] [] q in
+       let c2,s2,p2 = filter_broadcast cur others (col_filter@tps) in
        let combined_col_stat = List.fold_left (fun ac x -> combine tpcost.(x) ac) tpcost.(a) col_filter in
        let combined_term = List.fold_left (fun ac x -> Join(trad.(x),ac)) trad.(a) col_filter in
        
@@ -256,9 +257,10 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
          let c,s,p = filter_broadcast(cur+1) others tps in
          match p with
          | Empty -> zero_big_int,empty_stat (get_col (get_hash (a::tps)) (a::tps)),Empty
-         | p -> c,s,Broadcast(cur,combined_term,p)
+         | p ->
+            if c < c2 then c,s,Broadcast(cur,combined_term,p) else c2,s2,p2
        else
-         filter_broadcast cur others (col_filter@tps)
+         c2,s2,p2
                  
   in
   if large_tps <> []
