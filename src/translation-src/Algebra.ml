@@ -236,7 +236,7 @@ object Query {
                ^".leftOuterJoin("^code_b^mapkeys cols_b keys_b cols_join^")"
                ^".mapValues{case( ("^(join [] cols_a)^"), opt_b)=> opt_b match { case None => ("^(join [] cols_union_none)^") case Some( ("^join [] cols_b_bis^") ) => ("^join [] cols_union_some ^") }}",(List.map (fun s -> List.assoc s cols_int) cols_join),cols_union_some
              
-          | Join(a,b) ->
+          | Join(b,a) ->
              let code_a,keys_a,cols_a = foo a
              and code_b,keys_b,cols_b = foo b in
              let cols_join =  ListSet.inter cols_a cols_b in
