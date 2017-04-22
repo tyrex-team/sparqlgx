@@ -240,7 +240,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
                    else foo with_col (x::without_col) t
        in
        let col_filter,others = foo [] [] q in
-       let c2,s2,p2 = filter_broadcast cur others (col_filter@tps) in
+       let c2,s2,p2 = filter_broadcast cur others (a::col_filter@tps) in
        let combined_col_stat = List.fold_left (fun ac x -> combine tpcost.(x) ac) tpcost.(a) col_filter in
        let combined_term = List.fold_left (fun ac x -> Join(trad.(x),ac)) trad.(a) col_filter in
        
