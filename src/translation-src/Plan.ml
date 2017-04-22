@@ -244,6 +244,9 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
        let combined_col_stat = List.fold_left (fun ac x -> combine tpcost.(x) ac) tpcost.(a) col_filter in
        let combined_term = List.fold_left (fun ac x -> Join(trad.(x),ac)) trad.(a) col_filter in
        
+       let old_trad = Array.copy trad in
+       let old_tpcost = Array.copy tpcost in
+       
        let changed = 
          tps |>          
            List.filter (fun x -> List.mem col tpcols.(x)) |>
@@ -255,6 +258,10 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
        in
        if changed then
          let c,s,p = filter_broadcast(cur+1) others tps in
+         for i = 0 to Array.length tpcost -1 do
+           tpcost.(i) <- old_tpcost.(i) ;
+           trad.(i) <- old_trad.(i)
+         done ; 
          match p with
          | Empty -> zero_big_int,empty_stat (get_col (get_hash (a::tps)) (a::tps)),Empty
          | p ->
