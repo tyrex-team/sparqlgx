@@ -261,7 +261,10 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
          for i = 0 to Array.length tpcost -1 do
            tpcost.(i) <- old_tpcost.(i) ;
            trad.(i) <- old_trad.(i)
-         done ; 
+         done ;
+         for i = 0 to Array.length dyn_best -1 do
+           dyn_best.(i) <- None ;
+         done ;
          match p with
          | Empty -> zero_big_int,empty_stat (get_col (get_hash (a::tps)) (a::tps)),Empty
          | p ->
