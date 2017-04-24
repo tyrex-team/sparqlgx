@@ -6,7 +6,12 @@ let inf = max_int
 let cost_shuffle = big_int_of_int 4
 let cost_broadcast = big_int_of_int 60
 let cost_cartesian = big_int_of_int  10000
-let broadcast_threshold = big_int_of_int 300000
+let broadcast_threshold = big_int_of_int 1000000
+
+let stat_of_plan = Hashtbl.create 17
+                 
+let get_size p = try int_of_big_int (fst (Hashtbl.find stat_of_plan p)) with Not_found -> (-1)
+
 
 let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) =
 
@@ -108,6 +113,8 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
                  let c1,s1,p1 = get_best (get_hash ids) [] ids in
                  let c2,s2,p2 = get_best (get_hash ids_q) [] ids_q in
                  let s_res = combine s1 s2 in
+                 let p_res = Join(p1,p2) in
+                 Hashtbl.add stat_of_plan p_res s_res ;
                  [add_big_int (add_big_int c1 c2) (mult_big_int (size_of_stat s_res) cost_cartesian),s_res,Join(p1,p2),[]]
             in
             dyn_best.(hash) <- Some res ; res
@@ -161,6 +168,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     let cost_children = add_big_int ca cb in
     let cost_materialization = add_big_int cost_children cost_of_broadcast  in
     let cost_tot = add_big_int cost_materialization (size_of_stat stat) in
+    Hashtbl.add stat_of_plan (JoinWithBroadcast(pb,pa)) stat ;
     propose agg [] cost_tot stat (JoinWithBroadcast(pb,pa))
     
   and test_all_connected_split agg s_res (a,ha) (b,hb)= function
@@ -177,6 +185,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
               let c_res = add_big_int (add_big_int cb ca) (size_of_stat s_res) in
               let p_res = if lt_big_int size_a size_b then Join(pa,pb) else Join(pb,pa)
               in
+              Hashtbl.add stat_of_plan p_res s_res ;
               if sign_big_int (size_of_stat s_res) = 0
               then
                 [zero_big_int,empty_stat (get_col (ha+hb) (a@b)),Empty,[]],Some s_res
@@ -212,6 +221,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
             let stat_res = combine stat tpcost.(id) in
             let plan_res = Join(plan,trad.(id)) in
             let cols_res = ListSet.inter cols tpcols.(id) in
+            Hashtbl.add stat_of_plan plan_res stat_res ;
             dyn_star.(h) <- Some (cost_res,stat_res,plan_res,cols_res) ;
             if sign_big_int (size_of_stat stat_res) = 0
             then zero_big_int, stat_res, Empty, []
@@ -257,13 +267,14 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
                           ) false
        in
        if changed then
-         let c,s,p = filter_broadcast(cur+1) others tps in
+         let c,s,p = filter_broadcast (cur+1) others tps in
          for i = 0 to Array.length tpcost -1 do
            tpcost.(i) <- old_tpcost.(i) ;
            trad.(i) <- old_trad.(i)
          done ;
          for i = 0 to Array.length dyn_best -1 do
            dyn_best.(i) <- None ;
+           dyn_star.(i) <- None ;
          done ;
          match p with
          | Empty -> zero_big_int,empty_stat (get_col (get_hash (a::tps)) (a::tps)),Empty
