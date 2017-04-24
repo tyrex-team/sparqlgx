@@ -32,6 +32,10 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
 
      
   let dyn_col = Array.make size_p2 [] in 
+  let dyn_conn = Array.make size_p2 [] in
+  let dyn_best = Array.make size_p2 None in
+  let dyn_star = Array.make size_p2 None in
+
   let rec get_col h l =
     assert (h<size_p2) ;
     assert (h>=0) ;
@@ -45,7 +49,6 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     | v -> v
   in
 
-  let dyn_conn = Array.make size_p2 [] in
   let partition h l =
     (* 
        add takes a set (x) of columns, an id of a TP (whose columns
@@ -90,7 +93,6 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
 
   let size_of_stat (s:'a combstat) = match s with (a,_) -> a in
   
-  let dyn_best = Array.make size_p2 None in
   let rec get_best_no_keys hash l = match l with
     | [] -> failwith ("Empty list to optimized @ "^__LOC__)
     | [id] ->
@@ -205,7 +207,6 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
        let agg1,s_res = test_all_connected_split agg  s_res (x::a,ha+p2 x) (b,hb) t in
        test_all_connected_split agg1 s_res  (a,ha) (x::b,hb+p2 x) t
 
-  and dyn_star = Array.make size_p2 None 
   and plan_for_star l =
     let rec foo h = function
       | [] -> 
@@ -275,6 +276,8 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
          for i = 0 to Array.length dyn_best -1 do
            dyn_best.(i) <- None ;
            dyn_star.(i) <- None ;
+           dyn_conn.(i) <- [] ;
+           dyn_col.(i) <- [] ;
          done ;
          match p with
          | Empty -> zero_big_int,empty_stat (get_col (get_hash (a::tps)) (a::tps)),Empty
