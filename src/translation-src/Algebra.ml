@@ -67,6 +67,7 @@ object Query {
                    }
           }
       }
+      val start_date = java.lang.System.currentTimeMillis();
 "  in
 
   let footer = "
@@ -76,6 +77,8 @@ object Query {
     else {
        Qfinal.saveAsTextFile(args(1))
     }
+   var time_taken = (java.lang.System.currentTimeMillis() - start_date).toDouble /1000 ; 
+   println(\"Total time: \"+time_taken) ;
   }
 }
 " in
