@@ -268,21 +268,21 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
                           ) false
        in
        if changed then
-         let c,s,p = filter_broadcast (cur+1) others tps in
-         for i = 0 to Array.length tpcost -1 do
-           tpcost.(i) <- old_tpcost.(i) ;
-           trad.(i) <- old_trad.(i)
-         done ;
-         for i = 0 to Array.length dyn_best -1 do
-           dyn_best.(i) <- None ;
-           dyn_star.(i) <- None ;
-           dyn_conn.(i) <- [] ;
-           dyn_col.(i) <- [] ;
-         done ;
-         match p with
-         | Empty -> zero_big_int,empty_stat (get_col (get_hash (a::tps)) (a::tps)),Empty
-         | p ->
-            if lt_big_int c c2 then c,s,Broadcast(cur,combined_term,p) else c2,s2,p2
+         begin 
+           for i = 0 to size_p2 -1 do
+             dyn_best.(i) <- None ;
+             dyn_star.(i) <- None ;
+           done ;
+           let c,s,p = filter_broadcast (cur+1) others tps in
+           for i = 0 to Array.length tpcost -1 do
+             tpcost.(i) <- old_tpcost.(i) ;
+             trad.(i) <- old_trad.(i)
+           done ;
+           match p with
+           | Empty -> zero_big_int,empty_stat (get_col (get_hash (a::tps)) (a::tps)),Empty
+           | p ->
+              if lt_big_int c c2 then c,s,Broadcast(cur,combined_term,p) else c2,s2,p2
+         end
        else
          c2,s2,p2
                  
