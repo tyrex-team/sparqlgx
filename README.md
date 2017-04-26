@@ -20,7 +20,7 @@ to (1) the storage method used and (2) statistics on data. Using a
 simple design, SPARQLGX already represents an interesting alternative
 in several scenarios.
 
-__Version:__ 1.0 (A change log is available in ``CHANGES``.)
+__Version:__ 1.1 (A change log is available in ``CHANGES``.)
 
 Related Publications
 --------------------
