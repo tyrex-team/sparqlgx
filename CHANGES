@@ -8,8 +8,10 @@ official version.
 
 A list of versions is available with: ``git tag -l -n1``.
 
+
 v1.1
-(Work In Progress.)
+Wed Apr 26 14:14:49 2017 +0200
+commit hash 25a317598e8bb5124e794454b624cf035fabe3a2
    - Faster load routine which widely improves this phase perfomances
      by reading once the initial triple file and by partitioning data
      in the same time into the correct predicate files.
