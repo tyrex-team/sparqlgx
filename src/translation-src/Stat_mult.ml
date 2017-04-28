@@ -12,7 +12,7 @@ let count (tbl,nbDef,nbPerDef,totalDef) (v:'a) =
   with Not_found -> nbPerDef
     
 
-
+(* Add a parameter to introduce a maximal multiplier!*)
 
 let build_tree_mul mul =
   let rec foo nbBefore totBefore mul = match mul with
@@ -50,7 +50,13 @@ let compute_mul (t1,s1) (t2,s2) =
   
   let compute_mul_col s1 s2 =
     let (tbl2,nbDef2,nbPerDef2,totalDef2) = s2 in
-    let t1_special = t1 in (* we should minus common with t2*)
+    let (tbl1,nbDef1,nbPerDef1,totalDef1) = s1 in
+    let total_common = Hashtbl.fold (fun v n ac ->
+                           add_big_int ac
+                                          (count (tbl1,zero_big_int,zero_big_int,zero_big_int) v)
+                         ) tbl2 zero_big_int in
+    let t1_special = min_big_int t1 total_common in
+    (* we should minus common with t2*)
     Hashtbl.fold (fun v n ac -> (n,count s1 v)::ac) tbl2 [(nbPerDef2,t1_special)] |>
       List.sort (fun (a,x) (b,y) -> compare_big_int b a)  |>
       simplify_mul 
