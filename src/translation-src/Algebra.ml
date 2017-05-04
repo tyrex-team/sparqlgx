@@ -1,4 +1,5 @@
 open Sparql ;;
+open Yojson ;;
 
 type algebra =
   | Readfile3 
@@ -47,7 +48,7 @@ object Query {
        throw new Exception(\"We need the path of the queried data!\")
      }
      def readpred (s:String) = 
-        if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(args(0)+\"/\"+s))) {
+                if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(args(0)+\"/\"+s))) {
            sc.textFile(args(0)+\"/\"+s).map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}
         }
         else {
@@ -354,3 +355,40 @@ object Query {
   List.iter print_string (List.rev (!lines)) 
 ;;
   
+let print_json a =
+  let list_instr = ref [] in
+  let add x = list_instr := x::!list_instr in
+  let cur_id = ref (-1) in
+  let id () = incr cur_id ; !cur_id in
+  let rec foo cols x =
+    let id = id() in
+    let jid =  "id",`Int id in
+    let op c = "op",`String c in
+    let assoc v l =
+      try
+        List.assoc v l
+      with
+        Not_found -> v
+    in
+
+    let op c args = add (`Assoc  ["op",`String c; jid; "arg",`Assoc args]) ; id in
+    
+    match x with
+     | Readfile3 ->
+        op "ALL" []
+     | Readfile2(f) ->
+        op "PRED"  ["col_subject",`String (assoc  "s" cols); "col_object",`String (assoc  "o" cols) ]
+     | Filter(c,v,a) ->
+        op "FILTER"  ["col",`String (assoc c cols); "value",`String (String.sub v 1 (String.length v-2)) ; "id",`Int (foo cols a) ]
+     | Keep(l,a) ->
+        op "SELECT"  ["cols",`List (List.map (fun c -> `String (assoc c cols)) l) ; "id",`Int (foo cols a) ]
+     | Join(a,b) ->
+        op "JOIN" ["id1",`Int (foo cols a) ;  "id2",`Int (foo cols b)]
+     | Rename(a,b,c) ->
+        foo ((a,b)::cols) c
+       
+        
+     | _ -> failwith ("error @"^__LOC__)
+  in
+  foo [] a ;
+  print_string (Yojson.Basic.to_string (`List (List.rev !list_instr))) 

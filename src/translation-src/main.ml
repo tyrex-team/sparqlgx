@@ -26,6 +26,7 @@ let file = ref ""
 let vertical = ref true
 let optim = ref 1
 let debug = ref false
+let plan = ref false 
 
 let rec parse_arg = function
   | [] -> ()
@@ -36,6 +37,7 @@ let rec parse_arg = function
   | "--fullstat"::s::q
     | "--full-stat"::s::q-> Reorder.load_full_stat s ; optim:=3 ; parse_arg q
   | "--prefix"::s::q -> Prefix.load s ; parse_arg q
+  | "--plan"::q -> plan:=true ; parse_arg q
   | f::q ->
      if !file = ""
      then file := f
@@ -59,7 +61,11 @@ let _ =
       print_query distinguished modifiers (!optim) translated ;
       print_string "\nObtained Scala Code is:\n-----------------------\n" ;
      end ;
-    print_algebra translated
+    if !plan
+    then
+      print_json translated
+    else
+      print_algebra translated
   with
   | Lexer.Lexing_error s ->
      print_string ("lexical error: "^s);

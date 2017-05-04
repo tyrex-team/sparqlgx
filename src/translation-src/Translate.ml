@@ -38,18 +38,19 @@ let rec print_query distinguished modifiers optim stmt =
 
     let rec foo  ps t =
       let s = "  "^ps in
+      let size = string_of_int (Plan.get_size t) in
       match t with 
       | Union(a,b) ->
-         "\n"^ps^"{"^foo s a^"}\n"^ps^"UNION"^ps^"\n"^ps^"{"^foo s b^"}"
+         "\n"^ps^"{"^foo s a^"}\n"^ps^"UNION"^ps^"\n"^ps^"{"^foo s b^"}"^" //"^size
       | Join (a,b) ->
-         "\n"^ps^"{"^foo s a^foo s b^"\n"^ps^"}"
+         "\n"^ps^"{"^foo s a^foo s b^"\n"^ps^"}"^" //"^size
       | JoinWithBroadcast (a,b) ->
-         "\n"^ps^"{"^foo s a^foo s b^"\n"^ps^"}"
+         "\n"^ps^"{"^foo s a^foo s b^"\n"^ps^"}"^" //"^size
       | LeftJoin(a,b) ->
-         "\n"^ps^"{"^foo s a^"\n"^ps^"} OPTIONAL {"^foo s b^"\n"^ps^"}"
+         "\n"^ps^"{"^foo s a^"\n"^ps^"} OPTIONAL {"^foo s b^"\n"^ps^"}"^" //"^size
       | Keep(_,l) ->
          let tp = get_tp l in
-         "\n"^ps^(List.assoc "s" tp)^" "^(List.assoc "p" tp)^" "^(List.assoc "o" tp)^" ."
+         "\n"^ps^(List.assoc "s" tp)^" "^(List.assoc "p" tp)^" "^(List.assoc "o" tp)^" ."^" //"^size
       | Rename(c,v,t) -> foo ps (Keep([],(Rename (c,v,t))))
       | Distinct a | Order (_,a) -> foo ps a
                                   

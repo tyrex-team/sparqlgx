@@ -14,3 +14,4 @@ type algebra =
   | Order of (string*bool)  list*algebra
   | Empty                                  
 val print_algebra : algebra -> unit
+val print_json : algebra -> unit

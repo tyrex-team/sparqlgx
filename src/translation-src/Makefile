@@ -1,16 +1,16 @@
 MLI=
 CMX=ListSet.cmx Prefix.cmx Sparql.cmx Stat_mult.cmx Stat_combine.cmx Parser.cmx Lexer.cmx Algebra.cmx Plan.cmx Reorder.cmx Translate.cmx main.cmx
 #CMO=struct.cmo parser.cmo cost.cmo toScalaListSet.cmo toScalaOneFile.cmo toScalaVertical.cmo
-CMXA=ListSet.cmxa  Prefix.cmxa Sparql.cmxa Stat_mult.cmxa Stat_combine.cmxa Parser.cmxa Lexer.cmxa Algebra.cmxa Plan.cmxa Reorder.cmxa Translate.cmxa main.cmxa
-CMO=ListSet.cmo  Prefix.cmo Sparql.cmo Stat_mult.cmo Stat_combine.cmo Parser.cmo Lexer.cmo Algebra.cmo Plan.cmo Reorder.cmo Translate.cmo main.cmo
+CMXA= ListSet.cmxa  Prefix.cmxa Sparql.cmxa Stat_mult.cmxa Stat_combine.cmxa Parser.cmxa Lexer.cmxa Algebra.cmxa Plan.cmxa Reorder.cmxa Translate.cmxa main.cmxa
+CMO=ListSet.cmo  Prefix.cmo Sparql.cmo Stat_mult.cmo Stat_combine.cmo Parser.cmo Lexer.cmo Algebra.cmo Plan.cmo Reorder.cmo Translate.cmo main.cmo 
 #str.cmxa
 CMI=
 GENERATED=Parser.ml Lexer.ml Parser.mli
 #GENERATED=
-FLAGS= -annot nums.cmxa -cclib -lnums
-FLAGS_DEBUG= -p nums.a nums.cma -cclib -lnums
-OCAMLC=ocamlc
-OCAMLOPT=ocamlopt
+FLAGS= -annot nums.cmxa -cclib -lnums -package yojson  -linkpkg
+FLAGS_DEBUG= -p nums.a nums.cma -cclib -lnums 
+OCAMLC=ocamlfind ocamlc
+OCAMLOPT=ocamlfind ocamlopt
 
 all: depend sparql2scala
 
