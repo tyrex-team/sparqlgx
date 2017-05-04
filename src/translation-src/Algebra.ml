@@ -16,7 +16,15 @@ type algebra =
   | Distinct of algebra
   | Order of (string*bool) list*algebra
   | Empty
-           
+  
+(* Numero hashes predicate names; in Vertical partionning the
+   (subject,object) associated with pred are stored in (numero
+  pred)^".pred "*)
+  let numero(s:string):string=
+     String.map (fun c -> if (c <'a' || c>'z') && (c<'0' || c>'9') then '_' else c) (String.lowercase s)
+
+
+  
 let rec print_algebra term = 
   
   let gid = 
@@ -131,12 +139,6 @@ object Query {
     List.map (fun t -> if List.mem t l2 then "bis_"^(escape_var t) else t) l1
   in
 
-  (* Numero hashes predicate names; in Vertical partionning the
-  (subject,object) associated with pred are stored in (numero
-  pred)^".pred "*)
-  let numero(s:string):string=
-     String.map (fun c -> if (c <'a' || c>'z') && (c<'0' || c>'9') then '_' else c) (String.lowercase s)
-  in
   
   (*foo term returns (id,cols) where "V"id is the variable associated
   with term and cols is the list of columns of term (in the order they
@@ -377,7 +379,7 @@ let print_json a =
      | Readfile3 ->
         op "ALL" []
      | Readfile2(f) ->
-        op "PRED"  ["col_subject",`String (assoc  "s" cols); "col_object",`String (assoc  "o" cols) ]
+        op "PRED"  ["filename",`String ("p"^numero f);"col_subject",`String (assoc  "s" cols); "col_object",`String (assoc  "o" cols) ]
      | Filter(c,v,a) ->
         op "FILTER"  ["col",`String (assoc c cols); "value",`String (String.sub v 1 (String.length v-2)) ; "id",`Int (foo cols a) ]
      | Keep(l,a) ->
