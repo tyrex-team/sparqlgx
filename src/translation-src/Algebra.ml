@@ -392,5 +392,5 @@ let print_json a =
         
      | _ -> failwith ("error @"^__LOC__)
   in
-  foo [] a ;
-  print_string (Yojson.Basic.to_string (`List (List.rev !list_instr))) 
+  let final = foo [] a in
+  print_string (Yojson.Basic.to_string (`Assoc ["commands",`List (List.rev !list_instr); "result_id",`Int final]))
