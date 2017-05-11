@@ -13,7 +13,7 @@
 %token <string> IDENT
 %token EOF
 %token PREFIX
-%token LEFTPAR RIGHTPAR LEFTPROG RIGHTPROG LEFTBRACKET RIGHTBRACKET
+%token LEFTPAR RIGHTPAR LEFTPROG RIGHTPROG LEFTBRACKET RIGHTBRACKET QUOTE
 %token SELECT WHERE UNION OPTIONAL
 %token POINT COMMA COLON JOKER
 %token DISTINCT ORDER BY ASC DESC
@@ -72,6 +72,8 @@ ident_or_var:
    { Exact(Prefix.prefixize (replace_prefix pref v)) }
 | LEFTPROG s = ident RIGHTPROG
    { Exact(Prefix.prefixize ("<"^(s)^">")) }
+| QUOTE s = ident QUOTE
+   { Exact(s) }
 ;  
 
 toplevel:

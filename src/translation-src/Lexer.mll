@@ -21,6 +21,7 @@
 }
 
 let alphanum = ['a'-'z' 'A'-'Z' '0'-'9' '_' '/' '-' '#' '~']['a'-'z' 'A'-'Z' '0'-'9' '_' '/' '-' '#' '~' '.' ]*
+let litt = ['"']['a'-'z' 'A'-'Z' '0'-'9' '_' '/' '-' '#' '~']['a'-'z' 'A'-'Z' '0'-'9' '_' '/' '-' '#' '~' '.' ]*['"']
 let var = ['?' '$']['a'-'z' 'A'-'Z' '0'-'9' '_']*
 let space = ' ' | '\t'
 		    
@@ -31,6 +32,7 @@ rule next_token = parse
       { next_token lexbuf }
   | var as s { VAR(s) }
   | alphanum as id { id_or_kwd id }
+  | '"' { QUOTE }
   | '{'     { LEFTBRACKET }
   | '}'     { RIGHTBRACKET }
   | '('     { LEFTPAR }
