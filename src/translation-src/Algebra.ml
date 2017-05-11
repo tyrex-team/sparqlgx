@@ -377,7 +377,7 @@ let print_json a =
     
     match x with
      | Readfile3 ->
-        op "ALL" []
+        op "ALL" ["cols",`List (List.map (fun x-> `String (assoc x cols)) ["s";"p";"o"]) ]
      | Readfile2(f) ->
         op "PRED"  ["filename",`String ("p"^numero f);"col_subject",`String (assoc  "s" cols); "col_object",`String (assoc  "o" cols) ]
      | Filter(c,v,a) ->
