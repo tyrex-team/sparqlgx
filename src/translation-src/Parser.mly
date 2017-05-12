@@ -73,7 +73,7 @@ ident_or_var:
 | LEFTPROG s = ident RIGHTPROG
    { Exact(Prefix.prefixize ("<"^(s)^">")) }
 | QUOTE s = ident QUOTE
-   { Exact(s) }
+   { Exact("\\\""^s^"\\\"") }
 ;  
 
 toplevel:
