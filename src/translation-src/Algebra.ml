@@ -259,24 +259,25 @@ object Query {
 
           | JoinWithBroadcast(b,a) ->
              let code_a,keys_a,cols_a = foo a
+             and nokey_a = code_a^mapkeys cols_a keys_a [] in
              and code_b,keys_b,cols_b = foo b in
              let cols_join = ListSet.inter cols_a cols_b in
              let cols_union = ListSet.union cols_b cols_a in
              let cols_a_spec  = ListSet.minus cols_a cols_join in
              if cols_join = []
               then
-               "val "^res^"="^code_a^mapkeys cols_a keys_a []^".cartesian("^code_b^mapkeys cols_b keys_b []^").map{case (("^join [] cols_a^"),("^join [] cols_b^")) => ("^join [] cols_union^")}",[],cols_union
+               "val "^res^"="^nokey_a^".cartesian("^code_b^mapkeys cols_b keys_b []^").map{case (("^join [] cols_a^"),("^join [] cols_b^")) => ("^join [] cols_union^")}",[],cols_union
              else
                if cols_a_spec = []
                then
-                 let broadcast_a = "val broadcast_"^code_a^"=sc.broadcast("^code_a^".collect().toSet)\n" in
+                 let broadcast_a = "val broadcast_"^code_a^"=sc.broadcast("^nokey_a^".collect().toSet)\n" in
                  broadcast_a^
                    "val "^res^"="^code_b^".filter{ case ("^join keys_b cols_b^") => broadcast_"^code_a^".value("^join [] cols_join^")}", keys_b,cols_union
                  
                else
                  let set_a = "collection.mutable.Set["^typeof cols_a_spec^"]" in
                  let mmap_a = "val mmap_"^code_a^" = new collection.mutable.HashMap["^typeof cols_join^", "^set_a^"]() with collection.mutable.MultiMap[String, ("^typeof cols_a_spec^")]\n" in
-                 let add_mmap_a = code_a^".collect().foreach { case ("^join keys_a cols_a^") => mmap_"^code_a^".addBinding( ("^join [] cols_join^"),("^join [] cols_a_spec^"))}\n" in
+                 let add_mmap_a = nokey_a^".collect().foreach { case ("^join [] cols_a^") => mmap_"^code_a^".addBinding( ("^join [] cols_join^"),("^join [] cols_a_spec^"))}\n" in
                  let isValues = if keys_b <> [] then "Values" else "" in
                  let broadcast_a = "val broadcast_"^code_a^"=sc.broadcast(mmap_"^code_a^")\n" in
                  mmap_a^add_mmap_a^broadcast_a^
