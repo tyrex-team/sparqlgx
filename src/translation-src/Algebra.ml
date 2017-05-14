@@ -258,8 +258,8 @@ object Query {
                 ^".mapValues{case( ("^(join [] cols_a)^"),("^(join [] cols_b_bis)^"))=>("^(join [] cols_union)^")}",(List.map (fun s -> List.assoc s cols_int) cols_join),cols_union
 
           | JoinWithBroadcast(b,a) ->
-             let code_a,keys_a,cols_a = foo a
-             and nokey_a = code_a^mapkeys cols_a keys_a [] 
+             let code_a,keys_a,cols_a = foo a in
+             let nokey_a = code_a^mapkeys cols_a keys_a [] 
              and code_b,keys_b,cols_b = foo b in
              let cols_join = ListSet.inter cols_a cols_b in
              let cols_union = ListSet.union cols_b cols_a in
