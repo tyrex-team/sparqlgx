@@ -58,7 +58,7 @@ else
 fi;
 
 if [[ $stat == "1" ]] && [[ -f $localpath/$dbName/stat.txt ]] ;
-then stat="--stat $localpath/stat.txt";
+then stat="--stat $localpath/$dbName/stat.txt";
 else
     if [[ $stat == "2" ]] && [[ -f $localpath/$dbName/statfull.txt ]] ;
     then stat="--fullstat $localpath/$dbName/statfull.txt";
