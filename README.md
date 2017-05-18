@@ -20,7 +20,7 @@ to (1) the storage method used and (2) statistics on data. Using a
 simple design, SPARQLGX already represents an interesting alternative
 in several scenarios.
 
-__Version:__ 1.0
+__Version:__ 1.1 (A change log is available in ``CHANGES``.)
 
 Related Publications
 --------------------
@@ -34,7 +34,14 @@ Related Publications
 - Damien Graux, Louis Jachiet, Pierre Genev&egrave;s, Nabil
   Laya&iuml;da. __SPARQLGX in action: Efficient Distributed Evaluation
   of SPARQL with Apache Spark__. _The 15th International Semantic Web
-  Conference, Oct 2016, Kobe, Japan_.
+  Conference, Oct 2016, Kobe,
+  Japan_. [link](https://hal.inria.fr/hal-01358125)
+
+- Damien Graux, Louis Jachiet, Pierre Genev&egrave;s, Nabil
+  Laya&iuml;da. __SPARQLGX : Une Solution Distribuée pour RDF
+  Traduisant SPARQL vers Spark__. _32ème Conférence sur la Gestion de
+  Données - Principes, Technologies et Applications, Nov 2016,
+  Poitiers, France_. [link](https://hal.inria.fr/hal-01412035)
 
 Requirements
 ------------
@@ -87,7 +94,7 @@ Firstly, clone this repository. Secondly, check that all the needed
 commands are available on your (main) machine and that your HDFS is
 correctly configured. Thirdly, compile the whole project. Fourthly,
 you can modify the parameters listed in the configuration file (in
-conf/) according to your own cluster.
+`conf/`) according to your own cluster.
 
     git clone github.com/tyrex-team/sparqlgx.git
     cd sparqlgx/ ;
@@ -99,7 +106,7 @@ conf/) according to your own cluster.
 SPARQLGX can only load RDF data written according to the [N-Triples
 format](https://www.w3.org/TR/n-triples/); however, as many datasets
 come in other standards (e.g. RDF/XML...) we also provide a .jar file
-(rdf2rdf in bin/) from an external developer able to translate RDF
+(rdf2rdf in `bin/`) from an external developer able to translate RDF
 data from a standard to an other one.
 
 Before, loading an RDF triple file, you have to copy it directly on
@@ -187,4 +194,4 @@ Louis Jachiet
 Pierre Genev&egrave;s  
 Nabil Laya&iuml;da  
 
-[Tyrex Team](http://tyrex.inria.fr), Inria (France), 2016
+[Tyrex Team](http://tyrex.inria.fr), Inria (France), 2017

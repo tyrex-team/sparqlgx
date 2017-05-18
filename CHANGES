@@ -1,0 +1,37 @@
+                ===============================
+                ===   SPARQLGX CHANGE LOG   ===
+                ===============================
+
+This file lists the various versions of SPARQLGX with their dates,
+their commit hashes and their main new features from the previous
+official version.
+
+A list of versions is available with: ``git tag -l -n1``.
+
+
+v1.1
+Wed Apr 26 14:14:49 2017 +0200
+commit hash 25a317598e8bb5124e794454b624cf035fabe3a2
+   - Faster load routine which widely improves this phase perfomances
+     by reading once the initial triple file and by partitioning data
+     in the same time into the correct predicate files.
+   - Improving the generated Scala-code of the translation process
+     with mapValues. This technic allows not to break the partitioning
+     of KeyValueRDD while applying transformations to the values
+     instead of the traditional map that was done prior.
+   - Merging and cleaning several scripts in bin/ such as for example
+     sgx-eval.sh and sde-eval.sh
+   - Improving the compilation process of compile.sh
+   - Cleaner test scripts in tests/
+   - Offering the possibility of an easier deployment using Docker.
+
+v1.0
+Mon Oct 10 09:34:30 2016 +0200
+commit hash 1a3497958e0b6729255622f0e3d0969e1252f69d
+   - First Version of SPARQLGX which corresponds to the work presented
+     at ISWC2016 (Kobe, Japan) and BDA2016 (Poitiers, France). For
+     more information, see the related publications. In a nutshell,
+     SPARQLGX allows to load RDF dataset and evaluate SPARQL queries
+     using Apache Spark. Basically, it uses the vertical partitioning
+     approach to store the data and translates the queries into
+     Spark-compliant Scala-code.
