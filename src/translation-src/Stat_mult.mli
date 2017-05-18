@@ -7,3 +7,4 @@ val compute_mul :
   ('a * (('b, Big_int.big_int) Hashtbl.t * 'e * Big_int.big_int * 'f)) list ->
   tree_mul
 val mult : tree_mul -> bi -> bi
+val total : tree_mul -> bi -> bi -> bi

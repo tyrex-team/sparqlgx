@@ -69,19 +69,17 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
         let n_res = 
           try
             let n2 = Hashtbl.find tbl2 v in
-            min_big_int (min_big_int (Stat_mult.mult mul_12 n1) (Stat_mult.mult mul_21 n2)) (mult_big_int n1 n2)
+            min_big_int (Stat_mult.total mul_12 n1 n2) (Stat_mult.total mul_21 n2 n1)
           with
-            Not_found -> min_big_int (mult_big_int n1 nbPerDef2) (Stat_mult.mult mul_12 n1)
+            Not_found -> Stat_mult.total  mul_12 n1 nbPerDef2
         in
         if sign_big_int n_res = 1 then resadd res v n_res) tbl1 ;
     Hashtbl.iter (fun v n2 ->
 	if not (Hashtbl.mem res v) then
-          let n_res =
-            min_big_int (Stat_mult.mult mul_21 n2) (mult_big_int n2 nbPerDef1)
-          in
+          let n_res = Stat_mult.total mul_21 n2 nbPerDef1 in
           if sign_big_int n_res = 1 then resadd res v n_res) tbl2 ;
-    let nbDefRes = min_big_int (Stat_mult.mult mul_12 nbDef1) (Stat_mult.mult mul_21 nbDef2) in
-    let totalDefRes = min_big_int (Stat_mult.mult mul_12 totalDef1) (Stat_mult.mult mul_21 totalDef2) in
+    let nbDefRes = min_big_int  nbDef1 nbDef2 in
+    let totalDefRes = min_big_int (Stat_mult.total mul_12 totalDef1 nbPerDef2) (Stat_mult.total mul_21 totalDef2 nbPerDef1) in
 
     (res,min_big_int nbDefRes new_max,min_big_int new_max (mult_big_int nbPerDef1 nbPerDef2),min_big_int new_max totalDefRes)
   in
