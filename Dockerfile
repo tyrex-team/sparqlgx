@@ -52,7 +52,7 @@ USER sparqlgx
 # Install Menhir
 RUN opam init -a && \
     echo ". /opt/sparqlgx/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true" > ~/.bashrc && \
-    opam install -y menhir
+    opam install -y menhir yojson
 
 # Ensure that bash is the default shell
 ENV SHELL=/bin/bash
