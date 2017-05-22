@@ -93,12 +93,10 @@ object Query {
 " in
   
   let escape_var a =
-    if a.[0] = '?'
-    then let b = Bytes.copy a in (Bytes.set b 0 'v' ; b)
-    else
-      if a.[0] = '$'
-      then let b = Bytes.copy a in (Bytes.set b 0 'd' ; b)
-      else a
+    let b = Bytes.escaped a in
+    if a.[0] = '?' then Bytes.set b 0 'v' ;
+    if a.[0] = '$' then Bytes.set b 0 'd' ;
+    b         
   in
 
   let rec join keys cols =
