@@ -37,7 +37,8 @@ let rec parse_arg = function
   | "--fullstat"::s::q
     | "--full-stat"::s::q-> Reorder.load_full_stat s ; optim:=3 ; parse_arg q
   | "--prefix"::s::q -> Prefix.load s ; parse_arg q
-  | "--plan"::q -> plan:=true ; parse_arg q
+  | "--plan"::q
+    | "--json"::q-> plan:=true ; parse_arg q
   | f::q ->
      if !file = ""
      then file := f
@@ -63,9 +64,9 @@ let _ =
      end ;
     if !plan
     then
-      print_json translated
+      JsonOutput.print translated
     else
-      print_algebra translated
+      ScalaOutput.print translated
   with
   | Lexer.Lexing_error s ->
      print_string ("lexical error: "^s);
