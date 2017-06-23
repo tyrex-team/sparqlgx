@@ -103,7 +103,7 @@ let rec print_query distinguished modifiers optim stmt =
 let translate distinguished modifiers vertical optim stmt =
   
   let translate_el (base,cols) = function
-    | Exact(v),name -> (Filter(name,"\""^v^"\"",base),cols)
+    | Exact(v),name -> (Filter(name,v,base),cols)
     | Variable(v),name ->
        if List.mem v cols
        then Filter(name,v,base),cols

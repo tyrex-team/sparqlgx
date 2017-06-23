@@ -190,7 +190,7 @@ object Query {
                
           | Filter(c,v,a) ->
              let code,keys,cols = foo a in
-             "val "^res^"="^code^".filter{case ("^(join keys cols)^") => "^(escape_var c)^".equals("^(escape_var v)^")}",keys,cols
+             "val "^res^"="^code^".filter{case ("^(join keys cols)^") => "^(escape_var c)^".equals(\""^(escape_var v)^"\")}",keys,cols
                                                                                                                   
           | Keep (keepcols,a) ->
              let code,keys,cols = foo a in
