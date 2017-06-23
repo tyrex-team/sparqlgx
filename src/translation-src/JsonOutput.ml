@@ -35,11 +35,13 @@ let print a =
         op "LEFTJOIN" ["id_base",`Int (foo cols a) ;  "id_extend",`Int (foo cols b)]
      | JoinWithBroadcast(b,a) ->
         let varname = `String ("join_"^(string_of_int (get_id ()))) in
-        let _ = op "BROADCAST" ["id",`Int (foo cols a) ;  "var",varname] in
+        let _ = op "BROADCAST" ["vardef",`Int (foo cols a) ;  "varname",varname] in
         op "MAP_BC" ["id",`Int (foo cols b) ;  "var",varname]
      | Broadcast(i,a,b) ->
         let varname = `String ( "i_"^string_of_int i) in
-        op "BROADCAST" ["id",`Int (foo cols a) ;  "var",varname] ;
+        let def = foo cols a in
+        let _ = op "BROADCAST" ["vardef",`Int def ;  "varname",varname] in
+        foo cols b
 
      | FilterWithBroadcast(a,i,_) ->
         let varname = `String ("i_"^string_of_int i) in
