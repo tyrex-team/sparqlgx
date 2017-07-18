@@ -120,7 +120,7 @@ object Main {
       var beg = 0 ;
       var end = dict.size ;
 
-      // this dichotomy will find the last beg such that dict(beg) < word. 
+      // this dichotomy will find the last beg such that dict(beg) ≤ word. 
       while(end > beg+1) {
         val mid = (end+beg)/2 ;
         if(dict(mid) > word) {
@@ -131,8 +131,8 @@ object Main {
           }
       }
       val length = dict(beg).length + step ;
-      (word.substring(0,length),1)
-      }.reduceByKey(_+_).filter{ case (key,count) => count>target }.map(_._1).collect()
+      (word.substring(0,Math.min(word.length()-1,length)),1)
+      }.reduceByKey(_+_).filter{ case (key,count) => (count>target) || (curSize==0) }.map(_._1).collect()
   }
   
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
@@ -157,7 +157,7 @@ object Main {
     }
 
 
-    val prefixS = lastDict.sortWith( (p1,p2) => p1.length > p2.length ) ;
+    val prefixS = lastDict.sortWith( (p1,p2) => p1.length < p2.length ) ;
 
     for( id <- 0 to prefixS.length-1 ) {
       output.write(BigInt(id).toString(36)+" "+prefixS(id)+"\n") 
