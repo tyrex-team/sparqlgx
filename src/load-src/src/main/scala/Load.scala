@@ -115,6 +115,7 @@ object Main {
           beg = mid ;
           }
       }
+//    println(dict(beg)+" for "+word);
     return beg ;
   }
 
@@ -134,7 +135,11 @@ object Main {
   def countPrefix( input:RDD[String], step:Int, target:Long, dict:IndexedSeq[String] ) : Array[String] = {
     return input.map{ word => 
       val length = dict(prefixSearch(dict,word)).length + step ;
-      (word.substring(0,Math.min(word.length(),length)),1)
+      if(length>word.length) {
+        ("",1)
+      } else {
+        (word.substring(0,length),1)
+      }
       }.reduceByKey(_+_).filter{ case (key,count) => (count>target) || (step==0 && count>1) }.map(_._1).collect()
   }
   
@@ -157,6 +162,7 @@ object Main {
       val curS = curSize ;
       lastDict = countPrefix(wc,curS, target, dict) ;
       curDict = (curDict ++lastDict).sortWith(_<_) ;
+//      println(curSize.toString)
     }
 
 
