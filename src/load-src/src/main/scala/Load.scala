@@ -154,7 +154,8 @@ object Main {
     while (curSize > 0) {
       curSize /= 2 ;
       val dict : scala.collection.immutable.IndexedSeq[String] = curDict.toIndexedSeq ;
-      lastDict = countPrefix(wc,curSize, target, dict) ;
+      val curS = curSize ;
+      lastDict = countPrefix(wc,curS, target, dict) ;
       curDict = (curDict ++lastDict).sortWith(_<_) ;
     }
 
