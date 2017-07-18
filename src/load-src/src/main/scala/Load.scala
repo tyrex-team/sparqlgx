@@ -115,10 +115,10 @@ object Main {
   }
   
 
-  def countPrefix( input:RDD[(String,Int)], step:Int, target:Int, dict:List[String] ) : List[String] {
-    input.map{ word => 
+  def countPrefix( input:RDD[String], step:Int, target:Long, dict:IndexedSeq[String] ) : Array[String] = {
+    return input.map{ word => 
       var beg = 0 ;
-      var end = dict.size() ;
+      var end = dict.size ;
 
       // this dichotomy will find the last beg such that dict(beg) < word. 
       while(end > beg+1) {
@@ -130,9 +130,9 @@ object Main {
           beg = mid ;
           }
       }
-      val length = dict(beg).length + curS ;
-      word.substring(0,length),1
-    }.reduceByKey(_+_).filter( (key,count) => count>target).collect()
+      val length = dict(beg).length + step ;
+      (word.substring(0,length),1)
+      }.reduceByKey(_+_).filter{ case (key,count) => count>target }.map(_._1).collect()
   }
   
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
@@ -143,16 +143,16 @@ object Main {
     val wc = input
       .flatMap{ case (s,p,o) => List(s,o) }
       .filter{ case s => s.charAt(0) == '<' && s.charAt(s.length()-1) == '>'}
-      .map{ case s => (s.substring(1,s.length()-1),1)}
+      .map{ case s => s.substring(1,s.length()-1)}
 
     var curSize = 64 ;
-    var curDict = scala.collection.mutable.ArrayBuffer("") ;
+    var curDict = Array("") ;
     var lastDict = curDict ; 
     while (curSize > 0) {
       curSize /= 2 ;
-      val dict = List(curDict) ;
+      val dict : scala.collection.immutable.IndexedSeq[String] = curDict.toIndexedSeq ;
       lastDict = countPrefix(wc,curSize, target, dict) ;
-      curDict.appendAll(lastDict) ;
+      curDict ++= lastDict ;
       curDict.sortWith(_<_) ;
     }
 
