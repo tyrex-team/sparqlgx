@@ -115,7 +115,7 @@ object Main {
           }
       }
     while(!word.startsWith(dict(beg))) {
-        beg --;
+        beg = beg - 1 ;
       }
 //    println(dict(beg)+" for "+word);
     return beg ;
