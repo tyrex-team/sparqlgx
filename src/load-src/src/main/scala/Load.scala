@@ -132,7 +132,7 @@ object Main {
       }
       val length = dict(beg).length + step ;
       (word.substring(0,Math.min(word.length(),length)),1)
-      }.reduceByKey(_+_).filter{ case (key,count) => (count>target) || (step==0) }.map(_._1).collect()
+      }.reduceByKey(_+_).filter{ case (key,count) => (count>target) || (step==0 && count>1) }.map(_._1).collect()
   }
   
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
@@ -145,7 +145,7 @@ object Main {
       .filter{ case s => s.charAt(0) == '<' && s.charAt(s.length()-1) == '>'}
       .map{ case s => s.substring(1,s.length()-1)}
 
-    var curSize = 64 ;
+    var curSize = 128 ;
     var curDict = Array("") ;
     var lastDict = curDict ; 
     while (curSize > 0) {
