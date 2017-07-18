@@ -131,7 +131,7 @@ object Main {
           }
       }
       val length = dict(beg).length + step ;
-      (word.substring(0,Math.min(word.length()-1,length)),1)
+      (word.substring(0,Math.min(word.length(),length)),1)
       }.reduceByKey(_+_).filter{ case (key,count) => (count>target) || (step==0) }.map(_._1).collect()
   }
   
