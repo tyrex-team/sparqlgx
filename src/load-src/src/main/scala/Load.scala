@@ -101,22 +101,7 @@ object Main {
     output.close()
   }
 
-  def prefixReplace( a : Array[String], s:String) : String = {
-    if(s(0) != '<' || s(s.length()-1) != '>')
-      return s ;
-    val search = s.substring(1,s.length()-1)
-    for( id <- 0 to a.length-1 ) {
-      if(search.startsWith(a(id))) {
-        //insert a : as in normal prefixes ?
-        return BigInt(id).toString(36)+":"+search.substring(a(id).length(),search.length());
-      }
-    }
-    return s;
-  }
-  
-
-  def countPrefix( input:RDD[String], step:Int, target:Long, dict:IndexedSeq[String] ) : Array[String] = {
-    return input.map{ word => 
+  def prefixSearch(dict: IndexedSeq[String], word: String) : Int = {
       var beg = 0 ;
       var end = dict.size ;
 
@@ -130,7 +115,25 @@ object Main {
           beg = mid ;
           }
       }
-      val length = dict(beg).length + step ;
+    return beg ;
+  }
+
+  def prefixReplace( a : Array[String], s:String) : String = {
+    if(s(0) != '<' || s(s.length()-1) != '>')
+      return s ;
+    val search = s.substring(1,s.length()-1)
+    for( id <- 0 to a.length-1 ) {
+      if(search.startsWith(a(id))) {
+        //insert a : as in normal prefixes ?
+        return BigInt(id).toString(36)+":"+search.substring(a(id).length(),search.length());
+      }
+    }
+    return s;
+  }
+  
+  def countPrefix( input:RDD[String], step:Int, target:Long, dict:IndexedSeq[String] ) : Array[String] = {
+    return input.map{ word => 
+      val length = dict(prefixSearch(dict,word)).length + step ;
       (word.substring(0,Math.min(word.length(),length)),1)
       }.reduceByKey(_+_).filter{ case (key,count) => (count>target) || (step==0 && count>1) }.map(_._1).collect()
   }
@@ -156,7 +159,7 @@ object Main {
     }
 
 
-    val prefixS = lastDict.sortWith( (p1,p2) => p1.length < p2.length ) ;
+    val prefixS = lastDict.sortWith(_<_) ;//.sortWith( (p1,p2) => p1.length < p2.length ) ;
 
     for( id <- 0 to prefixS.length-1 ) {
       output.write(BigInt(id).toString(36)+" "+prefixS(id)+"\n") 
