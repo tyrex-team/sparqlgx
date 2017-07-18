@@ -114,41 +114,51 @@ object Main {
     return s;
   }
   
+
+  def countPrefix( input:RDD[(String,Int)], step:Int, target:Int, dict:List[String] ) : List[String] {
+    input.map{ word => 
+      var beg = 0 ;
+      var end = dict.size() ;
+
+      // this dichotomy will find the last beg such that dict(beg) < word. 
+      while(end > beg+1) {
+        val mid = (end+beg)/2 ;
+        if(dict(mid) > word) {
+          end = mid ;
+        }
+        else {
+          beg = mid ;
+          }
+      }
+      val length = dict(beg).length + curS ;
+      word.substring(0,length),1
+    }.reduceByKey(_+_).filter( (key,count) => count>target).collect()
+  }
+  
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
     val nbLines = input.count() ;
     
-    val target = (2*nbLines) / stat_size ;
+    val target = nbLines / 2 / stat_size ;
     val output = new BufferedWriter(new FileWriter(path)) ;
     val wc = input
       .flatMap{ case (s,p,o) => List(s,o) }
       .filter{ case s => s.charAt(0) == '<' && s.charAt(s.length()-1) == '>'}
       .map{ case s => (s.substring(1,s.length()-1),1)}
-    val hist = wc.map{ case(value,number) => (value.length,number) }.reduceByKey(_+_).collectAsMap() ;
-    var curSize = -1 ;
-    hist.foreach{ case (k,v) => if(k>curSize) { curSize=k;} } ; 
-    var seen = 0 ;
-    while(curSize>10 && seen < target) {
-      if(hist contains curSize) {
-        seen+=hist(curSize) ;
-      }
-      curSize = curSize - 1 ;
+
+    var curSize = 64 ;
+    var curDict = scala.collection.mutable.ArrayBuffer("") ;
+    var lastDict = curDict ; 
+    while (curSize > 0) {
+      curSize /= 2 ;
+      val dict = List(curDict) ;
+      lastDict = countPrefix(wc,curSize, target, dict) ;
+      curDict.appendAll(lastDict) ;
+      curDict.sortWith(_<_) ;
     }
 
-    var prefixes = wc ;
-    while(curSize>=10) {
-      val curS = curSize ;
-      prefixes = prefixes
-        .map { case (pred,nb) =>  if(nb<target && curS<pred.length) { (pred.substring(0,curS),nb)} else {  (pred,nb) } }
-        .reduceByKey(_+_) ;
-      curSize = curSize - 4 ;
-    }
 
-    val prefixS = prefixes
-      .filter{ case (pred,nb) => (nb>=target) }
-      .map {case (pred,nb) => pred }
-      .collect()
-      .sortWith( (p1,p2) => p1.length > p2.length );
-    
+    val prefixS = lastDict.sortWith( (p1,p2) => p1.length > p2.length ) ;
+
     for( id <- 0 to prefixS.length-1 ) {
       output.write(BigInt(id).toString(36)+" "+prefixS(id)+"\n") 
     }
