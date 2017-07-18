@@ -23,7 +23,6 @@ class RDDMultipleTextOutputFormat extends MultipleTextOutputFormat[Any, Any] {
             key.asInstanceOf[String]+"/"+name
 }
 
-
 object Main {
 
   var stat_size = 500 ;
@@ -114,6 +113,9 @@ object Main {
         else {
           beg = mid ;
           }
+      }
+    while(!word.startsWith(dict(beg))) {
+        beg --;
       }
 //    println(dict(beg)+" for "+word);
     return beg ;
