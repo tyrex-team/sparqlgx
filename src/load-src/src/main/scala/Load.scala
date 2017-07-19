@@ -115,11 +115,21 @@ object Main {
       var cur_end = end ;
       while(cur_end > beg+1) {
         val mid = (cur_end+beg)/2 ;
-        if(dict(mid).length() > id && dict(mid).charAt(id) >= word.charAt(id)) {
-          cur_end = mid ;
+        if(dict(mid).length() > id) {
+          if(mid+1<dict.size && word.startsWith(dict(mid))) {
+            beg = mid+1 ;
+          }
+          else { 
+            beg = mid ;
+          }
         }
         else {
-          beg = mid ;
+            if(dict(mid).charAt(id) >= word.charAt(id)) {
+              cur_end = mid ;
+            }
+          else {
+              beg = mid ;
+            }
         }
       }
 
