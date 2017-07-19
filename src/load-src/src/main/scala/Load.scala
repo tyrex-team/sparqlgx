@@ -104,20 +104,40 @@ object Main {
       var beg = 0 ;
       var end = dict.size ;
 
-      // this dichotomy will find the last beg such that dict(beg) ≤ word. 
-      while(end > beg+1) {
-        val mid = (end+beg)/2 ;
-        if(dict(mid) > word) {
-          end = mid ;
+    for( id <- 0 to word.length())
+    {
+      // [beg;end[ corresponds to the range of dict that share
+      // the letters word.substring(0,id)
+
+
+      // this first dichotomy will find the new beg such that
+      // [beg;end'[ shares word.substring(0,id+1)
+      var cur_end = end ;
+      while(cur_end > beg+1) {
+        val mid = (cur_end+beg)/2 ;
+        if(dict(mid).length() > id && dict(mid).charAt(id) >= word.charAt(id)) {
+          cur_end = mid ;
         }
         else {
           beg = mid ;
-          }
+        }
       }
-    while(!word.startsWith(dict(beg))) {
-        beg = beg - 1 ;
+
+      // this second dichotomy will find the new end such that
+      // [beg;end[ shares word.substring(0,id+1)
+      var cur_beg = beg ;
+      while(end > cur_beg+1) {
+        val mid = (end+cur_beg)/2 ;
+        if(dict(mid).length() > id && dict(mid).charAt(id) > word.charAt(id)) {
+          end = mid ;
+        }
+        else {
+          cur_beg = mid ;
+        }
       }
-//    println(dict(beg)+" for "+word);
+
+    }
+    //    println(dict(beg)+" for "+word);
     return beg ;
   }
 
