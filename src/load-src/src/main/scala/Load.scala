@@ -104,7 +104,7 @@ object Main {
       var beg = 0 ;
       var end = dict.size ;
 
-    for( id <- 0 to word.length())
+    for( id <- 0 to word.length()-1)
     {
       // [beg;end[ corresponds to the range of dict that share
       // the letters word.substring(0,id)
