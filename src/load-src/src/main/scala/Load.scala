@@ -152,7 +152,7 @@ object Main {
     if(s(0) == '<' || s(s.length()-1) == '>') {
       val search = s.substring(1,s.length()-1)
       val id = prefixSearch(dict,search);
-      if(search.startsWith(dict(id))) {// this test should be useless
+      if(dict(id).length > 0 && search.startsWith(dict(id))) {// this test should be useless
         return BigInt(id).toString(36)+":"+search.substring(dict(id).length(),search.length());
       }
     }
