@@ -139,7 +139,7 @@ object Main {
         }
       }
       if( beg < end && word.startsWith(dict(beg)) ) {
-        last_of = beg ;
+        last_ok = beg ;
         beg = beg+1 ;
       }
 
