@@ -138,7 +138,7 @@ object Main {
           cur_beg = mid ;
         }
       }
-      if( word.startsWith(dict(beg)) ) {
+      if( beg < end && word.startsWith(dict(beg)) ) {
         last_of = beg ;
         beg = beg+1 ;
       }
