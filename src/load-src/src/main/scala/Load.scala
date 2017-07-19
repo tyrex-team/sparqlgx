@@ -148,14 +148,12 @@ object Main {
     return last_ok ;
   }
 
-  def prefixReplace( a : Array[String], s:String) : String = {
-    if(s(0) != '<' || s(s.length()-1) != '>')
-      return s ;
-    val search = s.substring(1,s.length()-1)
-    for( id <- 0 to a.length-1 ) {
-      if(search.startsWith(a(id))) {
-        //insert a : as in normal prefixes ?
-        return BigInt(id).toString(36)+":"+search.substring(a(id).length(),search.length());
+  def prefixReplace( dict : IndexedSeq[String], s:String) : String = {
+    if(s(0) == '<' || s(s.length()-1) == '>') {
+      val search = s.substring(1,s.length()-1)
+      val id = prefixSearch(dict,search);
+      if(search.startsWith(dict(id))) {// this test should be useless
+        return BigInt(id).toString(36)+":"+search.substring(dict(id).length(),search.length());
       }
     }
     return s;
@@ -189,13 +187,14 @@ object Main {
       curSize /= 2 ;
       val dict : scala.collection.immutable.IndexedSeq[String] = curDict.toIndexedSeq ;
       val curS = curSize ;
-      lastDict = countPrefix(wc,curS, target, dict) ;
+      val bc_curS = sc.broadcast(curS);
+      lastDict = countPrefix(wc,bc_curS.value, target, dict) ;
       curDict = (curDict ++lastDict).sortWith(_<_) ;
 //      println(curSize.toString)
     }
 
 
-    val prefixS = lastDict.sortWith( (p1,p2) => p1.length > p2.length ) ;
+    val prefixS = lastDict.sortWith(_<_)l //.sortWith( (p1,p2) => p1.length > p2.length ) ;
 
     for( id <- 0 to prefixS.length-1 ) {
       output.write(BigInt(id).toString(36)+" "+prefixS(id)+"\n") 
