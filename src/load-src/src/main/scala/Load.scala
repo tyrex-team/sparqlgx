@@ -116,7 +116,7 @@ object Main {
       while(cur_end > beg+1) {
         val mid = (cur_end+beg)/2 ;
         if(dict(mid).length() > id) {
-          if(mid+1<dict.size && word.startsWith(dict(mid))) {
+          if(mid+1<dict.size && dict(mid+1)<word) {
             beg = mid+1 ;
           }
           else { 
