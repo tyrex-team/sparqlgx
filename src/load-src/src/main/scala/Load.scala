@@ -101,8 +101,9 @@ object Main {
   }
 
   def prefixSearch(dict: IndexedSeq[String], word: String) : Int = {
-      var beg = 0 ;
-      var end = dict.size ;
+    var beg = 0 ;
+    var end = dict.size ;
+    var last_ok = 0 ;
 
     for( id <- 0 to word.length()-1)
     {
@@ -115,21 +116,12 @@ object Main {
       var cur_end = end ;
       while(cur_end > beg+1) {
         val mid = (cur_end+beg)/2 ;
-        if(dict(mid).length() > id) {
-          if(mid+1<dict.size && dict(mid+1)<word) {
-            beg = mid+1 ;
-          }
-          else { 
-            beg = mid ;
-          }
+        if( (dict(mid).length() > id && dict(mid).charAt(id) >= word.charAt(id)) 
+          || (dict(mid).length() <= id && dict(mid) > word) ) {
+          cur_end = mid ;
         }
         else {
-            if(dict(mid).charAt(id) >= word.charAt(id)) {
-              cur_end = mid ;
-            }
-          else {
-              beg = mid ;
-            }
+          beg = mid ;
         }
       }
 
@@ -138,17 +130,22 @@ object Main {
       var cur_beg = beg ;
       while(end > cur_beg+1) {
         val mid = (end+cur_beg)/2 ;
-        if(dict(mid).length() > id && dict(mid).charAt(id) > word.charAt(id)) {
+        if( (dict(mid).length() > id && dict(mid).charAt(id) > word.charAt(id)) 
+          || (dict(mid).length() <= id && dict(mid) > word) ) {
           end = mid ;
         }
         else {
           cur_beg = mid ;
         }
       }
+      if( word.startsWith(dict(beg)) ) {
+        last_of = beg ;
+        beg = beg+1 ;
+      }
 
     }
     //    println(dict(beg)+" for "+word);
-    return beg ;
+    return last_ok ;
   }
 
   def prefixReplace( a : Array[String], s:String) : String = {
