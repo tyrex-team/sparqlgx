@@ -195,7 +195,7 @@ object Main {
     }
 
 
-    val prefixS = lastDict.sortWith(_<_) ;//.sortWith( (p1,p2) => p1.length < p2.length ) ;
+    val prefixS = lastDict.sortWith( (p1,p2) => p1.length > p2.length ) ;
 
     for( id <- 0 to prefixS.length-1 ) {
       output.write(BigInt(id).toString(36)+" "+prefixS(id)+"\n") 
