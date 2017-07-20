@@ -28,7 +28,11 @@ let find_trie t s =
        with _ -> x
   in
   foo 0 t
-               
+
+(* let t = (Node([],[]))  *)
+(* let t =add_trie t "abcd" "42"  *)
+(* let t =add_trie (Node([],[])) "abcd" "42"  *)
+(* let c = find_trie t "abcde"  *)
   
 let prefixes = ref (Node([],[]))
 
@@ -36,7 +40,7 @@ let load filename =
   let chan = Scanf.Scanning.from_file filename in
   let rec foo f =
     try
-      Scanf.bscanf chan "%s %[^\n]\n" (fun a b -> foo (add_trie f a b))
+      Scanf.bscanf chan "%s %[^\n]\n" (fun a b -> foo (add_trie f b a))
     with
     | End_of_file -> (Scanf.Scanning.close_in chan ; f )
   in
