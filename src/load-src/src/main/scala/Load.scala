@@ -156,7 +156,6 @@ object Main {
       if(dict(id).length > 0 && search.startsWith(dict(id))) {// this test should be useless
         return BigInt(id).toString(36)+":"+search.substring(dict(id).length(),search.length());
       }
-      return search;
     }
     return s;
   }
