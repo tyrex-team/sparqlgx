@@ -102,12 +102,14 @@ object Main {
   }
 
   def prefixSearch(dict: IndexedSeq[String], word: String) : Int = {
-    var beg = 0 ;
+    
+    var beg = 1 ;
     var end = dict.size ;
     var last_ok = 0 ;
-
-    for( id <- 0 to word.length()-1)
+    var id = 0 ;
+    while( id < word.length() && beg < end)
     {
+
       // [beg;end[ corresponds to the range of dict that share
       // the letters word.substring(0,id)
 
@@ -115,20 +117,23 @@ object Main {
       // this first dichotomy will find the new beg such that
       // [beg;end'[ shares word.substring(0,id+1)
       var cur_end = end ;
-      while(cur_end > beg+1) {
-        val mid = (cur_end+beg)/2 ;
-        if( (dict(mid).length() > id && dict(mid).charAt(id) >= word.charAt(id)) 
-          || (dict(mid).length() <= id && dict(mid) > word) ) {
-          cur_end = mid ;
+      var cur_beg = beg ;
+      if(dict(beg).charAt(id) != word.charAt(id)) {
+        while(cur_end > beg+1) {
+          val mid = (cur_end+beg)/2 ;
+          if( (dict(mid).length() > id && dict(mid).charAt(id) >= word.charAt(id)) 
+              || (dict(mid).length() <= id && dict(mid) > word) ) {
+            cur_end = mid ;
+          }
+          else {
+            beg = mid ;
+          }
         }
-        else {
-          beg = mid ;
+        beg = beg+1;
         }
-      }
 
       // this second dichotomy will find the new end such that
       // [beg;end[ shares word.substring(0,id+1)
-      var cur_beg = beg ;
       while(end > cur_beg+1) {
         val mid = (end+cur_beg)/2 ;
         if( (dict(mid).length() > id && dict(mid).charAt(id) > word.charAt(id)) 
@@ -139,13 +144,13 @@ object Main {
           cur_beg = mid ;
         }
       }
-      if( beg < end && word.startsWith(dict(beg)) ) {
+
+      while( beg < end && word.startsWith(dict(beg)) ) {
         last_ok = beg ;
         beg = beg+1 ;
       }
-
+      id=id+1;
     }
-    //    println(dict(beg)+" for "+word);
     return last_ok ;
   }
 
