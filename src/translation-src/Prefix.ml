@@ -1,24 +1,56 @@
-let prefixes = ref []
+
+type trie =
+  | Node of (char*trie) list*string list
+  
+let add_trie t s v = 
+
+  let rec add_trie t i =
+    let rec foo = function
+      | (c,t)::l when (c=s.[i]) -> (c,add_trie t (i+1))::l
+      | (c,t)::l -> (c,t)::foo l
+      | [] -> [s.[i],add_trie t (i+1)]
+    in
+
+  match t with
+  | Node(pos,pref) ->
+     if i = String.length s
+     then Node(pos,v::pref)
+     else Node(foo pos,pref)
+  in
+  add_trie t 0
+
+let find_trie t s =
+  let rec foo i = function
+    | Node(a,[]) -> foo (i+1) (List.assoc s.[i] a)
+    | Node(a,x::t) ->
+       try
+         foo (i+1) (List.assoc s.[i] a)
+       with _ -> x
+  in
+  foo 0 t
+               
+  
+let prefixes = ref (Node([],[]))
 
 let load filename =
   let chan = Scanf.Scanning.from_file filename in
-  try 
-    while true
-    do
-      Scanf.bscanf chan "%s %[^\n]\n" (fun a b -> prefixes := (a,b)::!prefixes)
-    done 
-  with | End_of_file -> (Scanf.Scanning.close_in chan ; prefixes := List.rev (!prefixes))
+  let rec foo f =
+    try
+      Scanf.bscanf chan "%s %[^\n]\n" (fun a b -> foo (add_trie f a b))
+    with
+    | End_of_file -> (Scanf.Scanning.close_in chan ; f )
+  in
+  prefixes:=foo (Node([],[]))
+  
 
 let prefixize s =
   if s.[0] = '<' && s.[String.length s-1] = '>'
   then
     let search = String.sub s 1 (String.length s-2) in
-    let rec foo = function
-      | (a,b)::q ->
-         if String.length b <= String.length search && b=String.sub search 0 (String.length b)
-         then a^":"^String.sub search (String.length b) (String.length search-String.length b)
-         else foo q
-      | [] -> s
-    in
-    foo (!prefixes)
-  else s
+    try
+      let pre = find_trie (!prefixes) search in
+      pre^":"^String.sub search (String.length pre) (String.length search-String.length pre)
+    with
+    | _ -> search
+  else
+    s
