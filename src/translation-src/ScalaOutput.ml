@@ -34,7 +34,7 @@ object Query {
      }
      def readpred (s:String) = 
                 if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(args(0)+\"/\"+s))) {
-           sc.textFile(args(0)+\"/\"+s).map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}
+           sc.textFile(args(0)+\"/\"+s+\"/*.gz\").map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}
         }
         else {
            sc.emptyRDD[(String,String)]
