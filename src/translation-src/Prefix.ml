@@ -25,7 +25,7 @@ let find_trie t s =
     | Node(a,x::t) ->
        try
          foo (i+1) (List.assoc s.[i] a)
-       with _ -> x
+       with _ -> (x,i)
   in
   foo 0 t
 
@@ -52,8 +52,8 @@ let prefixize s =
   then
     let search = String.sub s 1 (String.length s-2) in
     try
-      let pre = find_trie (!prefixes) search in
-      pre^":"^String.sub search (String.length pre) (String.length search-String.length pre)
+      let pre,len = find_trie (!prefixes) search in
+      pre^":"^String.sub search len (String.length search-len)
     with
     | _ -> search
   else
