@@ -1,5 +1,6 @@
 import org.apache.hadoop.io.NullWritable
 import org.apache.hadoop.mapred.lib.MultipleTextOutputFormat;
+import org.apache.hadoop.io.compress.GzipCodec
 import org.apache.log4j.Level
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger
