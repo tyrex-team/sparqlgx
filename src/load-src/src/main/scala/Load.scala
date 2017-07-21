@@ -118,7 +118,7 @@ object Main {
       // [beg;end'[ shares word.substring(0,id+1)
       var cur_end = end ;
       var cur_beg = beg ;
-      if(dict(beg).charAt(id) != word.charAt(id)) {
+      if( dict(beg).length() <= id  || dict(beg).charAt(id) != word.charAt(id)) {
         while(cur_end > beg+1) {
           val mid = (cur_end+beg)/2 ;
           if( (dict(mid).length() > id && dict(mid).charAt(id) >= word.charAt(id)) 
