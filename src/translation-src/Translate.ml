@@ -133,6 +133,7 @@ let translate distinguished modifiers vertical optim stmt =
     | Sparql.Union(a,b) -> Union(translate_toplevel a,translate_toplevel b)
     | Sparql.Optional(a,b) -> LeftJoin(translate_toplevel a,translate_toplevel b)
     | Sparql.BGP(a) -> translate_list_tp a
+    | Sparql.Join(a,b) -> Join(translate_toplevel a,translate_toplevel  b)
   in
 
   let rec add_modifiers t = function

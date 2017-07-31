@@ -83,8 +83,12 @@ toplevel:
   { Union(a,b) }
 | a=toplevel OPTIONAL b=toplevel
   { Optional(a,b) }
-| a=tplist
+| a=ptp
   { BGP(a) }
+| LEFTBRACKET a = toplevel b=toplevel RIGHTBRACKET
+  { Join (a,b) }
+| LEFTBRACKET a = toplevel RIGHTBRACKET
+  { a }
 ;
 
 ptp:
@@ -94,12 +98,6 @@ ptp:
   { [a] }
 | a=tp POINT
   { [a] }
-
-tplist:
-| a=ptp
-  { a }
-| LEFTBRACKET a=ptp RIGHTBRACKET
-  {a}
 ;
 
 tp:
