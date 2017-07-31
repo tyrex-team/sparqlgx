@@ -74,5 +74,8 @@ let _ =
   | Parser.Error ->
      print_string ("Parsing error (around line "^(string_of_int (!Lexer.line))^")\n");
      exit 1
+  | Sparql.TypeError(c) ->
+     print_string ("Typing error (collumn '"^c^"' is not certain around line "^(string_of_int (!Lexer.line))^")\n");
+     exit 1
           
   

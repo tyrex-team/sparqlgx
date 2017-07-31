@@ -1,21 +1,23 @@
-type atom = Exact of string | Variable of string ;;
+type atom = Exact of string | Variable of string 
 
-type prefix = (string*string) ;;
+type prefix = (string*string) 
 
-type tp = (atom*atom*atom) ;;
+type tp = (atom*atom*atom) 
 
-type bgp = tp list ;;
+type bgp = tp list 
 
-type optbgp = bgp*bgp ;;
-
-type unionoptbgp = optbgp list ;;
-
+type gp =
+  | Union of gp*gp
+  | Optional of gp*gp
+  | BGP of bgp
+  | Join of gp*gp
+         
 type modifier =
   | Distinct
   | OrderBy of (string*bool) list
-;;
 
-type query = (string list * unionoptbgp)*modifier list ;;
+
+type query = (string list * gp)*modifier list 
 
 let print_atom = function
   | Exact(a) -> print_string a
@@ -34,3 +36,28 @@ let rec list_var = function
      let l = list_var q in
      if List.mem s l then l else s::l
   | [] -> []
+
+let rec bgp_var l =
+  List.fold_left (fun ac (a,b,c) -> ListSet.union ac (list_var [a;b;c])) ListSet.empty l
+        
+exception TypeError of string
+
+let rec prob = function
+  | Union(a,b)
+    | Join(a,b)
+    | Optional(a,b) -> ListSet.union (prob a) (prob b)
+  | BGP(a) -> bgp_var a
+
+let rec cert = function
+  | Union(a,b)
+    | Optional(a,b) -> ListSet.inter (cert a) (cert b)
+  | Join(a,b) -> ListSet.inter (cert a) (cert b)
+  | BGP(a) -> bgp_var a
+                     
+let rec typecheck = function
+  | BGP(a) -> ()
+  | Optional(a,b)    
+    | Join(a,b)->
+     let dif = ListSet.minus (ListSet.inter (prob a) (prob b)) (ListSet.inter (cert a) (cert b)) in
+     if dif <> [] then  raise ( TypeError (List.hd dif))
+  | Union(a,b) -> ()

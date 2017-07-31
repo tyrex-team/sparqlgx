@@ -130,9 +130,9 @@ let translate distinguished modifiers vertical optim stmt =
   in
 
   let rec translate_toplevel = function
-    | [] -> failwith "Empty query!"
-    | [a] -> translate_opt a
-    | a::q -> Union(translate_opt a,translate_toplevel q)
+    | Sparql.Union(a,b) -> Union(translate_toplevel a,translate_toplevel b)
+    | Sparql.Optional(a,b) -> LeftJoin(translate_toplevel a,translate_toplevel b)
+    | Sparql.BGP(a) -> translate_list_tp a
   in
 
   let rec add_modifiers t = function

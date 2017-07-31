@@ -1,3 +1,4 @@
+
 type algebra =
   | Readfile3 
   | Readfile2 of string
@@ -17,7 +18,5 @@ type algebra =
 (* Numero hashes predicate names; in Vertical partionning the
    (subject,object) associated with pred are stored in (numero
   pred)^".pred "*)
-  let numero(s:string):string=
-     String.map (fun c -> if (c <'a' || c>'z') && (c<'0' || c>'9') then '_' else c) (String.lowercase s)
-
-
+let numero(s:string):string=
+  String.map (fun c -> if (c <'a' || c>'z') && (c<'0' || c>'9') then '_' else c) (String.lowercase s)

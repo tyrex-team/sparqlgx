@@ -34,18 +34,20 @@ orderby:
    { OrderBy(List.flatten v) }
 | ORDER BY v=separated_list(COMMA, VAR) EOF
   { OrderBy(List.map (fun x -> (x,true)) v) }
+;
 
 orderlist:
 | ASC LEFTPAR v=separated_list(COMMA, VAR) RIGHTPAR
   { List.map (fun x -> (x,true)) v }
 | DESC LEFTPAR v=separated_list(COMMA, VAR) RIGHTPAR
   { List.map (fun x -> (x,false)) v }
-
+;
 
 
 distinct:
 | DISTINCT
    { Distinct }
+;
 
 prefix:
 | PREFIX s=IDENT COLON LEFTPROG v=ident RIGHTPROG
@@ -77,30 +79,12 @@ ident_or_var:
 ;  
 
 toplevel:
-| c=union
-  {c}
-| a=opt_tp
-  { [a] }
-;
-
-union:
-| a=opt_tp UNION b=toplevel
-  { a::b } 
-| LEFTBRACKET c=union RIGHTBRACKET
-  { c }
-
-
-opt_tp:
-| c=opt
-  { c }
-| a=tplist 
-  { a,[]}
-
-opt:
-| a=tplist OPTIONAL b=tplist 
-  { a,b }
-| LEFTBRACKET a=opt RIGHTBRACKET
-  { a }
+| a=toplevel UNION b=toplevel
+  { Union(a,b) }
+| a=toplevel OPTIONAL b=toplevel
+  { Optional(a,b) }
+| a=tplist
+  { BGP(a) }
 ;
 
 ptp:
