@@ -26,7 +26,7 @@ let print a =
      | Readfile2(f) ->
         op "PRED"  ["filename",`String ("p"^numero f);"col_subject",`String (assoc  "s" cols); "col_object",`String (assoc  "o" cols) ]
      | Filter(c,v,a) ->
-        op "FILTER"  ["col",`String (assoc c cols); "value",`String (String.sub v 1 (String.length v-2)) ; "id",`Int (foo cols a) ]
+        op "FILTER"  ["col",`String (assoc c cols); "value",`String v ; "id",`Int (foo cols a) ]
      | Keep(l,a) ->
         op "SELECT"  ["cols",`List (List.map (fun c -> `String (assoc c cols)) l) ; "id",`Int (foo cols a) ]
      | Join(a,b) ->
