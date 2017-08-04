@@ -7,15 +7,17 @@
          "<"^List.assoc s (!prefixes)^v^">"
        with
          Not_found -> s^":"^v
+       
 %}
 
 %token <string> VAR
 %token <string> IDENT
+%token <string> NUMBER
 %token EOF
 %token PREFIX
 %token LEFTPAR RIGHTPAR LEFTPROG RIGHTPROG LEFTBRACKET RIGHTBRACKET QUOTE
-%token SELECT WHERE UNION OPTIONAL
-%token POINT COMMA COLON JOKER
+%token SELECT WHERE UNION OPTIONAL FILTER REGEX
+%token POINT COMMA COLON JOKER EQUAL
 %token DISTINCT ORDER BY ASC DESC
 %start query
 
@@ -76,19 +78,33 @@ ident_or_var:
    { Exact(Prefix.prefixize ("<"^(s)^">")) }
 | QUOTE s = ident QUOTE
    { Exact("\\\""^s^"\\\"") }
+| QUOTE s = NUMBER QUOTE
+   { Exact("\\\""^s^"\\\"") }
+| s = NUMBER
+   { Exact(s) }
 ;  
 
-toplevel:
+complex_toplevel:
+| LEFTBRACKET a = toplevel RIGHTBRACKET
+  { a }
 | a=toplevel UNION b=toplevel
   { Union(a,b) }
 | a=toplevel OPTIONAL b=toplevel
   { Optional(a,b) }
+
+toplevel:
 | a=ptp
-  { BGP(a) }
-| LEFTBRACKET a = toplevel b=toplevel RIGHTBRACKET
+ { BGP(a) }
+| a = complex_toplevel b=toplevel
   { Join (a,b) }
-| LEFTBRACKET a = toplevel RIGHTBRACKET
+| a = complex_toplevel 
   { a }
+| LEFTBRACKET a=toplevel b=filter c=toplevel RIGHTBRACKET
+  { print_string "middle!\n";Filter(Join(a,c),b)}
+| LEFTBRACKET a=toplevel b=filter RIGHTBRACKET
+  { print_string "endd!\n";Filter(a,b)}
+| LEFTBRACKET b=filter c=toplevel RIGHTBRACKET
+  { print_string "beg!\n";Filter(c,b)}
 ;
 
 ptp:
@@ -102,6 +118,19 @@ ptp:
 
 tp:
 | sub = ident_or_var pred = ident_or_var obj = ident_or_var 
-   { sub,pred,obj}
+   { (sub,pred,obj)}
 ;  
 
+filter:
+|  FILTER LEFTPAR f=filter_expr RIGHTPAR
+   { f} 
+;
+
+filter_expr:
+| a = ident_or_var EQUAL b=ident_or_var
+  { Equal(a,b)} 
+| a = ident_or_var LEFTBRACKET b=ident_or_var
+  { Less(a,b)} 
+| REGEX LEFTPAR a = ident_or_var COMMA b=ident_or_var RIGHTPAR
+  { Match(a,b)} 
+;

@@ -1,8 +1,16 @@
+type var_at =
+  | Var of string
+  | Atom of string
+
+type filter_alg =
+  | Equal of var_at*var_at
+  | Less of var_at*var_at
+  | Match of var_at*var_at
 
 type algebra =
   | Readfile3 
   | Readfile2 of string
-  | Filter of string * string * algebra
+  | Filter of filter_alg * algebra
   | Keep of string list * algebra
   | Join of algebra * algebra
   | Union of algebra * algebra

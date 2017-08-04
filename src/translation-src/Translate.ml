@@ -29,7 +29,7 @@ let rec print_query distinguished modifiers optim stmt =
   let rec get_tp = function
     | Readfile2(p) -> ["p",p]
     | Readfile3 -> []
-    | Filter(col,value,term) -> (col,value)::get_tp term 
+    | Filter(Equal(Var col,Atom value),term) -> (col,value)::get_tp term 
     | Rename(col,value,term) -> (col,value)::get_tp term
     | _ -> failwith ("Unrecognized pattern @ "^__LOC__)
   in
@@ -103,10 +103,10 @@ let rec print_query distinguished modifiers optim stmt =
 let translate distinguished modifiers vertical optim stmt =
   
   let translate_el (base,cols) = function
-    | Exact(v),name -> (Filter(name,v,base),cols)
+    | Exact(v),name -> (Filter((Equal(Var name,Atom v)),base),cols)
     | Variable(v),name ->
        if List.mem v cols
-       then Filter(name,v,base),cols
+       then Filter(Equal (Var name, Var v),base),cols
        else (Rename(name,v,base),v::cols)
   in
 
@@ -124,16 +124,23 @@ let translate distinguished modifiers vertical optim stmt =
     | _ -> Reorder.no_cartesian  translate_tp l
   in
 
-  let translate_opt  = function
-    | (a,[]) -> translate_list_tp a
-    | (a,b) -> LeftJoin(translate_list_tp a,translate_list_tp b)
+  
+  let translate_id_var = function
+    | Variable v -> Var v
+    | Exact v -> Atom v
   in
-
+  let translate_filter = function
+    | Sparql.Equal(a,b) -> Equal(translate_id_var a,translate_id_var b)
+    | Sparql.Less(a,b) -> Less(translate_id_var a,translate_id_var b)
+    | Sparql.Match(a,b) -> Match(translate_id_var a,translate_id_var b)
+  in
+  
   let rec translate_toplevel = function
     | Sparql.Union(a,b) -> Union(translate_toplevel a,translate_toplevel b)
     | Sparql.Optional(a,b) -> LeftJoin(translate_toplevel a,translate_toplevel b)
     | Sparql.BGP(a) -> translate_list_tp a
     | Sparql.Join(a,b) -> Join(translate_toplevel a,translate_toplevel  b)
+    | Sparql.Filter(a,b) -> Filter(translate_filter b,translate_toplevel a)
   in
 
   let rec add_modifiers t = function

@@ -5,7 +5,7 @@ CMXA= ListSet.cmxa  Prefix.cmxa Sparql.cmxa Stat_mult.cmxa Stat_combine.cmxa Par
 CMO=ListSet.cmo  Prefix.cmo Sparql.cmo Stat_mult.cmo Stat_combine.cmo Parser.cmo Lexer.cmo Algebra.cmo JsonOutput.cmo ScalaOutput.cmo Plan.cmo Reorder.cmo Translate.cmo main.cmo 
 #str.cmxa
 CMI=
-GENERATED=Parser.ml Lexer.ml Parser.mli
+GENERATED=Lexer.ml Parser.ml Parser.mli
 #GENERATED=
 FLAGS= -annot nums.cmxa -cclib -lnums -package yojson  -linkpkg
 FLAGS_DEBUG= -p nums.a nums.cma -cclib -lnums 

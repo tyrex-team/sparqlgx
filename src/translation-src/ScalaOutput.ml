@@ -135,8 +135,17 @@ object Query {
         incr cur ;
         trad
     in
+    let var_at = function
+      | Atom(a) -> Atom(a)
+      | Var(a) -> Var(rename a)
+    in
+    let trans = function
+      | Equal(a,b) -> Equal(var_at a, var_at b)
+      | Less(a,b) -> Less(var_at a, var_at b)
+      | Match(a,b) -> Match(var_at a, var_at b)
+    in
     let rec foo = function
-      | Filter(s,v,c) -> Filter(rename s, v,foo c)
+      | Filter(f,c) -> Filter(trans f,foo c)
       | Keep(l,c) -> Keep (List.map rename l,foo c)
       | Join(a,b) -> Join(foo a, foo b)
       | JoinWithBroadcast(a,b) -> JoinWithBroadcast(foo a, foo b)
@@ -156,7 +165,7 @@ object Query {
                     
     | Distinct c
     | Order(_,c)
-      | Filter(_,_,c) -> cols c
+      | Filter(_,c) -> cols c
                        
     | Keep(k,Empty) -> []
     | Keep(k,c) -> k
@@ -188,9 +197,17 @@ object Query {
           | Readfile2(f) ->
              "val "^res^"=readpred(\"p"^(numero f)^"\") //"^f,[],["s";"o"]
                
-          | Filter(c,v,a) ->
+          | Filter(f,a) ->
              let code,keys,cols = foo a in
-             "val "^res^"="^code^".filter{case ("^(join keys cols)^") => "^(escape_var c)^".equals(\""^(escape_var v)^"\")}",keys,cols
+             let trans_vat = function
+               | Atom a -> a
+               | Var a -> escape_var a
+             in
+             let trans = function
+               | Equal(a,b) -> (trans_vat a)^".equals(\""^(trans_vat b)^"\")"
+               | _ -> failwith "pas codé"
+             in
+             "val "^res^"="^code^".filter{case ("^(join keys cols)^") => "^(trans f)^"\")}",keys,cols
                                                                                                                   
           | Keep (keepcols,a) ->
              let code,keys,cols = foo a in

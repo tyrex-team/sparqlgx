@@ -19,14 +19,18 @@ let print a =
 
     let op c args = add (`Assoc  ["op",`String c; jid; "arg",`Assoc args]) ; id in
 
-    
+    let var_at = function
+      | Atom a -> "value",`String a
+      | Var a -> "col",`String (assoc a cols)
+    in
+
     match x with
      | Readfile3 ->
         op "ALL" ["cols",`List (List.map (fun x-> `String (assoc x cols)) ["s";"p";"o"]) ]
      | Readfile2(f) ->
         op "PRED"  ["filename",`String ("p"^numero f);"col_subject",`String (assoc  "s" cols); "col_object",`String (assoc  "o" cols) ]
-     | Filter(c,v,a) ->
-        op "FILTER"  ["col",`String (assoc c cols); "value",`String v ; "id",`Int (foo cols a) ]
+     | Filter(Equal(c,v),a) ->
+        op "FILTER"  [var_at c; var_at v ; "id",`Int (foo cols a) ]
      | Keep(l,a) ->
         op "SELECT"  ["cols",`List (List.map (fun c -> `String (assoc c cols)) l) ; "id",`Int (foo cols a) ]
      | Join(a,b) ->
@@ -62,7 +66,6 @@ let print a =
 
      | Distinct(a) ->
         op "DISTINCT"  ["id",`Int (foo cols a)]
-
        
      | _ -> failwith ("error @"^__LOC__)
   in

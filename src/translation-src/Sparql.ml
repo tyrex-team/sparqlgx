@@ -2,16 +2,24 @@ type atom = Exact of string | Variable of string
 
 type prefix = (string*string) 
 
-type tp = (atom*atom*atom) 
+type filter_expr =
+  | Equal of atom*atom
+  | Less of atom * atom
+  | Match of atom*atom                     
 
-type bgp = tp list 
+type tp =
+  |  TP of atom*atom*atom
+      
+
+type bgp = (atom*atom*atom) list 
 
 type gp =
   | Union of gp*gp
   | Optional of gp*gp
   | BGP of bgp
   | Join of gp*gp
-         
+  | Filter of gp*filter_expr
+          
 type modifier =
   | Distinct
   | OrderBy of (string*bool) list
@@ -46,12 +54,14 @@ let rec prob = function
   | Union(a,b)
     | Join(a,b)
     | Optional(a,b) -> ListSet.union (prob a) (prob b)
+  | Filter(a,b) -> prob a
   | BGP(a) -> bgp_var a
 
 let rec cert = function
   | Union(a,b)
     | Optional(a,b) -> ListSet.inter (cert a) (cert b)
   | Join(a,b) -> ListSet.inter (cert a) (cert b)
+  | Filter(a,b) -> cert a
   | BGP(a) -> bgp_var a
                      
 let rec typecheck = function
@@ -61,3 +71,5 @@ let rec typecheck = function
      let dif = ListSet.minus (ListSet.inter (prob a) (prob b)) (ListSet.inter (cert a) (cert b)) in
      if dif <> [] then  raise ( TypeError (List.hd dif))
   | Union(a,b) -> ()
+  | Filter(a,b) -> ()
+ 
