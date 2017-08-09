@@ -6,7 +6,15 @@ source ${PATH_CMD}/../conf/sparqlgx.conf
 
 if [[ $# -le 2 ]];
 then
-    echo "Usage: $0 [light-load|load|stat] dbName tripleFile_HDFSPath"
+    echo "Usage: $0 [option] <dbName> <tripleFilePath>"
+    echo "Where <option> can be one of:"
+    echo "  [--load]      Load database to HDFS"
+    echo "  [--stat]      Write database statistics"
+    echo "  [--full-stat] Write database full statistics"
+    echo "  [--all]       Load database and write all statistics"
+    echo ""
+    echo "The database will be loaded to \$SPARQLGX_HDFS/<dbName>"
+    echo "Statistics will be written to \$SPARQLGX_LOCAL/<dbName>"
     exit 1
 fi
 
