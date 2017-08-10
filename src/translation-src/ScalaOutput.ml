@@ -207,7 +207,7 @@ object Query {
                | Equal(a,b) -> (trans_vat a)^".equals(\""^(trans_vat b)^"\")"
                | _ -> failwith "pas codé"
              in
-             "val "^res^"="^code^".filter{case ("^(join keys cols)^") => "^(trans f)^"\")}",keys,cols
+             "val "^res^"="^code^".filter{case ("^(join keys cols)^") => "^(trans f)^"}",keys,cols
                                                                                                                   
           | Keep (keepcols,a) ->
              let code,keys,cols = foo a in
