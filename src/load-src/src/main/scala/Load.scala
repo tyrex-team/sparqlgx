@@ -55,7 +55,7 @@ object Main {
             else 
               c
         },(s+" "+o))};
-    T.saveAsHadoopFile(path,classOf[String],classOf[String],classOf[RDDMultipleTextOutputFormat])
+    T.saveAsHadoopFile(path,classOf[String],classOf[String],classOf[RDDMultipleTextOutputFormat],classOf[GzipCodec])
   }
 
 
