@@ -61,17 +61,18 @@ object Main {
 
   def stat(input:RDD[(String,String,String)], path:String) {
     val output = new BufferedWriter(new FileWriter(path))
+    val stat_size_cst = stat_size ;
     val stat = input
       .flatMap{ case (s,p,o) => List(((0,s),1),((1,p),1),((2,o),1)) }
       .reduceByKey(_+_).map { t => (t._1._1,(t._2,t._1._2))} // Compute word count
-      .aggregateByKey( (Nil:List[(Int,String)],0) ) ( // Compute the stat_size most present per key (and key is s or p or o)
-      { case ((acc,size),el) =>  (merge(el::Nil,acc,stat_size),(size+1) min stat_size) },
-      { case ((a1,s1),(a2,s2)) => (merge(a1,a2,stat_size),((s1+s2) min stat_size)) }
+      .aggregateByKey( (Nil:List[(Int,String)],0) ) ( // Compute the stat_size_cst most present per key (and key is s or p or o)
+      { case ((acc,size),el) =>  (merge(el::Nil,acc,stat_size_cst),(size+1) min stat_size_cst) },
+      { case ((a1,s1),(a2,s2)) => (merge(a1,a2,stat_size_cst),((s1+s2) min stat_size_cst)) }
     ).collect.sortWith{case (a,b) => a._1<b._1 }
     output.write(stat(0)._2._2.toString+" "+stat(1)._2._2.toString+" "+stat(2)._2._2.toString+"\n");
     for(i <- 0 to 2) {
       val list_el=stat(i)._2._1;
-      val last = if(stat(i)._2._2 < stat_size) {"*"} else {list_el.last._2};
+      val last = if(stat(i)._2._2 < stat_size_cst) {"*"} else {list_el.last._2};
       list_el foreach { case (n,iri) => val v = if(iri==last) "*" else iri ;  output.write (v+" "+n.toString+"\n") } ;
     }
     output.close()
