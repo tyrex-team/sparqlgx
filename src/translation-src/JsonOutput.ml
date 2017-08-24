@@ -39,12 +39,12 @@ let print a =
         op "LEFTJOIN" ["id_base",`Int (foo id_of_bc cols a) ;  "id_extend",`Int (foo id_of_bc cols b)]
      | JoinWithBroadcast(b,a) ->
         let id_bc = get_id () in
-        let _ = add (`Assoc ["op",`String "BROADCAST"; "id",`Int id_bc;"source",`Int (foo id_of_bc cols a)]) in
+        let _ = add (`Assoc ["op",`String "BROADCAST"; "id",`Int id_bc; "arg",`Assoc ["source",`Int (foo id_of_bc cols a)]]) in
         op "MAP_BC" ["id1",`Int (foo id_of_bc cols b) ;  "id2", `Int id_bc]
      | Broadcast(i,a,b) ->
         let id_bc = get_id () in
         let def = foo id_of_bc cols a in
-        let _ = add (`Assoc ["op",`String "BROADCAST"; "id",`Int id_bc; "source",`Int def ]) in
+        let _ = add (`Assoc ["op",`String "BROADCAST"; "id",`Int id_bc; "arg",`Assoc ["source",`Int def ]]) in
         foo ((i,id_bc)::id_of_bc) cols b
 
      | FilterWithBroadcast(a,i,_) ->
