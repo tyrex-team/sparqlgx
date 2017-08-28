@@ -209,14 +209,16 @@ object Main {
     output.close()
    
     val bc_prefix=sc.broadcast(prefixS) ;
-    val nbExecutors = 48 ;
+    val nbExecutors = 100 ;
     val sizePartitionMax = 1000000 ; 
     def nbPartitions(n: Long) : Int = {
-      if(nbExecutors*sizePartitionMax*2 > n ) {
-        nbExecutors*2
+      // ensure that there are nbExecutors partions unless 
+      // we need really few partitions
+      if(nbExecutors*sizePartitionMax > n && 5*n > nbExecutors*sizePartitionMax) { 
+        nbExecutors
       }
       else {
-       (n/sizePartitionMax).asInstanceOf[Int]
+       (n/sizePartitionMax).asInstanceOf[Int]+1
       }
     }
     val nbPartitionsTotal : Int = nbPartitions(nbLines);
