@@ -120,5 +120,6 @@ let full_stat trad_tp l =
   | Some s ->
      let tp  = List.map (fun x ->trad_tp x,Stat_combine.get_tp_stat s x, get_var x) l in
      let cost, stat, plan = get_optimal_plan_with_stat tp in
+     print_string ("// Estimated size is "^(Big_int.string_of_big_int (fst stat))^"\n") ;
      plan
       
