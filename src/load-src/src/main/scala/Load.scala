@@ -172,14 +172,14 @@ object Main {
       val pre_length = dict(curprefix).length ;
       val length = pre_length + step ;
       if(length>word.length) {
-        ("",1)
+        ((-1,""),1)
       } else {
         ((curprefix,word.substring(pre_length,length)),1)
       }
       }.reduceByKey(_+_)
         .filter{ case (key,count) => (count>target) || (step==0 && count>1) }
         .collect()
-        .map { case ((pre,add),nb) => dict(pre).concat(add) }
+        .map { case ((pre,add),nb) => if(pre>=0) { dict(pre).concat(add) } else { add}}
   }
   
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
