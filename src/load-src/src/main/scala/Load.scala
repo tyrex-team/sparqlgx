@@ -168,13 +168,18 @@ object Main {
   
   def countPrefix( input:RDD[String], step:Int, target:Long, dict:IndexedSeq[String] ) : Array[String] = {
     return input.map{ word => 
-      val length = dict(prefixSearch(dict,word)).length + step ;
+      val curprefix = prefixSearch(dict,word) ;
+      val pre_length = dict(curprefix).length ;
+      val length = pre_length + step ;
       if(length>word.length) {
         ("",1)
       } else {
-        (word.substring(0,length),1)
+        ((curprefix,word.substring(pre_length,length)),1)
       }
-      }.reduceByKey(_+_).filter{ case (key,count) => (count>target) || (step==0 && count>1) }.map(_._1).collect()
+      }.reduceByKey(_+_)
+        .filter{ case (key,count) => (count>target) || (step==0 && count>1) }
+        .collect()
+        .map { case ((pre,add),nb) => dict(pre).concat(add) }
   }
   
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
@@ -268,7 +273,7 @@ object Main {
     var fullstat_path : Option[String] = None ;
     var prefix_path : Option[String] = None ;
     var tripleFile = "" ;
-    var uniq = true ;
+    var uniq = false ;
     var curArg = 0 ;
     while(curArg < args.length) {
       args(curArg) match {
@@ -297,6 +302,8 @@ object Main {
             throw new Exception("No file to store prefixes given!");
           prefix_path=Some(args(curArg+1)) ;
           curArg+=1 ;
+        case "--clean" =>
+          uniq = true ;
         case "--no-clean" =>
           uniq = false ;
         case "--debug" =>
@@ -320,7 +327,7 @@ object Main {
     } ;
 
   val input = dirty_input ;
-//if(uniq) {dirty_input.distinct().persist() } else {dirty_input.persist()};
+    if(uniq) {dirty_input.distinct().persist() } else {dirty_input.persist()};
 
    val prefixed_input = (prefix_path match {
      case None => input
