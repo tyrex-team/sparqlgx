@@ -166,7 +166,7 @@ object Main {
     return s;
   }
   
-  def countPrefix( input:RDD[String], step:Int, target:Long, dict:IndexedSeq[String] ) : Array[String] = {
+  def countPrefix( input:RDD[String,Int], step:Int, target:Long, dict:IndexedSeq[String] ) : Array[String] = {
     return input.map{ case (word,nb) => 
       val curprefix = prefixSearch(dict,word) ;
       val pre_length = dict(curprefix).length ;
