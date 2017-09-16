@@ -167,14 +167,14 @@ object Main {
   }
   
   def countPrefix( input:RDD[String], step:Int, target:Long, dict:IndexedSeq[String] ) : Array[String] = {
-    return input.map{ word => 
+    return input.map{ word,nb => 
       val curprefix = prefixSearch(dict,word) ;
       val pre_length = dict(curprefix).length ;
       val length = pre_length + step ;
       if(length>word.length) {
-        ((-1,""),1)
+        ((-1,""),0)
       } else {
-        ((curprefix,word.substring(pre_length,length)),1)
+        ((curprefix,word.substring(pre_length,length)),nb)
       }
       }.reduceByKey(_+_)
         .filter{ case (key,count) => (count>target) || (step==0 && count>1) }
@@ -190,7 +190,8 @@ object Main {
     val wc = input
       .flatMap{ case (s,p,o) => List(s,o) }
       .filter{ case s => s.charAt(0) == '<' && s.charAt(s.length()-1) == '>'}
-      .map{ case s => s.substring(1,s.length()-1)}
+      .map{ case s => s.substring(1,s.length()-1),1}.reduceByKey(_+_)
+    wc.persist()
 
     var curSize = 128 ;
     var curDict = Array("") ;
@@ -327,7 +328,7 @@ object Main {
     } ;
 
   val input = dirty_input ;
-    if(uniq) {dirty_input.distinct().persist() } else {dirty_input.persist()};
+ //   if(uniq) {dirty_input.distinct().persist() } else {dirty_input.persist()};
 
    val prefixed_input = (prefix_path match {
      case None => input
