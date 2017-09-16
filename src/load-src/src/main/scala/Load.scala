@@ -183,15 +183,14 @@ object Main {
   }
   
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
-    val nbLines = input.count() ;
-    
-    val target = nbLines / 2 / stat_size ;
     val output = new BufferedWriter(new FileWriter(path)) ;
     val wc = input
       .flatMap{ case (s,p,o) => List(s,o) }
       .filter{ case s => s.charAt(0) == '<' && s.charAt(s.length()-1) == '>'}
       .map{ case s => (s.substring(1,s.length()-1),1) }.reduceByKey(_+_)
     wc.persist()
+    val nbLines = wc.count() ;    
+    val target = nbLines / 2 / stat_size ;
 
     var curSize = 128 ;
     var curDict = Array("") ;
