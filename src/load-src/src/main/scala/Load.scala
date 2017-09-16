@@ -190,7 +190,7 @@ object Main {
     val wc = input
       .flatMap{ case (s,p,o) => List(s,o) }
       .filter{ case s => s.charAt(0) == '<' && s.charAt(s.length()-1) == '>'}
-      .map{ case s => s.substring(1,s.length()-1),1}.reduceByKey(_+_)
+      .map{ case s => (s.substring(1,s.length()-1),1) }.reduceByKey(_+_)
     wc.persist()
 
     var curSize = 128 ;
