@@ -166,10 +166,10 @@ object Main {
     return s;
   }
   
-  def countPrefix( input:RDD[(String,Int)], step:Int, target:Long, dict:IndexedSeq[String] ) : Array[String] = {
+  def countPrefix( input:RDD[(String,Int)], step:Int, target:Long, dict:rg.apache.spark.broadcast.Broadcast[IndexedSeq[String]] ) : Array[String] = {
     return input.map{ case (word,nb) => 
-      val curprefix = prefixSearch(dict,word) ;
-      val pre_length = dict(curprefix).length ;
+      val curprefix = prefixSearch(dict.value,word) ;
+      val pre_length = dict.value(curprefix).length ;
       val length = pre_length + step ;
       if(length>word.length) {
         ((-1,""),0)
@@ -179,7 +179,7 @@ object Main {
       }.reduceByKey(_+_)
         .filter{ case (key,count) => (count>target) || (step==0 && count>1) }
         .collect()
-        .map { case ((pre,add),nb) => if(pre>=0) { dict(pre).concat(add) } else { add}}
+        .map { case ((pre,add),nb) => if(pre>=0) { dict.value(pre).concat(add) } else { add}}
   }
   
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
@@ -200,7 +200,7 @@ object Main {
       val dict : scala.collection.immutable.IndexedSeq[String] = curDict.toIndexedSeq ;
       val curS = curSize ;
       val bc_curS = sc.broadcast(curS);
-      lastDict = countPrefix(wc,bc_curS.value, target, dict) ;
+      lastDict = countPrefix(wc,bc_curS, target, dict) ;
       curDict = (curDict ++lastDict).sortWith(_<_) ;
 //      println(curSize.toString)
     }
