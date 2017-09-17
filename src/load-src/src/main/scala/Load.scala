@@ -166,7 +166,7 @@ object Main {
     return s;
   }
   
-  def countPrefix( input:RDD[(String,Int)], step:Int, target:Long, dict:rg.apache.spark.broadcast.Broadcast[IndexedSeq[String]] ) : Array[String] = {
+  def countPrefix( input:RDD[(String,Int)], step:Int, target:Long, dict:org.apache.spark.broadcast.Broadcast[IndexedSeq[String]] ) : Array[String] = {
     return input.map{ case (word,nb) => 
       val curprefix = prefixSearch(dict.value,word) ;
       val pre_length = dict.value(curprefix).length ;
