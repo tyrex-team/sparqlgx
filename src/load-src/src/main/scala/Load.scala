@@ -155,7 +155,7 @@ object Main {
     return last_ok ;
   }
 
-  def prefixReplace( dict : scala.collection.immutable.IndexedSeq[String], s:String) : String = {
+  def prefixReplace( dict : Array[String], s:String) : String = {
     if(s(0) == '<' || s(s.length()-1) == '>') {
       val search = s.substring(1,s.length()-1)
       val id = prefixSearch(dict,search);
