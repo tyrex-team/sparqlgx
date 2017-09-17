@@ -155,7 +155,7 @@ object Main {
     return last_ok ;
   }
 
-  def prefixReplace( dict : IndexedSeq[String], s:String) : String = {
+  def prefixReplace( dict : scala.collection.immutable.IndexedSeq[String], s:String) : String = {
     if(s(0) == '<' || s(s.length()-1) == '>') {
       val search = s.substring(1,s.length()-1)
       val id = prefixSearch(dict,search);
@@ -166,7 +166,7 @@ object Main {
     return s;
   }
   
-  def countPrefix( input:RDD[(String,Int)], step:Int, target:Long, dict:org.apache.spark.broadcast.Broadcast[IndexedSeq[String]] ) : Array[String] = {
+  def countPrefix( input:RDD[(String,Int)], step:Int, target:Long, dict:org.apache.spark.broadcast.Broadcast[scala.collection.immutable.IndexedSeq[String]] ) : Array[String] = {
     return input.map{ case (word,nb) => 
       val curprefix = prefixSearch(dict.value,word) ;
       val pre_length = dict.value(curprefix).length ;
