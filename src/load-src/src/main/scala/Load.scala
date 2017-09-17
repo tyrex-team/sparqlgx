@@ -199,8 +199,8 @@ object Main {
       curSize /= 2 ;
       val dict : scala.collection.immutable.IndexedSeq[String] = curDict.toIndexedSeq ;
       val curS = curSize ;
-      val bc_curS = sc.broadcast(curS);
-      lastDict = countPrefix(wc,bc_curS, target, dict) ;
+      val bc_dict = sc.broadcast(dict);
+      lastDict = countPrefix(wc,curS, target, bc_dict) ;
       curDict = (curDict ++lastDict).sortWith(_<_) ;
 //      println(curSize.toString)
     }
