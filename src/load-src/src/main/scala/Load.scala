@@ -286,7 +286,7 @@ object Main {
     // Cut of spark logs.
     Logger.getLogger("org").setLevel(Level.OFF);
     Logger.getLogger("akka").setLevel(Level.OFF);
-    val reg = new Regex("\\s+.\\s*$") ;
+    val reg = new Regex("\\s*.\\s*$") ;
     val conf = new SparkConf().setAppName("Simple Application");
     val sc = new SparkContext(conf);
     
