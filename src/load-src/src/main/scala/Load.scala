@@ -31,16 +31,38 @@ object Main {
   var debug = false ;
 
   def merge(xs: List[(Long,String)], ys: List[(Long,String)],n:Int): List[(Long,String)] = {
-    if (n==0) { Nil }
-    else
-      (xs, ys) match {
-        case(Nil, Nil) => Nil
-        case(Nil, y::ys) => y::merge(Nil,ys,n-1)
-        case(x::xs, Nil) => x::merge(xs,Nil,n-1)
-        case(x :: xs1, y :: ys1) =>
-          if (x._1 > y._1) x::merge(xs1, ys,n-1)
-          else y :: merge(xs, ys1,n-1)
+    var i = n;
+    var x = xs ;
+    var y = ys ;
+    var res : List[(Long,String)] = Nil ;
+    while(i > 0)
+    {
+      i=i-1;
+      (x, y) match {
+        case(Nil, Nil) => 
+        case(Nil, yh::yq) => res = yh::res ; y = yq
+        case(xh::xq, Nil) => res = xh::res ; x = xq
+        case(xh :: xq, yh :: yq) =>
+          if (xh._1 > yh._1) {
+              res = xh::res ;
+              x = xq ; 
+            }
+          else {
+              res = yh::res ;
+              y = yq ;
+          }
       }
+    }
+    var rev : List[(Long,String)] = Nil ;
+    while(res != Nil) {
+      res match {
+        case Nil =>
+        case(h::t) => 
+          rev = h::rev ;
+          res = t 
+      }
+    }
+    rev
   }
 
 
@@ -172,7 +194,7 @@ object Main {
       val pre_length = dict.value(curprefix).length ;
       val length = pre_length + step ;
       if(length>word.length) {
-        ((-1,""),0)
+        ((-1,""),0l)
       } else {
         ((curprefix,word.substring(pre_length,length)),nb)
       }
