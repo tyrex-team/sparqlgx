@@ -166,7 +166,7 @@ object Main {
     return s;
   }
   
-  def countPrefix( input:RDD[(String,Int)], step:Int, target:Long, dict:org.apache.spark.broadcast.Broadcast[scala.collection.immutable.IndexedSeq[String]] ) : Array[String] = {
+  def countPrefix( input:RDD[(String,Long)], step:Int, target:Long, dict:org.apache.spark.broadcast.Broadcast[scala.collection.immutable.IndexedSeq[String]] ) : Array[String] = {
     return input.map{ case (word,nb) => 
       val curprefix = prefixSearch(dict.value,word) ;
       val pre_length = dict.value(curprefix).length ;
@@ -187,7 +187,7 @@ object Main {
     val wc = input
       .flatMap{ case (s,p,o) => List(s,o) }
       .filter{ case s => s.charAt(0) == '<' && s.charAt(s.length()-1) == '>'}
-      .map{ case s => (s.substring(1,s.length()-1),1) }.reduceByKey(_+_)
+      .map{ case s => (s.substring(1,s.length()-1),1.asInstanceOf[Long]) }.reduceByKey(_+_)
     wc.persist()
     val nbLines = wc.map{ case (w,n) => n}.reduce(_+_) ;    
     val target = nbLines / 2 / stat_size ;
