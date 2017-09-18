@@ -30,7 +30,7 @@ object Main {
 
   var debug = false ;
 
-  def merge(xs: List[(Int,String)], ys: List[(Int,String)],n:Int): List[(Int,String)] = {
+  def merge(xs: List[(Long,String)], ys: List[(Long,String)],n:Int): List[(Long,String)] = {
     if (n==0) { Nil }
     else
       (xs, ys) match {
@@ -63,9 +63,9 @@ object Main {
     val output = new BufferedWriter(new FileWriter(path))
     val stat_size_cst = stat_size ;
     val stat = input
-      .flatMap{ case (s,p,o) => List(((0,s),1),((1,p),1),((2,o),1)) }
+      .flatMap{ case (s,p,o) => List(((0,s),1l),((1,p),1l),((2,o),1l)) }
       .reduceByKey(_+_).map { t => (t._1._1,(t._2,t._1._2))} // Compute word count
-      .aggregateByKey( (Nil:List[(Int,String)],0) ) ( // Compute the stat_size_cst most present per key (and key is s or p or o)
+      .aggregateByKey( (Nil:List[(Long,String)],0) ) ( // Compute the stat_size_cst most present per key (and key is s or p or o)
       { case ((acc,size),el) =>  (merge(el::Nil,acc,stat_size_cst),(size+1) min stat_size_cst) },
       { case ((a1,s1),(a2,s2)) => (merge(a1,a2,stat_size_cst),((s1+s2) min stat_size_cst)) }
     ).collect.sortWith{case (a,b) => a._1<b._1 }
@@ -81,9 +81,9 @@ object Main {
   def fullstat(input:RDD[(String,String,String)], path:String) {
     val output = new BufferedWriter(new FileWriter(path)) ;
     val stat_size_cst = stat_size ;
-    val stat = input.flatMap{ case (s,p,o) => List(((0,p,s),1),((1,p,o),1))}
+    val stat = input.flatMap{ case (s,p,o) => List(((0,p,s),1l),((1,p,o),1l))}
       .reduceByKey(_+_).map { t => ((t._1._2,t._1._1),(t._2,t._1._3))} // Compute word count
-      .aggregateByKey( (Nil:List[(Int,String)],0,0,0) ) ( //
+      .aggregateByKey( (Nil:List[(Long,String)],0l,0l,0l) ) ( //
       { case ((acc,size,nbDif,total),el) => (merge(el::Nil,acc,stat_size_cst),(size+1) min stat_size_cst,nbDif+1,total+el._1) },
       { case ((a1,s1,n1,t1),(a2,s2,n2,t2)) => (merge(a1,a2,stat_size_cst),((s1+s2) min stat_size_cst),n1+n2,t1+t2) }
     ).collect.foreach {
@@ -184,11 +184,10 @@ object Main {
   
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
     val output = new BufferedWriter(new FileWriter(path)) ;
-    val oneLong : Long = 1 ;
     val wc = input
       .flatMap{ case (s,p,o) => List(s,o) }
       .filter{ case s => s.charAt(0) == '<' && s.charAt(s.length()-1) == '>'}
-      .map{ case s => (s.substring(1,s.length()-1),oneLong) }.reduceByKey(_+_)
+      .map{ case s => (s.substring(1,s.length()-1),1l) }.reduceByKey(_+_)
     wc.persist()
     val nbLines = wc.map{ case (w,n) => n}.reduce(_+_) ;    
     val target : Long = nbLines / 2 / stat_size ;
