@@ -374,5 +374,6 @@ object Main {
       case Some(path) => fullstat(prefixed_input,path)
     }
     if(debug) { println("Full stat done"); }
-  }                
+    sc.stop() ;
+  }
 }
