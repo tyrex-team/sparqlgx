@@ -115,6 +115,14 @@ object Query {
     List.map (fun t -> if List.mem t l2 then "bis_"^(escape_var t) else t) l1
   in
 
+  let pos_of l1 l2 =
+    let rec foo x = function
+      | [] -> failwith ("not found "^__LOC__)
+      | a::q -> if a=x then 0 else 1+foo x q
+    in
+    List.map (fun x -> foo x l2) l1
+  in
+  
   
   (*foo term returns (id,cols) where "V"id is the variable associated
   with term and cols is the list of columns of term (in the order they
@@ -172,6 +180,7 @@ object Query {
     | Keep(k,c) -> k
     | FilterWithBroadcast(a,_,_) -> cols a
     | Broadcast(_,a,b) -> cols b
+    | StarJoin(a,b,c) -> ListSet.union (ListSet.union (cols a) (cols b)) (cols b)
     | Union(a,b) 
       | LeftJoin(a,b)
       | Join(a,b)
@@ -234,6 +243,26 @@ object Query {
                "val "^res^"="^code_a^mapkeys cols_a keys_a cols_join
                ^".leftOuterJoin("^code_b^mapkeys cols_b keys_b cols_join^")"
                ^".mapValues{case( ("^(join [] cols_a)^"), opt_b)=> opt_b match { case None => ("^(join [] cols_union_none)^") case Some( ("^join [] cols_b_bis^") ) => ("^join [] cols_union_some ^") }}",(List.map (fun s -> List.assoc s cols_int) cols_join),cols_union_some
+             
+          | StarJoin(a,b,c) ->
+             let code_a, keys_a, cols_a = foo a
+             and code_b, keys_b, cols_b = foo b 
+             and code_c, keys_c, cols_c = foo c in
+             let col = match ListSet.inter (cols_c) (cols_a) with
+               | [c] -> c
+               | _ -> failwith "star join not on a single column!"
+             in
+             let cols_res = ListSet.union (ListSet.union cols_a cols_b) cols_c in
+             "val "^res^"="^code_a^(mapkeys cols_a keys_a [col]) ^
+               ".cogroup("^code_b^(mapkeys cols_b keys_b [col])^
+                           code_c^(mapkeys cols_c keys_c [col])^
+                             ").flatMapValues{ case (a,b,c) => \n"^
+                               "var res = List()\n"^
+                                "if ( ! (a.isEmpty || b.isEmpty || c.isEmpty) ) {\n"^
+                                  "for (u <- a.iterator;v <- b.iterator; w <- c.iterator) \n"^
+                                    "(u,v,w) match {\n"^
+                                      "case (("^join [] cols_a^"),("^join [] cols_b^"),("^join [] cols_c^")) => "^(join [] cols_res)^"\n"^
+                             "}",(pos_of [col] cols_res),cols_res
              
           | Join(b,a) ->
              let code_a,keys_a,cols_a = foo a

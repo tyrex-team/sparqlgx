@@ -15,6 +15,7 @@ type algebra =
   | Join of algebra * algebra
   | Union of algebra * algebra
   | LeftJoin of algebra * algebra
+  | StarJoin of  algebra * algebra * algebra
   | JoinWithBroadcast of algebra * algebra
   | Broadcast of int*algebra*algebra
   | FilterWithBroadcast of algebra * int * string list
