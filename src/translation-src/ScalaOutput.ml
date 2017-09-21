@@ -180,7 +180,8 @@ object Query {
     | Keep(k,c) -> k
     | FilterWithBroadcast(a,_,_) -> cols a
     | Broadcast(_,a,b) -> cols b
-    | StarJoin(a,b,c) -> ListSet.union (ListSet.union (cols a) (cols b)) (cols b)
+    | StarJoin3(a,b,c) -> ListSet.union (ListSet.union (cols a) (cols b)) (cols b)
+    | StarJoin4(a,b,c,d) -> ListSet.union (ListSet.union (cols a) (cols b)) (ListSet.union (cols c) (cols d))
     | Union(a,b) 
       | LeftJoin(a,b)
       | Join(a,b)
@@ -244,7 +245,7 @@ object Query {
                ^".leftOuterJoin("^code_b^mapkeys cols_b keys_b cols_join^")"
                ^".mapValues{case( ("^(join [] cols_a)^"), opt_b)=> opt_b match { case None => ("^(join [] cols_union_none)^") case Some( ("^join [] cols_b_bis^") ) => ("^join [] cols_union_some ^") }}",(List.map (fun s -> List.assoc s cols_int) cols_join),cols_union_some
              
-          | StarJoin(a,b,c) ->
+          | StarJoin3(a,b,c) ->
              let code_a, keys_a, cols_a = foo a
              and code_b, keys_b, cols_b = foo b 
              and code_c, keys_c, cols_c = foo c in
@@ -253,8 +254,8 @@ object Query {
                | _ -> failwith "star join not on a single column!"
              in
              let cols_res = ListSet.union (ListSet.union cols_a cols_b) cols_c in
-             "val "^res^"="^code_a^(mapkeys cols_a keys_a [col]) ^
-               ".cogroup("^code_b^(mapkeys cols_b keys_b [col])^
+             "val "^res^"="^code_a^(mapkeys cols_a keys_a [col])^
+               ".cogroup3("^code_b^(mapkeys cols_b keys_b [col])^","^
                            code_c^(mapkeys cols_c keys_c [col])^
                              ").flatMapValues{ case (a,b,c) => \n"^
                                "var res = Nil\n"^
@@ -262,6 +263,27 @@ object Query {
                                   "for (u <- a.iterator;v <- b.iterator; w <- c.iterator) \n"^
                                     "(u,v,w) match {\n"^
                                       "case (("^join [] cols_a^"),("^join [] cols_b^"),("^join [] cols_c^")) => res = ("^(join [] cols_res)^")::res\n }}\n"^
+                             "return res;}",(pos_of [col] cols_res),cols_res
+          | StarJoin4(a,b,c,d) ->
+             let code_a, keys_a, cols_a = foo a
+             and code_b, keys_b, cols_b = foo b 
+             and code_c, keys_c, cols_c = foo c 
+             and code_d, keys_d, cols_d = foo d in
+             let col = match ListSet.inter (cols_c) (cols_a) with
+               | [c] -> c
+               | _ -> failwith "star join not on a single column!"
+             in
+             let cols_res = ListSet.union (ListSet.union cols_a cols_b) (ListSet.union cols_c cols_d) in
+             "val "^res^"="^code_a^(mapkeys cols_a keys_a [col]) ^
+               ".cogroup4("^code_b^(mapkeys cols_b keys_b [col])^","^
+                           code_c^(mapkeys cols_c keys_c [col])^","^
+                           code_d^(mapkeys cols_d keys_d [col])^
+                             ").flatMapValues{ case (a,b,c,d) => \n"^
+                               "var res = Nil\n"^
+                                "if ( ! (a.isEmpty || b.isEmpty || c.isEmpty || d.isEmpty) ) {\n"^
+                                  "for (u <- a.iterator;v <- b.iterator; w <- c.iterator ; z <- d.iterator) \n"^
+                                    "(u,v,w) match {\n"^
+                                      "case (("^join [] cols_a^"),("^join [] cols_b^"),("^join [] cols_c^"),("^join [] cols_d^")) => res = ("^(join [] cols_res)^")::res\n }}\n"^
                              "return res;}",(pos_of [col] cols_res),cols_res
              
           | Join(b,a) ->

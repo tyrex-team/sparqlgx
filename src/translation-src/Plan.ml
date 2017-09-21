@@ -225,7 +225,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
                                                                     (size_of_stat tpcost.(id_2))))
               in
               let stat_res = combine stat (combine tpcost.(id_1) tpcost.(id_2)) in
-              let plan_res = StarJoin(plan,trad.(id_1),trad.(id_2)) in
+              let plan_res = StarJoin3(plan,trad.(id_1),trad.(id_2)) in
               let cols_res = ListSet.inter cols tpcols.(id_1) in
               Hashtbl.add stat_of_plan plan_res stat_res ;
               dyn_star.(h) <- Some (cost_res,stat_res,plan_res,cols_res) ;
