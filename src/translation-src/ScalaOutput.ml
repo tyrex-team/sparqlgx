@@ -255,7 +255,7 @@ object Query {
              in
              let cols_res = ListSet.union (ListSet.union cols_a cols_b) cols_c in
              "val "^res^"="^code_a^(mapkeys cols_a keys_a [col])^
-               ".cogroup3("^code_b^(mapkeys cols_b keys_b [col])^","^
+               ".cogroup("^code_b^(mapkeys cols_b keys_b [col])^","^
                            code_c^(mapkeys cols_c keys_c [col])^
                              ").flatMapValues{ case (a,b,c) => \n"^
                                "var res = Nil\n"^
@@ -275,7 +275,7 @@ object Query {
              in
              let cols_res = ListSet.union (ListSet.union cols_a cols_b) (ListSet.union cols_c cols_d) in
              "val "^res^"="^code_a^(mapkeys cols_a keys_a [col]) ^
-               ".cogroup4("^code_b^(mapkeys cols_b keys_b [col])^","^
+               ".cogroup("^code_b^(mapkeys cols_b keys_b [col])^","^
                            code_c^(mapkeys cols_c keys_c [col])^","^
                            code_d^(mapkeys cols_d keys_d [col])^
                              ").flatMapValues{ case (a,b,c,d) => \n"^
