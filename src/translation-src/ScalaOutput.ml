@@ -109,10 +109,12 @@ object Query {
       then ""
       else values^".keyBy{case ("^(join [] cols)^")=>("^(join [] newkeys)^")}"
   in
-  
+
+  let id_rename = ref 0 in 
   let renamedup l1 l2 =
     (* bis_varname is not a possible variable name *)
-    List.map (fun t -> if List.mem t l2 then "bis_"^(escape_var t) else t) l1
+    incr id_rename ;
+    List.map (fun t -> if List.mem t l2 then "bis_"^(string_of_int (!id_rename))^"_"^(escape_var t) else t) l1
   in
 
   let pos_of l1 l2 =
@@ -262,7 +264,7 @@ object Query {
                                 "if ( ! (a.isEmpty || b.isEmpty || c.isEmpty) ) {\n"^
                                   "for (u <- a.iterator;v <- b.iterator; w <- c.iterator) \n"^
                                     "(u,v,w) match {\n"^
-                                      "case (("^join [] cols_a^"),("^join [] cols_b^"),("^join [] cols_c^")) => res = ("^(join [] cols_res)^")::res\n }}\n"^
+                                      "case (("^join [] (renamedup cols_a [col])^"),("^join [] (renamedup cols_b [col])^"),("^join [] cols_c^")) => res = ("^(join [] cols_res)^")::res\n }}\n"^
                              "return res;}",(pos_of [col] cols_res),cols_res
           | StarJoin4(a,b,c,d) ->
              let code_a, keys_a, cols_a = foo a
@@ -282,8 +284,8 @@ object Query {
                                "var res = Nil\n"^
                                 "if ( ! (a.isEmpty || b.isEmpty || c.isEmpty || d.isEmpty) ) {\n"^
                                   "for (u <- a.iterator;v <- b.iterator; w <- c.iterator ; z <- d.iterator) \n"^
-                                    "(u,v,w) match {\n"^
-                                      "case (("^join [] cols_a^"),("^join [] cols_b^"),("^join [] cols_c^"),("^join [] cols_d^")) => res = ("^(join [] cols_res)^")::res\n }}\n"^
+                                    "(u,v,w,z) match {\n"^
+                                      "case (("^join [] (renamedup cols_a [col])^"),("^join [] (renamedup cols_b [col])^"),("^join [] (renamedup cols_c [col])^"),("^join [] cols_d^")) => res = ("^(join [] cols_res)^")::res\n }}\n"^
                              "return res;}",(pos_of [col] cols_res),cols_res
              
           | Join(b,a) ->
