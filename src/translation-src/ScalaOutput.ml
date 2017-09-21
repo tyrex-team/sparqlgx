@@ -257,12 +257,12 @@ object Query {
                ".cogroup("^code_b^(mapkeys cols_b keys_b [col])^
                            code_c^(mapkeys cols_c keys_c [col])^
                              ").flatMapValues{ case (a,b,c) => \n"^
-                               "var res = List()\n"^
+                               "var res = Nil\n"^
                                 "if ( ! (a.isEmpty || b.isEmpty || c.isEmpty) ) {\n"^
                                   "for (u <- a.iterator;v <- b.iterator; w <- c.iterator) \n"^
                                     "(u,v,w) match {\n"^
-                                      "case (("^join [] cols_a^"),("^join [] cols_b^"),("^join [] cols_c^")) => "^(join [] cols_res)^"\n"^
-                             "}",(pos_of [col] cols_res),cols_res
+                                      "case (("^join [] cols_a^"),("^join [] cols_b^"),("^join [] cols_c^")) => res = ("^(join [] cols_res)^")::res\n }}\n"^
+                             "return res;",(pos_of [col] cols_res),cols_res
              
           | Join(b,a) ->
              let code_a,keys_a,cols_a = foo a
