@@ -262,7 +262,7 @@ object Query {
                                   "for (u <- a.iterator;v <- b.iterator; w <- c.iterator) \n"^
                                     "(u,v,w) match {\n"^
                                       "case (("^join [] cols_a^"),("^join [] cols_b^"),("^join [] cols_c^")) => res = ("^(join [] cols_res)^")::res\n }}\n"^
-                             "return res;",(pos_of [col] cols_res),cols_res
+                             "return res;}",(pos_of [col] cols_res),cols_res
              
           | Join(b,a) ->
              let code_a,keys_a,cols_a = foo a
