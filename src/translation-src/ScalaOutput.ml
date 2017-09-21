@@ -260,7 +260,7 @@ object Query {
                ".cogroup("^code_b^(mapkeys cols_b keys_b [col])^","^
                            code_c^(mapkeys cols_c keys_c [col])^
                              ").flatMapValues{ case (a,b,c) => \n"^
-                               "var res : List[("join [] (List.map (fun x -> "String") col_res)")]= Nil;\n"^
+                               "var res : List[("^join [] (List.map (fun x -> "String") cols_res)^")]= Nil;\n"^
                                 "if ( ! (a.isEmpty || b.isEmpty || c.isEmpty) ) {\n"^
                                   "for (u <- a.iterator;v <- b.iterator; w <- c.iterator) \n"^
                                     "(u,v,w) match {\n"^
@@ -281,7 +281,7 @@ object Query {
                            code_c^(mapkeys cols_c keys_c [col])^","^
                            code_d^(mapkeys cols_d keys_d [col])^
                              ").flatMapValues{ case (a,b,c,d) => \n"^
-                               "var res : List[("join [] (List.map (fun x -> "String") col_res)")]= Nil;\n"^
+                               "var res : List[("^join [] (List.map (fun x -> "String") cols_res)^")]= Nil;\n"^
                                 "if ( ! (a.isEmpty || b.isEmpty || c.isEmpty || d.isEmpty) ) {\n"^
                                   "for (u <- a.iterator;v <- b.iterator; w <- c.iterator ; z <- d.iterator) \n"^
                                     "(u,v,w,z) match {\n"^
