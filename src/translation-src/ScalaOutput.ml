@@ -265,7 +265,7 @@ object Query {
                                   "for (u <- a.iterator;v <- b.iterator; w <- c.iterator) \n"^
                                     "(u,v,w) match {\n"^
                                       "case (("^join [] (renamedup cols_a [col])^"),("^join [] (renamedup cols_b [col])^"),("^join [] cols_c^")) => res = ("^(join [] cols_res)^")::res\n }}\n"^
-                             "return res;}",(pos_of [col] cols_res),cols_res
+                             "res}",(pos_of [col] cols_res),cols_res
           | StarJoin4(a,b,c,d) ->
              let code_a, keys_a, cols_a = foo a
              and code_b, keys_b, cols_b = foo b 
@@ -286,7 +286,7 @@ object Query {
                                   "for (u <- a.iterator;v <- b.iterator; w <- c.iterator ; z <- d.iterator) \n"^
                                     "(u,v,w,z) match {\n"^
                                       "case (("^join [] (renamedup cols_a [col])^"),("^join [] (renamedup cols_b [col])^"),("^join [] (renamedup cols_c [col])^"),("^join [] cols_d^")) => res = ("^(join [] cols_res)^")::res\n }}\n"^
-                             "return res;}",(pos_of [col] cols_res),cols_res
+                             "res}",(pos_of [col] cols_res),cols_res
              
           | Join(b,a) ->
              let code_a,keys_a,cols_a = foo a
