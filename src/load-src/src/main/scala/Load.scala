@@ -30,17 +30,39 @@ object Main {
 
   var debug = false ;
 
-  def merge(xs: List[(Int,String)], ys: List[(Int,String)],n:Int): List[(Int,String)] = {
-    if (n==0) { Nil }
-    else
-      (xs, ys) match {
-        case(Nil, Nil) => Nil
-        case(Nil, y::ys) => y::merge(Nil,ys,n-1)
-        case(x::xs, Nil) => x::merge(xs,Nil,n-1)
-        case(x :: xs1, y :: ys1) =>
-          if (x._1 > y._1) x::merge(xs1, ys,n-1)
-          else y :: merge(xs, ys1,n-1)
+  def merge(xs: List[(Long,String)], ys: List[(Long,String)],n:Int): List[(Long,String)] = {
+    var i = n;
+    var x = xs ;
+    var y = ys ;
+    var res : List[(Long,String)] = Nil ;
+    while(i > 0)
+    {
+      i=i-1;
+      (x, y) match {
+        case(Nil, Nil) => 
+        case(Nil, yh::yq) => res = yh::res ; y = yq
+        case(xh::xq, Nil) => res = xh::res ; x = xq
+        case(xh :: xq, yh :: yq) =>
+          if (xh._1 > yh._1) {
+              res = xh::res ;
+              x = xq ; 
+            }
+          else {
+              res = yh::res ;
+              y = yq ;
+          }
       }
+    }
+    var rev : List[(Long,String)] = Nil ;
+    while(res != Nil) {
+      res match {
+        case Nil =>
+        case(h::t) => 
+          rev = h::rev ;
+          res = t 
+      }
+    }
+    rev
   }
 
 
@@ -63,9 +85,9 @@ object Main {
     val output = new BufferedWriter(new FileWriter(path))
     val stat_size_cst = stat_size ;
     val stat = input
-      .flatMap{ case (s,p,o) => List(((0,s),1),((1,p),1),((2,o),1)) }
+      .flatMap{ case (s,p,o) => List(((0,s),1l),((1,p),1l),((2,o),1l)) }
       .reduceByKey(_+_).map { t => (t._1._1,(t._2,t._1._2))} // Compute word count
-      .aggregateByKey( (Nil:List[(Int,String)],0) ) ( // Compute the stat_size_cst most present per key (and key is s or p or o)
+      .aggregateByKey( (Nil:List[(Long,String)],0) ) ( // Compute the stat_size_cst most present per key (and key is s or p or o)
       { case ((acc,size),el) =>  (merge(el::Nil,acc,stat_size_cst),(size+1) min stat_size_cst) },
       { case ((a1,s1),(a2,s2)) => (merge(a1,a2,stat_size_cst),((s1+s2) min stat_size_cst)) }
     ).collect.sortWith{case (a,b) => a._1<b._1 }
@@ -81,9 +103,9 @@ object Main {
   def fullstat(input:RDD[(String,String,String)], path:String) {
     val output = new BufferedWriter(new FileWriter(path)) ;
     val stat_size_cst = stat_size ;
-    val stat = input.flatMap{ case (s,p,o) => List(((0,p,s),1),((1,p,o),1))}
+    val stat = input.flatMap{ case (s,p,o) => List(((0,p,s),1l),((1,p,o),1l))}
       .reduceByKey(_+_).map { t => ((t._1._2,t._1._1),(t._2,t._1._3))} // Compute word count
-      .aggregateByKey( (Nil:List[(Int,String)],0,0,0) ) ( //
+      .aggregateByKey( (Nil:List[(Long,String)],0l,0l,0l) ) ( //
       { case ((acc,size,nbDif,total),el) => (merge(el::Nil,acc,stat_size_cst),(size+1) min stat_size_cst,nbDif+1,total+el._1) },
       { case ((a1,s1,n1,t1),(a2,s2,n2,t2)) => (merge(a1,a2,stat_size_cst),((s1+s2) min stat_size_cst),n1+n2,t1+t2) }
     ).collect.foreach {
@@ -155,7 +177,7 @@ object Main {
     return last_ok ;
   }
 
-  def prefixReplace( dict : IndexedSeq[String], s:String) : String = {
+  def prefixReplace( dict : Array[String], s:String) : String = {
     if(s(0) == '<' || s(s.length()-1) == '>') {
       val search = s.substring(1,s.length()-1)
       val id = prefixSearch(dict,search);
@@ -166,26 +188,31 @@ object Main {
     return s;
   }
   
-  def countPrefix( input:RDD[String], step:Int, target:Long, dict:IndexedSeq[String] ) : Array[String] = {
-    return input.map{ word => 
-      val length = dict(prefixSearch(dict,word)).length + step ;
+  def countPrefix( input:RDD[(String,Long)], step:Int, target:Long, dict:org.apache.spark.broadcast.Broadcast[scala.collection.immutable.IndexedSeq[String]] ) : Array[String] = {
+    return input.map{ case (word,nb) => 
+      val curprefix = prefixSearch(dict.value,word) ;
+      val pre_length = dict.value(curprefix).length ;
+      val length = pre_length + step ;
       if(length>word.length) {
-        ("",1)
+        ((-1,""),0l)
       } else {
-        (word.substring(0,length),1)
+        ((curprefix,word.substring(pre_length,length)),nb)
       }
-      }.reduceByKey(_+_).filter{ case (key,count) => (count>target) || (step==0 && count>1) }.map(_._1).collect()
+      }.reduceByKey(_+_)
+        .filter{ case (key,count) => (count>target) || (step==0 && count>1) }
+        .collect()
+        .map { case ((pre,add),nb) => if(pre>=0) { dict.value(pre).concat(add) } else { add}}
   }
   
   def prefix(input:RDD[(String,String,String)], path:String, sc : SparkContext) : RDD[(String,String,String)] = {
-    val nbLines = input.count() ;
-    
-    val target = nbLines / 2 / stat_size ;
     val output = new BufferedWriter(new FileWriter(path)) ;
     val wc = input
       .flatMap{ case (s,p,o) => List(s,o) }
       .filter{ case s => s.charAt(0) == '<' && s.charAt(s.length()-1) == '>'}
-      .map{ case s => s.substring(1,s.length()-1)}
+      .map{ case s => (s.substring(1,s.length()-1),1l) }.reduceByKey(_+_)
+    wc.persist()
+    val nbLines = wc.map{ case (w,n) => n}.reduce(_+_) ;    
+    val target : Long = nbLines / 2 / stat_size ;
 
     var curSize = 128 ;
     var curDict = Array("") ;
@@ -194,8 +221,8 @@ object Main {
       curSize /= 2 ;
       val dict : scala.collection.immutable.IndexedSeq[String] = curDict.toIndexedSeq ;
       val curS = curSize ;
-      val bc_curS = sc.broadcast(curS);
-      lastDict = countPrefix(wc,bc_curS.value, target, dict) ;
+      val bc_dict = sc.broadcast(dict);
+      lastDict = countPrefix(wc,curS, target, bc_dict) ;
       curDict = (curDict ++lastDict).sortWith(_<_) ;
 //      println(curSize.toString)
     }
@@ -259,7 +286,7 @@ object Main {
     // Cut of spark logs.
     Logger.getLogger("org").setLevel(Level.OFF);
     Logger.getLogger("akka").setLevel(Level.OFF);
-    val reg = new Regex("\\s+.\\s*$") ;
+    val reg = new Regex("\\s*.\\s*$") ;
     val conf = new SparkConf().setAppName("Simple Application");
     val sc = new SparkContext(conf);
     
@@ -268,7 +295,7 @@ object Main {
     var fullstat_path : Option[String] = None ;
     var prefix_path : Option[String] = None ;
     var tripleFile = "" ;
-    var uniq = true ;
+    var uniq = false ;
     var curArg = 0 ;
     while(curArg < args.length) {
       args(curArg) match {
@@ -297,6 +324,8 @@ object Main {
             throw new Exception("No file to store prefixes given!");
           prefix_path=Some(args(curArg+1)) ;
           curArg+=1 ;
+        case "--clean" =>
+          uniq = true ;
         case "--no-clean" =>
           uniq = false ;
         case "--debug" =>
@@ -320,7 +349,7 @@ object Main {
     } ;
 
   val input = dirty_input ;
-//if(uniq) {dirty_input.distinct().persist() } else {dirty_input.persist()};
+ //   if(uniq) {dirty_input.distinct().persist() } else {dirty_input.persist()};
 
    val prefixed_input = (prefix_path match {
      case None => input
@@ -345,5 +374,6 @@ object Main {
       case Some(path) => fullstat(prefixed_input,path)
     }
     if(debug) { println("Full stat done"); }
-  }                
+    sc.stop() ;
+  }
 }

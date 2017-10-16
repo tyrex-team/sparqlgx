@@ -65,6 +65,7 @@ object Query {
     }
    var time_taken = (java.lang.System.currentTimeMillis() - start_date).toDouble /1000 ; 
    println(\"Total time: \"+time_taken) ;
+   sc.stop() ;
   }
 }
 " in
