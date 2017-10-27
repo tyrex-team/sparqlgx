@@ -34,8 +34,9 @@ let rec parse_arg = function
   | "--debug"::q -> debug:=true ; parse_arg q
   | "--no-optim"::q -> optim := 0 ; parse_arg q
   | "--stat"::s::q -> Reorder.load s ; optim:=2 ; parse_arg q
+  | "--restricted-stat"::k::s::q-> Reorder.load_rest_stat k s ; optim:=3 ; parse_arg q
   | "--fullstat"::s::q
-    | "--full-stat"::s::q-> Reorder.load_full_stat s ; optim:=3 ; parse_arg q
+  | "--full-stat"::s::q-> Reorder.load_full_stat s ; optim:=3 ; parse_arg q
   | "--prefix"::s::q -> Prefix.load s ; parse_arg q
   | "--plan"::q
     | "--json"::q-> plan:=true ; parse_arg q

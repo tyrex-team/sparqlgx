@@ -7,7 +7,7 @@ let cost_shuffle = big_int_of_int 4
 let cost_broadcast = big_int_of_int 60
 let cost_cartesian = big_int_of_int  10000
 let broadcast_threshold = big_int_of_int 1000000
-
+let cost_broadcast_unit = big_int_of_int 1000000
 let stat_of_plan = Hashtbl.create 17
                  
 let get_size p = try int_of_big_int (fst (Hashtbl.find stat_of_plan p)) with Not_found -> (-1)
@@ -166,7 +166,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
     let cb,sb,pb = get_best hashb [] largeset
     and ca,sa,pa = get_best hasha [] smallset in
 
-    let cost_of_broadcast = mult_big_int (size_of_stat sa) cost_broadcast in
+    let cost_of_broadcast = add_big_int cost_broadcast_unit (mult_big_int (size_of_stat sa) cost_broadcast) in
     let cost_children = add_big_int ca cb in
     let cost_materialization = add_big_int cost_children cost_of_broadcast  in
     let cost_tot = add_big_int cost_materialization (size_of_stat stat) in

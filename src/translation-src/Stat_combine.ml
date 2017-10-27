@@ -110,6 +110,43 @@ let combine (tot1,stat1:'a combstat) (tot2,stat2:'a combstat) =
   (* print_int (List.length (mul_12)) ; print_string " " ; print_int (List.length (mul_21) ) ; print_string " "; print_int (!turns) ; print_newline(); *)
   r
 
+let reststat filename limit : (string*int,bi*string summary) Hashtbl.t  =
+
+  let max_egal a b = if le_big_int (!a) b then a:=b in
+  
+  let res = Hashtbl.create 53 in
+  try
+       let chan = Scanf.Scanning.from_file filename in
+       
+       let foo (nb:int) (nbDef:bi) (tot:bi) =
+         let hshtbl = Hashtbl.create 17 in
+         let nbPerDef = ref zero_big_int in
+         let totDef = ref tot in
+         for cur = 1 to nb do
+           Scanf.bscanf chan "%d %[^\n]\n"
+                        (fun j i ->
+                          let j = bioi j in
+                          if i = "*" || cur>=limit
+                          then max_egal nbPerDef j
+                          else
+                            begin
+                              Hashtbl.add hshtbl i j ;
+                              totDef := sub_big_int (!totDef) j
+                            end
+                        ) ;
+         done ;
+         tot,(hshtbl,nbDef,!nbPerDef,!totDef)
+       in
+       let rec bar () =
+         try
+           Scanf.bscanf chan "%s %d %d %d %d\n" (fun pred col nb nbDef total -> Hashtbl.add res (pred,col) (foo nb (bioi nbDef) (bioi total))) ;
+           bar ()
+         with | End_of_file -> (Scanf.Scanning.close_in chan)
+       in
+       bar () ; res
+  with | Sys_error s -> failwith ("Stat file problem, "^s)
+  
+
   
 let fullstat filename : (string*int,bi*string summary) Hashtbl.t  =
   let res = Hashtbl.create 53 in

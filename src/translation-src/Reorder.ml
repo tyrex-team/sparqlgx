@@ -4,6 +4,7 @@ open Algebra
 open Plan   
 
 let stats = Hashtbl.create 17
+let stat_file = ref None
 
 (* let () = Hashtbl.add stats ("s","*") 1 ; Hashtbl.add stats ("p","*") 1 ; Hashtbl.add stats ("o","*") 1 *)
 let load_into filename hshtbl = 
@@ -99,10 +100,19 @@ let reorder trad_tp l =
 
 ;;
 
-let stat_file = ref None
               
 let load_full_stat s =
   stat_file := Some (Stat_combine.fullstat s) 
+
+let load_rest_stat k s =
+  let limit_stat =
+    try
+      int_of_string k
+    with
+      _ -> failwith ("Argument "^k^" cannot be parsed into an int for restricted stats")
+  in
+  stat_file := Some (Stat_combine.reststat s limit_stat)  
+           
   
 let full_stat trad_tp l =
 
