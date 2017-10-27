@@ -23,6 +23,12 @@ while true; do
 	    stat=1
 	    shift
 	    ;;
+	--restricted-stat )
+	    stat=3
+	    nb_stats=$2
+            shift 2
+	    ;;
+
 	--fullstat )
 	    stat=2
 	    shift
@@ -63,10 +69,14 @@ else
     if [[ $stat == "2" ]] && [[ -f $localpath/$dbName/statfull.txt ]] ;
     then stat="--fullstat $localpath/$dbName/statfull.txt";
     else
-        [[ $stat != "0" ]] && (echo "File stat in $localpath not found! Stats deactivated!") ;
-        stat="";
-    fi ;
-fi ;
+        if [[ $stat == "3" ]] && [[ -f $localpath/$dbName/statfull.txt ]] ;
+        then stat="--restricted-stat $nb_stats $localpath/$dbName/statfull.txt";
+        else
+            [[ $stat != "0" ]] && (echo "File stat in $localpath not found! Stats deactivated!") ;
+            stat="";
+        fi ;
+    fi;
+fi;
 
 ########################################################
 # Job is done in three main steps:
