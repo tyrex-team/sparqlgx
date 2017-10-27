@@ -72,9 +72,14 @@ object Query {
   
   let escape_var a =
     let b = Bytes.escaped a in
-    if a.[0] = '?' then Bytes.set b 0 'v' ;
-    if a.[0] = '$' then Bytes.set b 0 'd' ;
-    b         
+    if  Bytes.length b = 0
+    then  "\"\""
+    else
+      begin
+        if a.[0] = '?' then Bytes.set b 0 'v' ;
+        if a.[0] = '$' then Bytes.set b 0 'd' ;
+        b
+      end
   in
 
   let rec join keys cols =
