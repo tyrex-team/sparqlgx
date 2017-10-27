@@ -51,7 +51,7 @@ EXPOPT[2]="--restricted-stat 0"
 EXPOPT[3]="--restricted-stat 100"
 EXPOPT[4]="--restricted-stat 1000"
 EXPOPT[5]="--restricted-stat 10000"
-NBEXPS=6
+EXPS="$(seq 0 5)"
 NBRUNS=2
 # Time beginning.
 start_time=$(date +%s)
@@ -99,7 +99,7 @@ do
     echo -n "| Query\t|"
     for run in $(seq $NBRUNS) ;
     do
-        for exp in $(seq $NBEXPS) ;
+        for exp in $EXPS ;
         do
             printf "%12s\t|" ${EXPNAME[$exp]} ;
         done ;
@@ -112,7 +112,7 @@ do
         echo -n -e "| $query\t|" 1>&3;
         for run in $(seq $NBRUNS) ;
         do
-            for exp in $(seq $NBEXPS) ;
+            for exp in $EXPS ;
             do
                 (
                     echo "[$query:${EXPNAME[$exp]} run $run] Start" >> ${logs}.out
@@ -131,6 +131,7 @@ do
                     echo "[$query:${EXPNAME[$exp]} run $run] End : $tim" >> ${logs}.out
                     echo "[$query:${EXPNAME[$exp]} run $run] End : $tim" >> ${logs}.err
                 ) 2>>${logs}.err | sed -u "s/^/[${query}:${EXPNAME[$exp]}] /" >>${logs}.out ;
+            done ;
         done ;
         echo "" ;
         exec 3>&- ;
