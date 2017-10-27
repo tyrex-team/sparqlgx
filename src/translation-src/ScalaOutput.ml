@@ -37,6 +37,7 @@ object Query {
            sc.textFile(args(0)+\"/\"+s+\"/*.gz\").map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}
         }
         else {
+           throw new IllegalArgumentException(\"empty files...\");
            sc.emptyRDD[(String,String)]
         };
 
