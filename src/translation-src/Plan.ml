@@ -294,6 +294,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
              dyn_star.(i) <- None ;
            done ;
            let c,s,p = filter_broadcast (cur+1) others tps in
+           let cost = add_big_int c cost_broadcast_unit in
            for i = 0 to Array.length tpcost -1 do
              tpcost.(i) <- old_tpcost.(i) ;
              trad.(i) <- old_trad.(i)
