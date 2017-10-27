@@ -11,11 +11,11 @@ let add_trie t s v =
       | [] -> [s.[i],add_trie t (i+1)]
     in
 
-  match t with
-  | Node(pos,pref) ->
-     if i = String.length s
-     then Node(pos,v::pref)
-     else Node(foo pos,pref)
+    match t with
+    | Node(pos,pref) ->
+       if i = String.length s
+       then Node(pos,v::pref)
+       else Node(foo pos,pref)
   in
   add_trie t 0
 
@@ -24,7 +24,11 @@ let find_trie t s =
     | Node(a,[]) -> foo (i+1) (List.assoc s.[i] a)
     | Node(a,x::t) ->
        try
-         foo (i+1) (List.assoc s.[i] a)
+         if String.length s < i
+         then
+           foo (i+1) (List.assoc s.[i] a)
+         else
+           x,i
        with _ -> x,i
   in
   foo 0 t
