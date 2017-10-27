@@ -302,7 +302,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
            match p with
            | Empty -> zero_big_int,empty_stat (get_col (get_hash (a::tps)) (a::tps)),Empty
            | p ->
-              if lt_big_int c c2 then c,s,Broadcast(cur,combined_term,p) else c2,s2,p2
+              if lt_big_int cost c2 then cost,s,Broadcast(cur,combined_term,p) else c2,s2,p2
          end
        else
          c2,s2,p2
