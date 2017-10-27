@@ -89,7 +89,7 @@ do
     echo "Start loading" >>${logs}.err
     echo "Start loading" >>${logs}.out
     t1=$(date +%s);
-    bash ${PATH_SGX}/sparqlgx.sh load ${BENCHNAME[$b]} ${DATASET[$b]} 1>>${logs}.out 2>>${logs}.err ;
+    bash ${PATH_SGX}/sparqlgx.sh loadall ${BENCHNAME[$b]} ${DATASET[$b]} 1>>${logs}.out 2>>${logs}.err ;
     t2=$(date +%s);
     echo "Finished loading" >>${logs}.err
     echo "Finished loading" >>${logs}.out
