@@ -96,7 +96,7 @@ do
     echo "> ${BENCHNAME[$b]} dataset loaded in $((t2-t1))s."
     echo "----------------------------------------------- EVAL ----------------------------------------------------"
 #    echo -e "| \t|\t     Direct Evaluation\t|\t\t    Standard Evaluation\t\t\t|"
-    echo -n "| Query\t|"
+    echo -ne "| Query\t|"
     for run in $(seq $NBRUNS) ;
     do
         for exp in $EXPS ;
@@ -104,7 +104,7 @@ do
             printf "%12s\t|" ${EXPNAME[$exp]} ;
         done ;
     done ;
-    echo "\n";
+    echo "";
     
     for query in ${QUERIES[$b]}; do
         queryfile=$(dirname $0)/resources/queries/$query.rq
