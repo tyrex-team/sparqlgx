@@ -223,7 +223,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
                 add_big_int cost (
                   add_big_int
                     (add_big_int (size_of_stat tpcost.(id_3))
-                       size_of_stat stat)
+                       (size_of_stat stat))
                     (add_big_int (size_of_stat tpcost.(id_1))
                        (size_of_stat tpcost.(id_2))))
               in
