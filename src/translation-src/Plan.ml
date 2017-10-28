@@ -213,6 +213,29 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
          zero_big_int,empty_stat [],Empty,[]
       | [a] ->                    
          size_of_stat tpcost.(a),tpcost.(a),trad.(a),tpcols.(a)
+      | id_1::id_2::id_3::x::q  ->
+         begin 
+           match dyn_star.(h) with
+           | Some v -> v
+           | None ->
+              let (cost,stat,plan,cols) = foo (h-(p2 id_1)-(p2 id_2)-(p2 id_3)) (x::q) in
+              let cost_res =
+                add_big_int cost (
+                  add_big_int
+                    (add_big_int (size_of_stat tpcost.(id_3))
+                       size_of_stat stat)
+                    (add_big_int (size_of_stat tpcost.(id_1))
+                       (size_of_stat tpcost.(id_2))))
+              in
+              let stat_res = combine (combine stat tpcost.(id_3)) (combine tpcost.(id_1) tpcost.(id_2)) in
+              let plan_res = StarJoin4(plan,trad.(id_1),trad.(id_2),trad.(id_3)) in
+              let cols_res = ListSet.inter cols tpcols.(id_1) in
+              Hashtbl.add stat_of_plan plan_res stat_res ;
+              dyn_star.(h) <- Some (cost_res,stat_res,plan_res,cols_res) ;
+              if sign_big_int (size_of_stat stat_res) = 0
+              then zero_big_int, stat_res, Empty, []
+              else cost_res,stat_res,plan_res,cols_res
+         end
       | id_1::id_2::x::q  ->
          begin 
            match dyn_star.(h) with
