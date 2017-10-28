@@ -212,44 +212,7 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
       | [] -> 
          zero_big_int,empty_stat [],Empty,[]
       | [a] ->                    
-         size_of_stat tpcost.(a),tpcost.(a),trad.(a),tpcols.(a)
-      | [id_1::id_2::id_3::id_4] ->
-         begin 
-           match dyn_star.(h) with
-           | Some v -> v
-           | None ->
-              let cost_res =
-                add_big_int (
-                    (add_big_int (size_of_stat tpcost.(id_3)) (size_of_stat tpcost.(id_4)))
-                    (add_big_int (size_of_stat tpcost.(id_1)) (size_of_stat tpcost.(id_2))))
-              in
-              let stat_res = combine (combine  tpcost.(id_3)  tpcost.(id_4)) (combine tpcost.(id_1) tpcost.(id_2)) in
-              let plan_res = StarJoin4(trad.(id_1),trad.(id_2),trad.(id_3),trad.(id_4)) in
-              let cols_res = ListSet.inter  tpcols.(id_1)  tpcols.(id_2) in
-              Hashtbl.add stat_of_plan plan_res stat_res ;
-              dyn_star.(h) <- Some (cost_res,stat_res,plan_res,cols_res) ;
-              if sign_big_int (size_of_stat stat_res) = 0
-              then zero_big_int, stat_res, Empty, []
-              else cost_res,stat_res,plan_res,cols_res
-         end
-      | [id_1::id_2::id_3] ->
-         begin 
-           match dyn_star.(h) with
-           | Some v -> v
-           | None ->
-              let cost_res =
-                add_big_int ( (size_of_stat tpcost.(id_3)) 
-                    (add_big_int (size_of_stat tpcost.(id_1)) (size_of_stat tpcost.(id_2))))
-              in
-              let stat_res = combine tpcost.(id_3) (combine tpcost.(id_1) tpcost.(id_2)) in
-              let plan_res = StarJoin3(trad.(id_1),trad.(id_2),trad.(id_3)) in
-              let cols_res = ListSet.inter  tpcols.(id_1)  tpcols.(id_2) in
-              Hashtbl.add stat_of_plan plan_res stat_res ;
-              dyn_star.(h) <- Some (cost_res,stat_res,plan_res,cols_res) ;
-              if sign_big_int (size_of_stat stat_res) = 0
-              then zero_big_int, stat_res, Empty, []
-              else cost_res,stat_res,plan_res,cols_res
-         end
+         (size_of_stat tpcost.(a)),tpcost.(a),trad.(a),tpcols.(a)
       | q  ->
          begin 
            match dyn_star.(h) with
@@ -257,19 +220,21 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
            | None ->
               let rec split l1 l2 = function
                 | [] -> l1,l2
-                | a::q -> split l2 (a::l1) q
+                | x::t -> split l2 (x::l1) t
               in
               let l1,l2 = split [] [] q in
-              let h1 = List.fold_left (fun ac el -> ac+p2 el) 0 l1, h2 = h-h1 in
+              let h1 = List.fold_left (fun ac el -> ac+p2 el) 0 l1 in
+              let h2 = h-h1 in
               let (c1,s1,p1,cols1) = foo h1 l1 in
               let (c2,s2,p2,cols2) = foo h2 l2 in
               let cost_res = add_big_int c1 c2 in
               let stat_res = combine s1 s2 in
-              let dep = (match p1 with Join(a,b)->[a;b] | a -> a)@(match p2 with Join(a,b)->[a;b] | a -> a) in
+              let dep = (match p1 with Join(a,b)->[a;b] | a -> [a])@(match p2 with Join(a,b)->[a;b] | a -> [a]) in
               let plan_res = match dep with
                 | [a;b] -> Join(a,b)
                 | [a;b;c] -> StarJoin3(a,b,c) 
                 | [a;b;c;d] -> StarJoin4(a,b,c,d)
+                | _ -> failwith "Not happening"
               in
               let cols_res = ListSet.inter cols1 cols2 in
               Hashtbl.add stat_of_plan plan_res stat_res ;
@@ -278,20 +243,6 @@ let get_optimal_plan_with_stat (tp_list:(algebra*'a combstat*string list) list) 
               then zero_big_int, stat_res, Empty, []
               else cost_res,stat_res,plan_res,cols_res
          end
-      | id::q ->
-         match dyn_star.(h) with
-         | Some v -> v
-         | None ->
-            let (cost,stat,plan,cols) = foo (h-p2 id) q in
-            let cost_res = add_big_int cost (add_big_int (size_of_stat stat) (size_of_stat tpcost.(id))) in
-            let stat_res = combine stat tpcost.(id) in
-            let plan_res = Join(plan,trad.(id)) in
-            let cols_res = ListSet.inter cols tpcols.(id) in
-            Hashtbl.add stat_of_plan plan_res stat_res ;
-            dyn_star.(h) <- Some (cost_res,stat_res,plan_res,cols_res) ;
-            if sign_big_int (size_of_stat stat_res) = 0
-            then zero_big_int, stat_res, Empty, []
-            else cost_res,stat_res,plan_res,cols_res
     in
     match  
       List.sort (fun x y -> compare_big_int (size_of_stat tpcost.(x)) (size_of_stat tpcost.(y))) l 
