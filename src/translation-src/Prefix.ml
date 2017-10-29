@@ -24,7 +24,7 @@ let find_trie t s =
     | Node(a,[]) -> foo (i+1) (List.assoc s.[i] a)
     | Node(a,x::t) ->
        try
-         if String.length s <= i
+         if String.length s > i
          then
            foo (i+1) (List.assoc s.[i] a)
          else
