@@ -31,7 +31,9 @@ let find_trie t s =
            x,i
        with _ -> x,i
   in
-  foo 0 t
+  let tr = foo 0 t in
+  print_string ("// "^tr^" for "^s^" \n" );
+  tr
 
 (* let t = (Node([],[]))  *)
 (* let t =add_trie t "abcd" "42"  *)
