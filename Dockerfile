@@ -7,7 +7,7 @@ COPY . /opt/sparqlgx
 WORKDIR /opt/sparqlgx
 
 # Image configuration
-ARG HADOOP_VERSION=2.7.3
+ARG HADOOP_VERSION=2.7.4
 ENV HADOOP_URL https://www.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
 
 # Ensure a sane environment
@@ -52,6 +52,7 @@ USER sparqlgx
 # Install Menhir
 RUN opam init -a && \
     echo ". /opt/sparqlgx/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true" > ~/.bashrc && \
+    eval $(opam config env) && \
     opam install -y menhir yojson
 
 # Ensure that bash is the default shell
