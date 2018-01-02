@@ -73,7 +73,10 @@ ident_or_var:
 | s = VAR
    { Variable(s) }
 | pref = IDENT COLON v = IDENT
-   { Exact(Prefix.prefixize (replace_prefix pref v)) }
+   { if pref = "_"
+     then Variable("_"^v)
+     else Exact(Prefix.prefixize (replace_prefix pref v))
+   }               
 | LEFTPROG s = ident RIGHTPROG
    { Exact(Prefix.prefixize ("<"^(s)^">")) }
 | QUOTE s = ident QUOTE

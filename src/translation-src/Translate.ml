@@ -115,14 +115,37 @@ let translate distinguished modifiers vertical optim stmt =
     | s,p,o -> Keep(list_var [s;p;o],fst (List.fold_left translate_el (Readfile3,[]) [s,"s";p,"p";o,"o"]))
   in
 
-  let translate_list_tp l =
-    match optim with
-    | 0 -> Reorder.no_optim translate_tp (List.rev l)
-    | 1 -> Reorder.no_cartesian translate_tp l
-    | 2 -> Reorder.reorder  translate_tp l
-    | 3 -> Reorder.full_stat translate_tp l
-    | _ -> Reorder.no_cartesian  translate_tp l
+  let vars l =
+    let rec foo = function
+      | [] -> []
+      | (s,p,o)::q -> [s; p; o]@foo q
+    in
+      
+    let rec bar l = function
+      | Variable(x) -> if List.mem x l then l else x::l
+      | Exact(x) -> l
+    in
+    l |> foo |> List.fold_left bar []
   in
+
+  let not_blank x = x.[0] <> '_' in 
+    
+  
+  let translate_list_tp l =
+    let reordered_bgp =
+      match optim with
+      | 0 -> Reorder.no_optim translate_tp (List.rev l)
+      | 1 -> Reorder.no_cartesian translate_tp l
+      | 2 -> Reorder.reorder  translate_tp l
+      | 3 -> Reorder.full_stat translate_tp l
+      | _ -> Reorder.no_cartesian  translate_tp l
+    in
+    if vars l |> List.for_all not_blank
+    then reordered_bgp
+    else Keep(vars l |> List.filter not_blank, reordered_bgp)
+  in
+
+        
 
   
   let translate_id_var = function

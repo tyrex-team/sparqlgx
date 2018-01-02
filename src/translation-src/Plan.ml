@@ -7,7 +7,7 @@ let cost_shuffle = big_int_of_int 4
 let cost_broadcast = big_int_of_int 60
 let cost_cartesian = big_int_of_int  10000
 let broadcast_threshold = big_int_of_int 1000000
-let cost_broadcast_unit = big_int_of_int 100000
+let cost_broadcast_unit = big_int_of_int 1000000
 let stat_of_plan = Hashtbl.create 17
                  
 let get_size p = try int_of_big_int (fst (Hashtbl.find stat_of_plan p)) with Not_found -> (-1)
