@@ -58,8 +58,12 @@ prefix:
 
 vars:
 | l = separated_list(COMMA, VAR)
- {l} 
+ {l}
+| l = list(VAR)
+ {l}
 | LEFTPAR l = separated_list(COMMA, VAR) RIGHTPAR
+ {l}
+| LEFTPAR l = list(VAR) RIGHTPAR
  {l}
 | JOKER
  {["*"]}
