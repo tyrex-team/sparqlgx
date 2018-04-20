@@ -32,13 +32,15 @@ object Query {
      if(args.length == 0) {
        throw new Exception(\"We need the path of the queried data!\")
      }
-     def readpred (s:String) = 
-                if(org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration).exists(new org.apache.hadoop.fs.Path(args(0)+\"/\"+s))) {
+     def readpred (s:String) = {
+        val hadoopPath = new org.apache.hadoop.fs.Path(args(0)+\"/\"+s)
+        if(org.apache.hadoop.fs.FileSystem.get(hadoopPath.toUri, sc.hadoopConfiguration).exists(hadoopPath)) {
            sc.textFile(args(0)+\"/\"+s+\"/*.gz\").map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}
         }
         else {
            sc.emptyRDD[(String,String)]
-        };
+        }
+    };
 
         def readwhole () = { 
           val reg = new Regex(\"\\\\s+.\\\\s*$\") ;
