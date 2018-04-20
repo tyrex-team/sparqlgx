@@ -95,11 +95,11 @@ ${PATH_CMD}/sparqlgx-translator $queryFile  --prefix ${localpath}/${dbName}/pref
 cd $localpath/eval/ ;
 rm -f target/scala*/sparqlgx-evaluation_*.jar ;
 sync ;
-if ! sbt -verbose -batch package ;
+if ! sbt -verbose -batch clean package ;
 then
     echo "Compilation failed!" ;
     >&2 echo "Compilation failed!" ;
-    if ! sbt  -verbose -batch package ;
+    if ! sbt  -verbose -batch clean package ;
     then
         exit 1 ;
     fi ;
