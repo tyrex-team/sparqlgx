@@ -188,10 +188,11 @@ Authors
 -------
 
 Damien Graux  
-<damien.graux@inria.fr>  
-
 Louis Jachiet  
 Pierre Genev&egrave;s  
 Nabil Laya&iuml;da  
 
-[Tyrex Team](http://tyrex.inria.fr), Inria (France), 2017
+[Tyrex Team](http://tyrex.inria.fr), Inria (France)
+
+Research Project and funding body: the [ANR CLEAR Project](http://tyrex.inria.fr/clear/)
+
