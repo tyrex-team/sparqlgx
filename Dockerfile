@@ -2,30 +2,24 @@
 FROM debian:testing
 LABEL maintainer thomas.calmant@inria.fr
 
-# Add SparqlGX
-COPY . /opt/sparqlgx
-WORKDIR /opt/sparqlgx
-
-# Image configuration
-ARG HADOOP_VERSION=2.7.4
-ENV HADOOP_URL https://www.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
-
 # Ensure a sane environment
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive
 
 # Add support for HTTPS in aptitude
 # and install Java 8, Scala and OCaml
 RUN set -x && \
-    apt-get update --fix-missing && \
-    apt-get install -y apt-transport-https ocaml-nox opam m4 && \
-    apt-get install -y --no-install-recommends curl vim openjdk-8-jdk-headless && \
+    apt update --fix-missing && \
+    apt install -y apt-transport-https ocaml-nox opam m4 && \
+    apt install -y --no-install-recommends curl vim openjdk-8-jdk-headless && \
     echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list && \
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823 && \
-    curl -fSLO http://downloads.lightbend.com/scala/2.12.1/scala-2.12.1.deb && \
-    dpkg -i scala-2.12.1.deb && \
-    apt-get update && \
-    apt-get install -y sbt && \
-    apt-get clean
+    apt update && \
+    apt install -y sbt && \
+    apt clean
+
+# Image configuration
+ARG HADOOP_VERSION=2.7.6
+ENV HADOOP_URL https://www.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
 
 # Install Hadoop
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
@@ -38,6 +32,10 @@ RUN set -x && \
 # Update environment
 ENV HADOOP_PREFIX=/opt/hadoop-$HADOOP_VERSION \
     HADOOP_CONF_DIR=/etc/hadoop
+
+# Add SparqlGX
+COPY . /opt/sparqlgx
+WORKDIR /opt/sparqlgx
 
 # Install Spark
 RUN . /opt/sparqlgx/conf/compilation.conf && \
@@ -64,4 +62,3 @@ RUN eval `opam config env` && \
     ln -s /opt/sparqlgx/bin/sparqlgx.sh /opt/sparqlgx/bin/sparqlgx && \
     chmod +x /opt/sparqlgx/bin/sparqlgx.sh && sync
 ENV PATH=/opt/sparqlgx/bin:/opt/spark/bin:$HADOOP_PREFIX/bin:$PATH
-
