@@ -22,6 +22,7 @@ import org.apache.spark._
 import org.apache.spark.rdd.RDD
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
+import java.security.MessageDigest
 
 object Query {
   def main(args: Array[String]) {
@@ -32,8 +33,23 @@ object Query {
      if(args.length == 0) {
        throw new Exception(\"We need the path of the queried data!\")
      }
+
+  def path_for_IRI(iri: String) {
+    if(iri.length() < 150) {
+      (\"p\"+iri.toLowerCase.map{ 
+        case c =>
+          if( (c<'a' || c>'z') && (c<'0' || c>'9'))
+            '_'
+          else 
+            c})
+      }
+    else
+        (\"ps_\"+MessageDigest.getInstance(\"SHA-1\").digest(iri.getBytes)) ;    
+  }
+
+
      def readpred (s:String) = {
-        val hadoopPath = new org.apache.hadoop.fs.Path(args(0)+\"/\"+s)
+        val hadoopPath = new org.apache.hadoop.fs.Path(args(0)+\"/\"+path_for_IRI(s))
         if(org.apache.hadoop.fs.FileSystem.get(hadoopPath.toUri, sc.hadoopConfiguration).exists(hadoopPath)) {
            sc.textFile(args(0)+\"/\"+s+\"/*.gz\").map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}
         }
@@ -73,14 +89,15 @@ object Query {
 " in
   
   let escape_var a =
-    let b = Bytes.escaped a in
-    if  Bytes.length b = 0
+    let b = String.escaped a in
+    if  String.length b = 0
     then  "\"\""
     else
       begin
-        if a.[0] = '?' then Bytes.set b 0 'v' ;
-        if a.[0] = '$' then Bytes.set b 0 'd' ;
-        b
+        match b.[0] with
+        | '?' -> "v"^(String.sub b 1 (String.length b-1))
+        | '$' -> "d"^(String.sub b 1 (String.length b-1))
+        | _ -> b
       end
   in
 
@@ -215,7 +232,7 @@ object Query {
           | Readfile3 ->
              "val "^res^"=readwhole();",[],["s";"p";"o"]
           | Readfile2(f) ->
-             "val "^res^"=readpred(\"p"^(numero f)^"\") //"^f,[],["s";"o"]
+             "val "^res^"=readpred(\"p"^(String.escaped f)^"\") //"^f,[],["s";"o"]
                
           | Filter(f,a) ->
              let code,keys,cols = foo a in

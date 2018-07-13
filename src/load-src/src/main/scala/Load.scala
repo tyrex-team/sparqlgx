@@ -13,7 +13,7 @@ import org.apache.spark.SparkContext._
 import scala.Tuple2;
 import scala.util.matching.Regex
 import java.io._
-
+import java.security.MessageDigest
 
 
 class RDDMultipleTextOutputFormat extends MultipleTextOutputFormat[Any, Any] {
@@ -65,18 +65,24 @@ object Main {
     rev
   }
 
-
+  def path_for_IRI(iri: String) {
+    if(iri.length() < 150) {
+      ("p"+iri.toLowerCase.map{ 
+        case c =>
+          if( (c<'a' || c>'z') && (c<'0' || c>'9'))
+            '_'
+          else 
+            c})
+      }
+    else
+        ("ps_"+MessageDigest.getInstance("SHA-1").digest(iri.getBytes)) ;    
+  }
 
   def load(input:RDD[(String,String,String)], path:String) {
     val T = input.map {
       case (s,p,o) => 
-        ("p"+p.toLowerCase.map{ 
-          case c =>
-            if( (c<'a' || c>'z') && (c<'0' || c>'9'))
-              '_'
-            else 
-              c
-        },(s+" "+o))};
+        (path_for_IRI(p),(s+" "+o))
+    }
     T.saveAsHadoopFile(path,classOf[String],classOf[String],classOf[RDDMultipleTextOutputFormat],classOf[GzipCodec])
   }
 
