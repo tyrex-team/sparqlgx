@@ -44,7 +44,7 @@ object Query {
             c})
       }
     else
-        (\"ps_\"+MessageDigest.getInstance(\"SHA-1\").digest(iri.getBytes)) ;    
+        (\"ps_\"+MessageDigest.getInstance(\"SHA-1\").digest(iri.getBytes(\"UTF-8\"))) ;    
   }
 
 
