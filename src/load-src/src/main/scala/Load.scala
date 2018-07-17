@@ -14,6 +14,7 @@ import scala.Tuple2;
 import scala.util.matching.Regex
 import java.io._
 import java.security.MessageDigest
+import java.math.BigInteger
 
 
 class RDDMultipleTextOutputFormat extends MultipleTextOutputFormat[Any, Any] {
@@ -65,7 +66,7 @@ object Main {
     rev
   }
 
-  def path_for_IRI(iri: String) {
+  def path_for_IRI(iri: String): String = {
     if(iri.length() < 150) {
       ("p"+iri.toLowerCase.map{ 
         case c =>
@@ -74,8 +75,10 @@ object Main {
           else 
             c})
       }
-    else
-        ("ps_"+MessageDigest.getInstance("SHA-1").digest(iri.getBytes)) ;    
+    else {
+      val iriHash = MessageDigest.getInstance("SHA-1").digest(iri.getBytes("UTF-8"))
+      ("ps_"+new BigInteger(1, iriHash).toString(16))
+    }
   }
 
   def load(input:RDD[(String,String,String)], path:String) {
