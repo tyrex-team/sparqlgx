@@ -34,7 +34,7 @@ object Query {
        throw new Exception(\"We need the path of the queried data!\")
      }
 
-  def path_for_IRI(iri: String) {
+  def path_for_IRI(iri: String): String = {
     if(iri.length() < 150) {
       (\"p\"+iri.toLowerCase.map{ 
         case c =>
@@ -43,8 +43,10 @@ object Query {
           else 
             c})
       }
-    else
-        (\"ps_\"+MessageDigest.getInstance(\"SHA-1\").digest(iri.getBytes(\"UTF-8\"))) ;    
+    else {
+      val iriHash = MessageDigest.getInstance(\"SHA-1\").digest(iri.getBytes(\"UTF-8\"))
+      (\"ps_\"+new BigInteger(1, iriHash).toString(16))
+    }
   }
 
 
