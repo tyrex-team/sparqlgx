@@ -23,6 +23,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
 import java.security.MessageDigest
+import java.math.BigInteger
 
 object Query {
   def main(args: Array[String]) {
