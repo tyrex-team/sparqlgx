@@ -52,9 +52,10 @@ object Query {
 
 
      def readpred (s:String) = {
-        val hadoopPath = new org.apache.hadoop.fs.Path(args(0)+\"/\"+path_for_IRI(s))
+        val iriPath = path_for_IRI(s)
+        val hadoopPath = new org.apache.hadoop.fs.Path(args(0)+\"/\"+iriPath)
         if(org.apache.hadoop.fs.FileSystem.get(hadoopPath.toUri, sc.hadoopConfiguration).exists(hadoopPath)) {
-           sc.textFile(args(0)+\"/\"+s+\"/*.gz\").map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}
+           sc.textFile(args(0)+\"/\"+iriPath+\"/*.gz\").map{line => val field:Array[String]=line.split(\" \",2); (field(0),field(1))}
         }
         else {
            sc.emptyRDD[(String,String)]
