@@ -1,5 +1,5 @@
 # Use testing to have a compatible version of OCaml
-FROM debian:testing
+FROM debian:stretch
 LABEL maintainer thomas.calmant@inria.fr
 
 # Ensure a sane environment
