@@ -18,7 +18,7 @@ RUN set -x && \
     apt clean
 
 # Image configuration
-ARG HADOOP_VERSION=2.7.6
+ARG HADOOP_VERSION=2.7.7
 ENV HADOOP_URL https://www.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
 
 # Install Hadoop
