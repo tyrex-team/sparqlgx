@@ -62,3 +62,6 @@ RUN eval `opam config env` && \
     ln -s /opt/sparqlgx/bin/sparqlgx.sh /opt/sparqlgx/bin/sparqlgx && \
     chmod +x /opt/sparqlgx/bin/sparqlgx.sh && sync
 ENV PATH=/opt/sparqlgx/bin:/opt/spark/bin:$HADOOP_PREFIX/bin:$PATH
+
+# Adding a bit of documentation when a user launches interactively the image
+RUN echo "\n. /opt/sparqlgx/launch-message-for-docker.sh\n" >> /opt/sparqlgx/.bashrc
