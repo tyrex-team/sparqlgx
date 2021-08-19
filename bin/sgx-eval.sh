@@ -89,7 +89,14 @@ fi;
 # Step 1: Translation.
 mkdir -p $localpath/eval/src/main/scala/ ;
 bash ${PATH_CMD}/generate-build.sh "SPARQLGX Evaluation" > $localpath/eval/build.sbt
-${PATH_CMD}/sparqlgx-translator $queryFile  --prefix ${localpath}/${dbName}/prefix.txt $sde $noOptim $stat > $localpath/eval/src/main/scala/Query.scala
+if [ -e ${localpath}/${dbName}/prefix.txt ] ;
+then 
+    ${PATH_CMD}/sparqlgx-translator $queryFile  --prefix ${localpath}/${dbName}/prefix.txt $sde $noOptim $stat > $localpath/eval/src/main/scala/Query.scala
+else
+    echo "Prefix file not found, not using prefixes!"
+    echo "${PATH_CMD}/sparqlgx-translator $queryFile  $sde $noOptim $stat"
+    ${PATH_CMD}/sparqlgx-translator $queryFile  $sde $noOptim $stat > $localpath/eval/src/main/scala/Query.scala
+fi ;
 
 # Step 2: Compilation.
 cd $localpath/eval/ ;

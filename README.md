@@ -49,7 +49,11 @@ Requirements
 - [Apache Hadoop](http://hadoop.apache.org) (+HDFS) version __2.6.0-cdh5.7.0__
 - [Apache Spark](http://spark.apache.org/) version __1.6.0__
 - [OCaml](http://ocaml.org/) version ≥ __4.0__
-- [Menhir](http://gallium.inria.fr/~fpottier/menhir/) version __20160526__
+- [Menhir](http://gallium.inria.fr/~fpottier/menhir/) compatible with the OCaml version
+- [Ocamlfind](https://github.com/ocaml/ocamlfind) compatible with the OCaml version
+- [Yojson](https://github.com/ocaml-community/yojson) compatible with the OCaml version
+
+Note: Menhir, Yojson and Ocamlfind can all be installed through opam (the ocaml package manager).
 
 How to use it?
 --------------
